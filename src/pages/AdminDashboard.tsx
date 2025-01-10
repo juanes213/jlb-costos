@@ -3,7 +3,7 @@ import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash, Download, LogOut } from "lucide-react";
+import { Plus, Trash, Download, LogOut, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import type { Category, Project } from "@/types/project";
