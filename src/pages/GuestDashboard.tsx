@@ -11,25 +11,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Project } from "@/types/project";
 
 export default function GuestDashboard() {
   const { projects, updateProject } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(value);
+  };
+
+  const parseCurrencyInput = (value: string) => {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    return parseFloat(numericValue) || 0;
+  };
 
   const handleCostChange = (
     categoryIndex: number,
     itemIndex: number,
-    cost: string
+    value: string
   ) => {
     if (!selectedProject) return;
 
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
-    newProject.categories[categoryIndex].items[itemIndex].cost = parseFloat(cost) || 0;
-
+    newProject.categories[categoryIndex].items[itemIndex].cost = parseCurrencyInput(value);
     updateProject(newProject);
   };
 
@@ -42,23 +56,29 @@ export default function GuestDashboard() {
 
   return (
     <div className="container py-8 space-y-8 animate-fadeIn">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Cost Management</h1>
-        <p className="text-muted-foreground">
-          Select a project and input costs
-        </p>
+      <div className="flex justify-between items-center">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold text-primary">Cost Management</h1>
+          <p className="text-muted-foreground">
+            Select a project and input costs
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => navigate("/login")}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </div>
 
-      <Card className="p-6 space-y-6">
+      <Card className="p-6 space-y-6 bg-white shadow-md">
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-primary">
             Select Project
           </label>
           <Select
             value={selectedProjectId}
             onValueChange={setSelectedProjectId}
           >
-            <SelectTrigger>
+            <SelectTrigger className="border-blue-200 focus:border-blue-400">
               <SelectValue placeholder="Choose a project" />
             </SelectTrigger>
             <SelectContent>
@@ -75,7 +95,7 @@ export default function GuestDashboard() {
           <div className="space-y-6">
             {selectedProject.categories.map((category, categoryIndex) => (
               <div key={categoryIndex} className="space-y-4">
-                <h3 className="text-lg font-medium">{category.name}</h3>
+                <h3 className="text-lg font-medium text-primary">{category.name}</h3>
                 <div className="space-y-2">
                   {category.items.map((item, itemIndex) => (
                     <div
@@ -84,8 +104,8 @@ export default function GuestDashboard() {
                     >
                       <span className="flex-1">{item.name}</span>
                       <Input
-                        type="number"
-                        value={item.cost}
+                        type="text"
+                        value={formatCurrency(item.cost)}
                         onChange={(e) =>
                           handleCostChange(
                             categoryIndex,
@@ -93,7 +113,7 @@ export default function GuestDashboard() {
                             e.target.value
                           )
                         }
-                        className="w-32"
+                        className="w-32 border-blue-200 focus:border-blue-400"
                       />
                     </div>
                   ))}
