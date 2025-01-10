@@ -24,12 +24,13 @@ export default function GuestDashboard() {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
+    if (!value) return ""; 
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 2,
     }).format(value);
   };
-
 
   const parseCurrencyInput = (value: string) => {
     const numericValue = value.replace(/[^0-9.]/g, '');
@@ -38,15 +39,28 @@ export default function GuestDashboard() {
 
   const handleCostChange = (categoryIndex: number, itemIndex: number, value: string) => {
     if (!selectedProject) return;
-    const numericValue = value.replace(/[^0-9.]/g, '');
   
-    const floatValue = parseFloat(numericValue);
+    // Handle empty input to allow deleting the entire number
+    if (value === "") {
+      const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
+      newProject.categories[categoryIndex].items[itemIndex].cost = 0;
+      updateProject(newProject);
+      return;
+    }
   
+    // Remove non-numeric characters except for digits
+    const numericValue = value.replace(/\D/g, "");
+  
+    // Convert to a float by dividing by 100 to handle decimals
+    const floatValue = parseFloat(numericValue) / 100;
+  
+    // Update the project's cost
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
     newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
   
     updateProject(newProject);
   };
+
 
 
 
@@ -108,14 +122,9 @@ export default function GuestDashboard() {
                       <span className="flex-1">{item.name}</span>
                       <Input
                         type="text"
-                        value={item.cost ? formatCurrency(item.cost): ""}
-                        onChange={(e) =>
-                          handleCostChange(
-                            categoryIndex,
-                            itemIndex,
-                            e.target.value
-                          )
-                        }
+                        value={item.cost ? formatCurrency(item.cost) : ""}
+                        onChange={(e) => handleCostChange(categoryIndex, itemIndex, e.target.value)}
+                        placeholder="$0.00"
                         className="w-32 border-blue-200 focus:border-blue-400"
                       />
                     </div>
