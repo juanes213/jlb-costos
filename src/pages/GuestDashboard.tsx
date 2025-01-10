@@ -41,11 +41,17 @@ export default function GuestDashboard() {
     value: string
   ) => {
     if (!selectedProject) return;
-
+  
+    // Remove all non-numeric characters except the decimal point
+    const numericValue = value.replace(/[^0-9.]/g, '');
+  
+    // Update the cost in the project with the parsed numeric value
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
-    newProject.categories[categoryIndex].items[itemIndex].cost = parseCurrencyInput(value);
+    newProject.categories[categoryIndex].items[itemIndex].cost = parseFloat(numericValue) || 0;
+  
     updateProject(newProject);
   };
+
 
   const handleSave = () => {
     toast({
@@ -105,7 +111,7 @@ export default function GuestDashboard() {
                       <span className="flex-1">{item.name}</span>
                       <Input
                         type="text"
-                        value={formatCurrency(item.cost)}
+                        value={item.cost !== 0 ? item.cost.toFixed(2) : ''}
                         onChange={(e) =>
                           handleCostChange(
                             categoryIndex,
