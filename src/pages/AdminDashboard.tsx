@@ -14,6 +14,8 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isEditingProject, setIsEditingProject] = useState<string | null>(null);
+  const [editedProjectName, setEditedProjectName] = useState("");
 
   const handleAddCategory = () => {
     setCategories([...categories, { name: "", items: [] }]);
@@ -25,6 +27,28 @@ export default function AdminDashboard() {
     setCategories(newCategories);
   };
 
+  const handleEditProject = (projectId: string, name: string) => {
+    setIsEditingProject(projectId);
+    setEditedProjectName(name);
+  };
+
+  const handleSaveProjectEdit = (projectId: string) => {
+    if (!editedProjectName.trim()) {
+      toast({
+        title: "Error",
+        description: "Project name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+
+    updateProject({ ...project, name: editedProjectName });
+    setIsEditingProject(null);
+  };
+  
   const handleAddItem = (categoryIndex: number) => {
     const newCategories = [...categories];
     newCategories[categoryIndex].items.push({ name: "", cost: 0 });
@@ -232,8 +256,34 @@ export default function AdminDashboard() {
               className="space-y-4 p-4 border rounded-lg border-blue-100"
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-primary">{project.name}</span>
+                {isEditingProject === project.id ? (
+                  <Input
+                    value={editedProjectName}
+                    onChange={(e) => setEditedProjectName(e.target.value)}
+                    className="border-blue-200 focus:border-blue-400"
+                  />
+                ) : (
+                  <span className="font-medium text-primary">{project.name}</span>
+                )}
                 <div className="space-x-2">
+                  {isEditingProject === project.id ? (
+                    <Button
+                      onClick={() => handleSaveProjectEdit(project.id)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Save
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleEditProject(project.id, project.name)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  )}
                   <Button
                     onClick={() => exportProjectCSV(project)}
                     variant="outline"
