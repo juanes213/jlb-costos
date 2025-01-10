@@ -108,7 +108,7 @@ export default function GuestDashboard() {
                       <span className="flex-1">{item.name}</span>
                       <Input
                         type="text"
-                        value={item.cost !== 0 ? item.cost.toFixed(2) : ''}
+                        value={item.cost ? formatCurrency(item.cost): ""}
                         onChange={(e) =>
                           handleCostChange(
                             categoryIndex,
