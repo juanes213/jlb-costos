@@ -24,33 +24,30 @@ export default function GuestDashboard() {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'COP',
     }).format(value);
   };
+
 
   const parseCurrencyInput = (value: string) => {
     const numericValue = value.replace(/[^0-9.]/g, '');
     return parseFloat(numericValue) || 0;
   };
 
-  const handleCostChange = (
-    categoryIndex: number,
-    itemIndex: number,
-    value: string
-  ) => {
+  const handleCostChange = (categoryIndex: number, itemIndex: number, value: string) => {
     if (!selectedProject) return;
-  
-    // Remove all non-numeric characters except the decimal point
     const numericValue = value.replace(/[^0-9.]/g, '');
   
-    // Update the cost in the project with the parsed numeric value
+    const floatValue = parseFloat(numericValue);
+  
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
-    newProject.categories[categoryIndex].items[itemIndex].cost = parseFloat(numericValue) || 0;
+    newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
   
     updateProject(newProject);
   };
+
 
 
   const handleSave = () => {
