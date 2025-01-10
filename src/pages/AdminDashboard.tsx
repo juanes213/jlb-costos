@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const { projects, addProject, deleteProject, exportProjectCSV, updateProject } = useProjects();
   const [newProjectName, setNewProjectName] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [editingStates, setEditingStates] = useState<{[key: string]: boolean}>({});
+  const [editedNames, setEditedNames] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -54,6 +56,44 @@ export default function AdminDashboard() {
       (_, index) => index !== itemIndex
     );
     setCategories(newCategories);
+  };
+
+  // Toggle editing state for a project
+  const toggleEditing = (projectId: string) => {
+    setEditingStates(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }));
+    // Initialize edited name if starting to edit
+    if (!editingStates[projectId]) {
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setEditedNames(prev => ({
+          ...prev,
+          [projectId]: project.name
+        }));
+      }
+    }
+  };
+
+  // Handle name edit
+  const handleNameEdit = (projectId: string, newName: string) => {
+    setEditedNames(prev => ({
+      ...prev,
+      [projectId]: newName
+    }));
+  };
+
+  // Save edited project
+  const saveProject = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (project && editedNames[projectId]) {
+      updateProject({
+        ...project,
+        name: editedNames[projectId]
+      });
+      toggleEditing(projectId);
+    }
   };
 
   // Create a new project
@@ -181,47 +221,45 @@ export default function AdminDashboard() {
       <Card className="p-6 bg-white shadow-md">
         <h2 className="text-xl font-semibold mb-4 text-primary">Existing Projects</h2>
         <div className="space-y-4">
-          {projects.map((project) => {
-            const [isEditing, setIsEditing] = useState(false);
-            const [editedProjectName, setEditedProjectName] = useState(project.name);
-
-            return (
-              <div key={project.id} className="space-y-4 p-4 border rounded-lg border-blue-100">
-                <div className="flex items-center justify-between">
-                  {isEditing ? (
-                    <Input
-                      value={editedProjectName}
-                      onChange={(e) => setEditedProjectName(e.target.value)}
-                      placeholder="Edit project name"
-                      className="w-full border-blue-200 focus:border-blue-400"
-                    />
-                  ) : (
-                    <span className="font-medium text-primary">{project.name}</span>
-                  )}
-                  <div className="space-x-2">
-                    <Button
-                      onClick={() => {
-                        if (isEditing) updateProject({ ...project, name: editedProjectName });
-                        setIsEditing(!isEditing);
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      {isEditing ? "Save" : <Edit className="w-4 h-4" />}
-                    </Button>
-                    <Button onClick={() => exportProjectCSV(project)} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Export CSV
-                    </Button>
-                    <Button onClick={() => deleteProject(project.id)} variant="destructive" size="sm">
-                      <Trash className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
+          {projects.map((project) => (
+            <div key={project.id} className="space-y-4 p-4 border rounded-lg border-blue-100">
+              <div className="flex items-center justify-between">
+                {editingStates[project.id] ? (
+                  <Input
+                    value={editedNames[project.id] || project.name}
+                    onChange={(e) => handleNameEdit(project.id, e.target.value)}
+                    placeholder="Edit project name"
+                    className="w-full border-blue-200 focus:border-blue-400"
+                  />
+                ) : (
+                  <span className="font-medium text-primary">{project.name}</span>
+                )}
+                <div className="space-x-2">
+                  <Button
+                    onClick={() => {
+                      if (editingStates[project.id]) {
+                        saveProject(project.id);
+                      } else {
+                        toggleEditing(project.id);
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {editingStates[project.id] ? "Save" : <Edit className="w-4 h-4" />}
+                  </Button>
+                  <Button onClick={() => exportProjectCSV(project)} variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export CSV
+                  </Button>
+                  <Button onClick={() => deleteProject(project.id)} variant="destructive" size="sm">
+                    <Trash className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </Card>
     </div>
