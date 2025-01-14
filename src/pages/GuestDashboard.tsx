@@ -71,8 +71,8 @@ export default function GuestDashboard() {
 
   const handleSave = () => {
     toast({
-      title: "Success",
-      description: "Costs saved successfully",
+      title: "Éxito",
+      description: "Costes guardados con éxito",
     });
   };
 
@@ -80,28 +80,28 @@ export default function GuestDashboard() {
     <div className="container py-8 space-y-8 animate-fadeIn">
       <div className="flex justify-between items-center">
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-primary">Cost Management</h1>
+          <h1 className="text-3xl font-bold text-primary">Gestión de costes</h1>
           <p className="text-muted-foreground">
-            Select a project and input costs
+            Seleccione un proyecto e introduzca los costes
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/login")}>
           <LogOut className="w-4 h-4 mr-2" />
-          Logout
+          Cierre de sesión
         </Button>
       </div>
 
       <Card className="p-6 space-y-6 bg-white shadow-md">
         <div>
           <label className="block text-sm font-medium mb-2 text-primary">
-            Select Project
+            Seleccionar Proyecto
           </label>
           <Select
             value={selectedProjectId}
             onValueChange={setSelectedProjectId}
           >
             <SelectTrigger className="border-blue-200 focus:border-blue-400">
-              <SelectValue placeholder="Choose a project" />
+              <SelectValue placeholder="Elija un proyecto" />
             </SelectTrigger>
             <SelectContent>
               {projects.map((project) => (
@@ -121,7 +121,7 @@ export default function GuestDashboard() {
                 <div className="space-y-2">
                   {category.items.length === 0 ? (
                     <div className="flex items-center space-x-4">
-                      <span className="flex-1">Category Cost</span>
+                      <span className="flex-1">Costo de Categoría</span>
                       <Input
                         type="text"
                         value={category.cost ? formatCurrency(category.cost) : ""}
@@ -152,7 +152,7 @@ export default function GuestDashboard() {
             ))}
 
             <Button onClick={handleSave} className="w-full">
-              Save Costs
+              Guardar Costos
             </Button>
           </div>
         )}
