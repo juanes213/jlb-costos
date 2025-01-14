@@ -79,8 +79,8 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
     }));
 
     toast({
-      title: "Success",
-      description: "Project updated successfully",
+      title: "Éxito",
+      description: "Proyecto actualizado correctamente",
     });
   };
 
@@ -108,8 +108,8 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
     setEditedCategoryName("");
 
     toast({
-      title: "Success",
-      description: "Category updated successfully",
+      title: "Éxito",
+      description: "Categoría actualizada correctamente",
     });
   };
 
@@ -127,8 +127,8 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
     setEditedItemName("");
 
     toast({
-      title: "Success",
-      description: "Item updated successfully",
+      title: "Éxito",
+      description: "Elemento actualizado con éxito",
     });
   };
 
@@ -168,7 +168,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                     ...prev,
                     [project.id]: e.target.value
                   }))}
-                  placeholder="Project name"
+                  placeholder="Nombre del proyecto"
                   className="border-blue-200 focus:border-blue-400"
                 />
                 <Input
@@ -178,11 +178,11 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                     ...prev,
                     [project.id]: parseInt(e.target.value) || 0
                   }))}
-                  placeholder="Number ID"
+                  placeholder="Número ID"
                   className="border-blue-200 focus:border-blue-400 w-32"
                 />
                 <Button onClick={() => handleSaveEdit(project.id)} size="sm">
-                  Save
+                  Guardar
                 </Button>
               </div>
             ) : (
@@ -198,7 +198,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                 size="sm"
               >
                 <Pencil className="w-4 h-4 mr-2" />
-                {editingStates[project.id] ? "Cancel" : "Edit"}
+                {editingStates[project.id] ? "Cancelar" : "Editar"}
               </Button>
               <Button
                 onClick={() => onDeleteProject(project.id)}
@@ -206,7 +206,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                 size="sm"
               >
                 <Trash className="w-4 h-4 mr-2" />
-                Delete
+                Eliminar
               </Button>
             </div>
           </div>
@@ -227,7 +227,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                       variant="outline" 
                       size="sm"
                     >
-                      Cancel
+                      Cancelar
                     </Button>
                   </div>
                 ) : (
@@ -278,7 +278,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                         variant="outline" 
                         size="sm"
                       >
-                        Cancel
+                        Cancelar
                       </Button>
                     </div>
                   ) : (
