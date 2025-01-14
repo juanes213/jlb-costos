@@ -30,16 +30,16 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold">Welcome to JLB Company</h2>
+          <h2 className="text-2xl font-bold">Bienvenido a JLB</h2>
           <p className="text-muted-foreground mt-2">
-            Please sign in to continue
+            Inicie sesión para continuar
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium">
-                Username
+                Nombre de usuario
               </label>
               <Input
                 id="username"
@@ -52,7 +52,7 @@ export default function Login() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium">
-                Password
+                Contraseña
               </label>
               <Input
                 id="password"
