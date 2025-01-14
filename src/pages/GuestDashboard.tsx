@@ -37,13 +37,17 @@ export default function GuestDashboard() {
     return parseFloat(numericValue) || 0;
   };
 
-  const handleCostChange = (categoryIndex: number, itemIndex: number, value: string) => {
+  const handleCostChange = (categoryIndex: number, itemIndex: number | null, value: string) => {
     if (!selectedProject) return;
   
-    // Handle empty input to allow deleting the entire number
+    // Handle empty input
     if (value === "") {
       const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
-      newProject.categories[categoryIndex].items[itemIndex].cost = 0;
+      if (itemIndex === null) {
+        newProject.categories[categoryIndex].cost = 0;
+      } else {
+        newProject.categories[categoryIndex].items[itemIndex].cost = 0;
+      }
       updateProject(newProject);
       return;
     }
@@ -56,13 +60,14 @@ export default function GuestDashboard() {
   
     // Update the project's cost
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
-    newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    if (itemIndex === null) {
+      newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    } else {
+      newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    }
   
     updateProject(newProject);
   };
-
-
-
 
   const handleSave = () => {
     toast({
@@ -114,21 +119,34 @@ export default function GuestDashboard() {
               <div key={categoryIndex} className="space-y-4">
                 <h3 className="text-lg font-medium text-primary">{category.name}</h3>
                 <div className="space-y-2">
-                  {category.items.map((item, itemIndex) => (
-                    <div
-                      key={itemIndex}
-                      className="flex items-center space-x-4"
-                    >
-                      <span className="flex-1">{item.name}</span>
+                  {category.items.length === 0 ? (
+                    <div className="flex items-center space-x-4">
+                      <span className="flex-1">Category Cost</span>
                       <Input
                         type="text"
-                        value={item.cost ? formatCurrency(item.cost) : ""}
-                        onChange={(e) => handleCostChange(categoryIndex, itemIndex, e.target.value)}
+                        value={category.cost ? formatCurrency(category.cost) : ""}
+                        onChange={(e) => handleCostChange(categoryIndex, null, e.target.value)}
                         placeholder="$0.00"
                         className="w-32 border-blue-200 focus:border-blue-400"
                       />
                     </div>
-                  ))}
+                  ) : (
+                    category.items.map((item, itemIndex) => (
+                      <div
+                        key={itemIndex}
+                        className="flex items-center space-x-4"
+                      >
+                        <span className="flex-1">{item.name}</span>
+                        <Input
+                          type="text"
+                          value={item.cost ? formatCurrency(item.cost) : ""}
+                          onChange={(e) => handleCostChange(categoryIndex, itemIndex, e.target.value)}
+                          placeholder="$0.00"
+                          className="w-32 border-blue-200 focus:border-blue-400"
+                        />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             ))}
