@@ -56,7 +56,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     if (!newProjectName.trim()) {
       toast({
         title: "Error",
-        description: "Project name is required",
+        description: "El nombre del proyecto es obligatorio",
         variant: "destructive",
       });
       return;
@@ -65,7 +65,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     if (categories.some((c) => !c.name.trim())) {
       toast({
         title: "Error",
-        description: "All categories must have names",
+        description: "Todas las categorías deben tener nombre",
         variant: "destructive",
       });
       return;
@@ -74,7 +74,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     if (categories.some((c) => c.items.some((item) => !item.name.trim()))) {
       toast({
         title: "Error",
-        description: "All items must have names",
+        description: "Todos los artículos deben tener nombre",
         variant: "destructive",
       });
       return;
@@ -85,8 +85,8 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     setCategories([]);
 
     toast({
-      title: "Success",
-      description: "Project created successfully",
+      title: "Éxito",
+      description: "Proyecto creado con éxito",
     });
   };
 
@@ -97,7 +97,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
         <Input
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
-          placeholder="Enter project name"
+          placeholder="Introduzca el nombre del proyecto"
           className="border-blue-200 focus:border-blue-400"
         />
       </div>
@@ -107,7 +107,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
           <h3 className="text-lg font-medium text-primary">Categorías</h3>
           <Button onClick={handleAddCategory} size="sm" variant="outline">
             <Plus className="w-4 h-4 mr-2" />
-            Add Category
+            Añadir categoría
           </Button>
         </div>
 
@@ -119,7 +119,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
                 onChange={(e) =>
                   handleCategoryNameChange(categoryIndex, e.target.value)
                 }
-                placeholder="Category name"
+                placeholder="Nombre de la categoría"
                 className="border-blue-200 focus:border-blue-400"
               />
               <Button
@@ -163,14 +163,14 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
               size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Item
+              Añadir elemento
             </Button>
           </div>
         ))}
       </div>
 
       <Button onClick={handleCreateProject} className="w-full">
-        Create Project
+        Crear proyecto
       </Button>
     </div>
   );
