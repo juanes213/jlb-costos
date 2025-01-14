@@ -20,7 +20,7 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid credentials",
+        description: "Credenciales inválidas",
         variant: "destructive",
       });
     }
@@ -65,7 +65,7 @@ export default function Login() {
             </div>
           </div>
           <Button type="submit" className="w-full">
-            Sign in
+            Iniciar sesión
           </Button>
         </form>
       </div>
