@@ -93,7 +93,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">Project Name</label>
+        <label className="block text-sm font-medium mb-2">Nombre del Proyecto</label>
         <Input
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
@@ -104,7 +104,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-primary">Categories</h3>
+          <h3 className="text-lg font-medium text-primary">Categorias</h3>
           <Button onClick={handleAddCategory} size="sm" variant="outline">
             <Plus className="w-4 h-4 mr-2" />
             Add Category
