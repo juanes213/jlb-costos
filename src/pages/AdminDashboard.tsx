@@ -15,6 +15,10 @@ export default function AdminDashboard() {
   const [editingStates, setEditingStates] = useState<Record<string, boolean>>({});
   const [editedNames, setEditedNames] = useState<Record<string, string>>({});
   const [editedNumberIds, setEditedNumberIds] = useState<Record<string, number>>({});
+  const [editingCategory, setEditingCategory] = useState<{projectId: string, categoryIndex: number} | null>(null);
+  const [editingItem, setEditingItem] = useState<{projectId: string, categoryIndex: number, itemIndex: number} | null>(null);
+  const [editedCategoryName, setEditedCategoryName] = useState("");
+  const [editedItemName, setEditedItemName] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -196,6 +200,54 @@ export default function AdminDashboard() {
     });
   };
 
+  const startEditingCategory = (projectId: string, categoryIndex: number, currentName: string) => {
+    setEditingCategory({ projectId, categoryIndex });
+    setEditedCategoryName(currentName);
+  };
+
+  const startEditingItem = (projectId: string, categoryIndex: number, itemIndex: number, currentName: string) => {
+    setEditingItem({ projectId, categoryIndex, itemIndex });
+    setEditedItemName(currentName);
+  };
+
+  const handleSaveCategoryEdit = () => {
+    if (!editingCategory) return;
+
+    const project = projects.find(p => p.id === editingCategory.projectId);
+    if (!project) return;
+
+    const newProject = { ...project };
+    newProject.categories[editingCategory.categoryIndex].name = editedCategoryName;
+    updateProject(newProject);
+
+    setEditingCategory(null);
+    setEditedCategoryName("");
+
+    toast({
+      title: "Success",
+      description: "Category updated successfully",
+    });
+  };
+
+  const handleSaveItemEdit = () => {
+    if (!editingItem) return;
+
+    const project = projects.find(p => p.id === editingItem.projectId);
+    if (!project) return;
+
+    const newProject = { ...project };
+    newProject.categories[editingItem.categoryIndex].items[editingItem.itemIndex].name = editedItemName;
+    updateProject(newProject);
+
+    setEditingItem(null);
+    setEditedItemName("");
+
+    toast({
+      title: "Success",
+      description: "Item updated successfully",
+    });
+  };
+
   return (
     <div className="container py-8 space-y-8 animate-fadeIn">
       <div className="flex justify-between items-center">
@@ -361,7 +413,35 @@ export default function AdminDashboard() {
               {project.categories.map((category, categoryIndex) => (
                 <div key={categoryIndex} className="ml-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">{category.name}</h4>
+                    {editingCategory?.projectId === project.id && 
+                     editingCategory?.categoryIndex === categoryIndex ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={editedCategoryName}
+                          onChange={(e) => setEditedCategoryName(e.target.value)}
+                          className="w-48 border-blue-200 focus:border-blue-400"
+                        />
+                        <Button onClick={handleSaveCategoryEdit} size="sm">Save</Button>
+                        <Button 
+                          onClick={() => setEditingCategory(null)} 
+                          variant="outline" 
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{category.name}</h4>
+                        <Button
+                          onClick={() => startEditingCategory(project.id, categoryIndex, category.name)}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       {category.items.length === 0 && (
                         <Input
@@ -383,7 +463,36 @@ export default function AdminDashboard() {
                   </div>
                   {category.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex items-center justify-between ml-4">
-                      <span>{item.name}</span>
+                      {editingItem?.projectId === project.id && 
+                       editingItem?.categoryIndex === categoryIndex &&
+                       editingItem?.itemIndex === itemIndex ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editedItemName}
+                            onChange={(e) => setEditedItemName(e.target.value)}
+                            className="w-48 border-blue-200 focus:border-blue-400"
+                          />
+                          <Button onClick={handleSaveItemEdit} size="sm">Save</Button>
+                          <Button 
+                            onClick={() => setEditingItem(null)} 
+                            variant="outline" 
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>{item.name}</span>
+                          <Button
+                            onClick={() => startEditingItem(project.id, categoryIndex, itemIndex, item.name)}
+                            variant="ghost"
+                            size="sm"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <Input
                           type="text"
