@@ -28,12 +28,12 @@ export default function AdminDashboard() {
       <ProjectHeader />
 
       <Card className="p-6 space-y-6 bg-white shadow-md">
-        <h2 className="text-xl font-semibold text-primary">Create New Project</h2>
+        <h2 className="text-xl font-semibold text-primary">Agregar Proyecto</h2>
         <ProjectForm onCreateProject={handleCreateProject} />
       </Card>
 
       <Card className="p-6 bg-white shadow-md">
-        <h2 className="text-xl font-semibold mb-4 text-primary">Existing Projects</h2>
+        <h2 className="text-xl font-semibold mb-4 text-primary">Proyectos Existentes</h2>
         <ProjectList
           projects={projects}
           onUpdateProject={updateProject}
