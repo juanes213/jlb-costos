@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useProjects } from "@/contexts/ProjectContext";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 
 export function ProjectHeader() {
+  const navigate = useNavigate();
   const { projects } = useProjects();
 
   const exportToExcel = () => {
@@ -41,16 +44,24 @@ export function ProjectHeader() {
   };
 
   return (
-    <div className="flex justify-between items-center mb-6">
-      <div>
-        <h1 className="text-2xl font-bold text-primary">Gestión de proyectos</h1>
-        <p className="text-muted-foreground">
-          Cree y gestione sus proyectos
-        </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Project Management</h1>
+          <p className="text-muted-foreground">
+            Create and manage your projects
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => navigate("/login")}>
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </div>
-      <Button onClick={exportToExcel} variant="outline">
-        Exportar todo a Excel
-      </Button>
+      <div className="flex justify-end">
+        <Button onClick={exportToExcel} variant="outline">
+          Export All to Excel
+        </Button>
+      </div>
     </div>
   );
 }
