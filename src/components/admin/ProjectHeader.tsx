@@ -43,13 +43,13 @@ export function ProjectHeader() {
   return (
     <div className="flex justify-between items-center mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Project Management</h1>
+        <h1 className="text-2xl font-bold text-primary">Gestión de proyectos</h1>
         <p className="text-muted-foreground">
-          Create and manage your projects
+          Cree y gestione sus proyectos
         </p>
       </div>
       <Button onClick={exportToExcel} variant="outline">
-        Export All to Excel
+        Exportar todo a Excel
       </Button>
     </div>
   );
