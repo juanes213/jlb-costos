@@ -47,19 +47,19 @@ export function ProjectHeader() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Project Management</h1>
+          <h1 className="text-2xl font-bold text-primary">Gestión de proyectos</h1>
           <p className="text-muted-foreground">
-            Create and manage your projects
+            Cree y gestione sus proyectos
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/login")}>
           <LogOut className="w-4 h-4 mr-2" />
-          Logout
+          Cierre de sesión
         </Button>
       </div>
       <div className="flex justify-end">
         <Button onClick={exportToExcel} variant="outline">
-          Export All to Excel
+          Exportar todo a Excel
         </Button>
       </div>
     </div>
