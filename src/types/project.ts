@@ -6,10 +6,12 @@ export type Item = {
 export type Category = {
   name: string;
   items: Item[];
+  cost?: number;
 };
 
 export type Project = {
   id: string;
+  numberId: number;
   name: string;
   categories: Category[];
 };

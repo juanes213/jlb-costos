@@ -3,17 +3,29 @@ import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash, Download, LogOut } from "lucide-react";
+import { Plus, Trash, LogOut, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import type { Category, Project } from "@/types/project";
 
 export default function AdminDashboard() {
-  const { projects, addProject, deleteProject, exportProjectCSV, updateProject } = useProjects();
+  const { projects, addProject, deleteProject, updateProject } = useProjects();
   const [newProjectName, setNewProjectName] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [editingStates, setEditingStates] = useState<Record<string, boolean>>({});
+  const [editedNames, setEditedNames] = useState<Record<string, string>>({});
+  const [editedNumberIds, setEditedNumberIds] = useState<Record<string, number>>({});
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const formatCurrency = (value: number) => {
+    if (!value) return ""; 
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
 
   const handleAddCategory = () => {
     setCategories([...categories, { name: "", items: [] }]);
@@ -108,7 +120,15 @@ export default function AdminDashboard() {
 
     addProject({
       name: newProjectName,
-      categories,
+      numberId: Math.floor(Math.random() * 10000),
+      categories: categories.map(category => ({
+        ...category,
+        cost: category.items.length === 0 ? 0 : undefined,
+        items: category.items.map(item => ({
+          ...item,
+          cost: 0
+        }))
+      })),
     });
 
     setNewProjectName("");
@@ -117,6 +137,62 @@ export default function AdminDashboard() {
     toast({
       title: "Success",
       description: "Project created successfully",
+    });
+  };
+
+  const handleCostChange = (projectId: string, categoryIndex: number, itemIndex: number | null, value: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+  
+    const numericValue = value.replace(/\D/g, "");
+    const floatValue = parseFloat(numericValue) / 100;
+    
+    const newProject = { ...project };
+    
+    if (itemIndex === null) {
+      // Category cost
+      newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    } else {
+      // Item cost
+      newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    }
+  
+    updateProject(newProject);
+  };
+
+  const toggleEditing = (projectId: string) => {
+    setEditingStates(prev => ({
+      ...prev,
+      [projectId]: !prev[projectId]
+    }));
+    setEditedNames(prev => ({
+      ...prev,
+      [projectId]: projects.find(p => p.id === projectId)?.name || ""
+    }));
+    setEditedNumberIds(prev => ({
+      ...prev,
+      [projectId]: projects.find(p => p.id === projectId)?.numberId || 0
+    }));
+  };
+
+  const handleSaveEdit = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    updateProject({
+      ...project,
+      name: editedNames[projectId],
+      numberId: editedNumberIds[projectId]
+    });
+
+    setEditingStates(prev => ({
+      ...prev,
+      [projectId]: false
+    }));
+
+    toast({
+      title: "Success",
+      description: "Project updated successfully",
     });
   };
 
@@ -232,15 +308,45 @@ export default function AdminDashboard() {
               className="space-y-4 p-4 border rounded-lg border-blue-100"
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-primary">{project.name}</span>
+                {editingStates[project.id] ? (
+                  <div className="flex gap-2 flex-1">
+                    <Input
+                      value={editedNames[project.id]}
+                      onChange={(e) => setEditedNames(prev => ({
+                        ...prev,
+                        [project.id]: e.target.value
+                      }))}
+                      placeholder="Project name"
+                      className="border-blue-200 focus:border-blue-400"
+                    />
+                    <Input
+                      type="number"
+                      value={editedNumberIds[project.id]}
+                      onChange={(e) => setEditedNumberIds(prev => ({
+                        ...prev,
+                        [project.id]: parseInt(e.target.value) || 0
+                      }))}
+                      placeholder="Number ID"
+                      className="border-blue-200 focus:border-blue-400 w-32"
+                    />
+                    <Button onClick={() => handleSaveEdit(project.id)} size="sm">
+                      Save
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-4 items-center">
+                    <span className="font-medium text-primary">{project.name}</span>
+                    <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
+                  </div>
+                )}
                 <div className="space-x-2">
                   <Button
-                    onClick={() => exportProjectCSV(project)}
+                    onClick={() => toggleEditing(project.id)}
                     variant="outline"
                     size="sm"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
+                    <Pencil className="w-4 h-4 mr-2" />
+                    {editingStates[project.id] ? "Cancel" : "Edit"}
                   </Button>
                   <Button
                     onClick={() => deleteProject(project.id)}
@@ -256,24 +362,44 @@ export default function AdminDashboard() {
                 <div key={categoryIndex} className="ml-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">{category.name}</h4>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDeleteProjectCategory(project.id, categoryIndex)}
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {category.items.length === 0 && (
+                        <Input
+                          type="text"
+                          value={category.cost ? formatCurrency(category.cost) : ""}
+                          onChange={(e) => handleCostChange(project.id, categoryIndex, null, e.target.value)}
+                          placeholder="$0.00"
+                          className="w-32 border-blue-200 focus:border-blue-400"
+                        />
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleDeleteProjectCategory(project.id, categoryIndex)}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   {category.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex items-center justify-between ml-4">
                       <span>{item.name}</span>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleDeleteProjectItem(project.id, categoryIndex, itemIndex)}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          value={formatCurrency(item.cost)}
+                          onChange={(e) => handleCostChange(project.id, categoryIndex, itemIndex, e.target.value)}
+                          placeholder="$0.00"
+                          className="w-32 border-blue-200 focus:border-blue-400"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleDeleteProjectItem(project.id, categoryIndex, itemIndex)}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

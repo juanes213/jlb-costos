@@ -6,7 +6,6 @@ type ProjectContextType = {
   addProject: (project: Omit<Project, "id">) => void;
   updateProject: (project: Project) => void;
   deleteProject: (id: string) => void;
-  exportProjectCSV: (project: Project) => void;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -46,29 +45,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     saveProjects(newProjects);
   };
 
-  const exportProjectCSV = (project: Project) => {
-    let csv = "Category,Subcategory,Cost\n";
-    
-    project.categories.forEach((category) => {
-      category.items.forEach((item) => {
-        csv += `${category.name},${item.name},${item.cost}\n`;
-      });
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("hidden", "");
-    a.setAttribute("href", url);
-    a.setAttribute("download", `${project.name}_costs.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   return (
     <ProjectContext.Provider
-      value={{ projects, addProject, updateProject, deleteProject, exportProjectCSV }}
+      value={{ projects, addProject, updateProject, deleteProject }}
     >
       {children}
     </ProjectContext.Provider>
