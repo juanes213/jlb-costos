@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import type { Project } from "@/types/project";
+import { IvaButton } from "../shared/IvaButton";
 
 interface CategoryCostProps {
   project: Project;
@@ -26,13 +27,32 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
     onUpdateProject(newProject);
   };
 
+  const handleIvaCalculated = (ivaAmount: number) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].ivaAmount = ivaAmount;
+    onUpdateProject(newProject);
+  };
+
+  const currentCost = project.categories[categoryIndex].cost || 0;
+
   return (
-    <Input
-      type="text"
-      value={formatCurrency(project.categories[categoryIndex].cost || 0)}
-      onChange={(e) => handleCostChange(e.target.value)}
-      placeholder="$0.00"
-      className="w-32 border-blue-200 focus:border-blue-400"
-    />
+    <div className="flex items-center gap-2">
+      <Input
+        type="text"
+        value={formatCurrency(currentCost)}
+        onChange={(e) => handleCostChange(e.target.value)}
+        placeholder="$0.00"
+        className="w-32 border-blue-200 focus:border-blue-400"
+      />
+      <IvaButton
+        cost={currentCost}
+        onIvaCalculated={handleIvaCalculated}
+      />
+      {project.categories[categoryIndex].ivaAmount && (
+        <span className="text-sm text-muted-foreground">
+          IVA: {formatCurrency(project.categories[categoryIndex].ivaAmount)}
+        </span>
+      )}
+    </div>
   );
 }

@@ -6,11 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Category } from "@/types/project";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, categories: Category[], finalDate?: Date) => void;
+  onCreateProject: (name: string, categories: Category[], initialDate?: Date, finalDate?: Date) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [newProjectName, setNewProjectName] = useState("");
+  const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
@@ -81,8 +82,15 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       return;
     }
 
-    onCreateProject(newProjectName, categories, finalDate ? new Date(finalDate) : undefined);
+    onCreateProject(
+      newProjectName,
+      categories,
+      initialDate ? new Date(initialDate) : undefined,
+      finalDate ? new Date(finalDate) : undefined
+    );
+    
     setNewProjectName("");
+    setInitialDate("");
     setFinalDate("");
     setCategories([]);
 
@@ -105,14 +113,26 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Fecha Final</label>
-          <Input
-            type="date"
-            value={finalDate}
-            onChange={(e) => setFinalDate(e.target.value)}
-            className="border-blue-200 focus:border-blue-400"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Fecha Inicial</label>
+            <Input
+              type="date"
+              value={initialDate}
+              onChange={(e) => setInitialDate(e.target.value)}
+              className="border-blue-200 focus:border-blue-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Fecha Final</label>
+            <Input
+              type="date"
+              value={finalDate}
+              onChange={(e) => setFinalDate(e.target.value)}
+              className="border-blue-200 focus:border-blue-400"
+            />
+          </div>
         </div>
       </div>
 

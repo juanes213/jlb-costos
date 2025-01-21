@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project } from "@/types/project";
+import type { Project, ProjectStatus } from "@/types/project";
 import { format } from "date-fns";
 import { ProjectCategories } from "./ProjectCategories";
+import { ProjectStatus as ProjectStatusComponent } from "./ProjectStatus";
 
 interface ProjectListItemProps {
   project: Project;
@@ -17,7 +18,10 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(project.name);
   const [editedNumberId, setEditedNumberId] = useState(project.numberId);
-  const [editedDate, setEditedDate] = useState(
+  const [editedInitialDate, setEditedInitialDate] = useState(
+    project.initialDate ? format(new Date(project.initialDate), 'yyyy-MM-dd') : ''
+  );
+  const [editedFinalDate, setEditedFinalDate] = useState(
     project.finalDate ? format(new Date(project.finalDate), 'yyyy-MM-dd') : ''
   );
   const { toast } = useToast();
@@ -27,7 +31,8 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       ...project,
       name: editedName,
       numberId: editedNumberId,
-      finalDate: editedDate ? new Date(editedDate) : undefined
+      initialDate: editedInitialDate ? new Date(editedInitialDate) : undefined,
+      finalDate: editedFinalDate ? new Date(editedFinalDate) : undefined
     });
 
     setIsEditing(false);
@@ -38,16 +43,23 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     });
   };
 
+  const handleStatusChange = (status: ProjectStatus) => {
+    onUpdateProject({
+      ...project,
+      status
+    });
+  };
+
   return (
     <div className="space-y-4 p-4 border rounded-lg border-blue-100">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         {isEditing ? (
-          <div className="flex gap-2 flex-1">
+          <div className="flex gap-2 flex-1 flex-wrap">
             <Input
               value={editedName}
               onChange={(e) => setEditedName(e.target.value)}
               placeholder="Nombre del proyecto"
-              className="border-blue-200 focus:border-blue-400"
+              className="border-blue-200 focus:border-blue-400 min-w-[200px]"
             />
             <Input
               type="number"
@@ -58,8 +70,14 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             />
             <Input
               type="date"
-              value={editedDate}
-              onChange={(e) => setEditedDate(e.target.value)}
+              value={editedInitialDate}
+              onChange={(e) => setEditedInitialDate(e.target.value)}
+              className="border-blue-200 focus:border-blue-400 w-40"
+            />
+            <Input
+              type="date"
+              value={editedFinalDate}
+              onChange={(e) => setEditedFinalDate(e.target.value)}
               className="border-blue-200 focus:border-blue-400 w-40"
             />
             <Button onClick={handleSaveEdit} size="sm">
@@ -67,9 +85,14 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             </Button>
           </div>
         ) : (
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center flex-wrap">
             <span className="font-medium text-primary">{project.name}</span>
             <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
+            {project.initialDate && (
+              <span className="text-sm text-muted-foreground">
+                Fecha inicial: {format(new Date(project.initialDate), 'dd/MM/yyyy')}
+              </span>
+            )}
             {project.finalDate && (
               <span className="text-sm text-muted-foreground">
                 Fecha final: {format(new Date(project.finalDate), 'dd/MM/yyyy')}
@@ -77,7 +100,11 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             )}
           </div>
         )}
-        <div className="space-x-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <ProjectStatusComponent
+            status={project.status}
+            onStatusChange={handleStatusChange}
+          />
           <Button
             onClick={() => setIsEditing(!isEditing)}
             variant="outline"

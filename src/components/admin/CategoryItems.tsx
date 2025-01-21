@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Trash, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, Category } from "@/types/project";
+import { IvaButton } from "../shared/IvaButton";
 
 interface CategoryItemsProps {
   project: Project;
@@ -41,6 +42,18 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     onUpdateProject(newProject);
   };
 
+  const handleIvaCalculated = (itemIndex: number | null, ivaAmount: number) => {
+    const newProject = { ...project };
+    
+    if (itemIndex === null) {
+      newProject.categories[categoryIndex].ivaAmount = ivaAmount;
+    } else {
+      newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
+    }
+  
+    onUpdateProject(newProject);
+  };
+
   const handleSaveItemEdit = () => {
     if (!editingItem) return;
 
@@ -68,7 +81,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
   return (
     <>
       {category.items.map((item, itemIndex) => (
-        <div key={itemIndex} className="flex items-center justify-between ml-4">
+        <div key={itemIndex} className="flex items-center justify-between ml-4 flex-wrap gap-2">
           {editingItem?.itemIndex === itemIndex ? (
             <div className="flex items-center gap-2">
               <Input
@@ -101,13 +114,24 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
             </div>
           )}
           <div className="flex items-center gap-2">
-            <Input
-              type="text"
-              value={formatCurrency(item.cost)}
-              onChange={(e) => handleCostChange(itemIndex, e.target.value)}
-              placeholder="$0.00"
-              className="w-32 border-blue-200 focus:border-blue-400"
-            />
+            <div className="flex items-center">
+              <Input
+                type="text"
+                value={formatCurrency(item.cost)}
+                onChange={(e) => handleCostChange(itemIndex, e.target.value)}
+                placeholder="$0.00"
+                className="w-32 border-blue-200 focus:border-blue-400"
+              />
+              <IvaButton
+                cost={item.cost}
+                onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
+              />
+              {item.ivaAmount && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  IVA: {formatCurrency(item.ivaAmount)}
+                </span>
+              )}
+            </div>
             <Button
               variant="destructive"
               size="icon"
