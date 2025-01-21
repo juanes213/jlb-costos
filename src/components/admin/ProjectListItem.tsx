@@ -62,10 +62,9 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
               className="border-blue-200 focus:border-blue-400 min-w-[200px]"
             />
             <Input
-              type="number"
               value={editedNumberId}
-              onChange={(e) => setEditedNumberId(parseInt(e.target.value) || 0)}
-              placeholder="Número ID"
+              onChange={(e) => setEditedNumberId(e.target.value)}
+              placeholder="ID del proyecto"
               className="border-blue-200 focus:border-blue-400 w-32"
             />
             <Input
