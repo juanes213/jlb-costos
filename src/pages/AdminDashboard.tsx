@@ -8,7 +8,7 @@ import type { Category } from "@/types/project";
 export default function AdminDashboard() {
   const { projects, addProject, deleteProject, updateProject } = useProjects();
 
-  const handleCreateProject = (name: string, categories: Category[]) => {
+  const handleCreateProject = (name: string, categories: Category[], initialDate?: Date, finalDate?: Date) => {
     addProject({
       name,
       numberId: Math.floor(Math.random() * 10000),
@@ -20,6 +20,9 @@ export default function AdminDashboard() {
           cost: 0
         }))
       })),
+      status: "in-process", // Add default status
+      initialDate,
+      finalDate,
     });
   };
 
