@@ -14,4 +14,5 @@ export type Project = {
   numberId: number;
   name: string;
   categories: Category[];
+  finalDate?: Date;
 };

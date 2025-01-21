@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Trash, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project } from "@/types/project";
+import { format } from "date-fns";
 
 interface ProjectListProps {
   projects: Project[];
@@ -15,6 +16,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
   const [editingStates, setEditingStates] = useState<Record<string, boolean>>({});
   const [editedNames, setEditedNames] = useState<Record<string, string>>({});
   const [editedNumberIds, setEditedNumberIds] = useState<Record<string, number>>({});
+  const [editedDates, setEditedDates] = useState<Record<string, string>>({});
   const [editingCategory, setEditingCategory] = useState<{projectId: string, categoryIndex: number} | null>(null);
   const [editingItem, setEditingItem] = useState<{projectId: string, categoryIndex: number, itemIndex: number} | null>(null);
   const [editedCategoryName, setEditedCategoryName] = useState("");
@@ -53,14 +55,21 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
       ...prev,
       [projectId]: !prev[projectId]
     }));
-    setEditedNames(prev => ({
-      ...prev,
-      [projectId]: projects.find(p => p.id === projectId)?.name || ""
-    }));
-    setEditedNumberIds(prev => ({
-      ...prev,
-      [projectId]: projects.find(p => p.id === projectId)?.numberId || 0
-    }));
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setEditedNames(prev => ({
+        ...prev,
+        [projectId]: project.name
+      }));
+      setEditedNumberIds(prev => ({
+        ...prev,
+        [projectId]: project.numberId
+      }));
+      setEditedDates(prev => ({
+        ...prev,
+        [projectId]: project.finalDate ? format(new Date(project.finalDate), 'yyyy-MM-dd') : ''
+      }));
+    }
   };
 
   const handleSaveEdit = (projectId: string) => {
@@ -70,7 +79,8 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
     onUpdateProject({
       ...project,
       name: editedNames[projectId],
-      numberId: editedNumberIds[projectId]
+      numberId: editedNumberIds[projectId],
+      finalDate: editedDates[projectId] ? new Date(editedDates[projectId]) : undefined
     });
 
     setEditingStates(prev => ({
@@ -181,6 +191,15 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
                   placeholder="Número ID"
                   className="border-blue-200 focus:border-blue-400 w-32"
                 />
+                <Input
+                  type="date"
+                  value={editedDates[project.id]}
+                  onChange={(e) => setEditedDates(prev => ({
+                    ...prev,
+                    [project.id]: e.target.value
+                  }))}
+                  className="border-blue-200 focus:border-blue-400 w-40"
+                />
                 <Button onClick={() => handleSaveEdit(project.id)} size="sm">
                   Guardar
                 </Button>
@@ -189,6 +208,11 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
               <div className="flex gap-4 items-center">
                 <span className="font-medium text-primary">{project.name}</span>
                 <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
+                {project.finalDate && (
+                  <span className="text-sm text-muted-foreground">
+                    Fecha final: {format(new Date(project.finalDate), 'dd/MM/yyyy')}
+                  </span>
+                )}
               </div>
             )}
             <div className="space-x-2">
@@ -210,6 +234,7 @@ export function ProjectList({ projects, onUpdateProject, onDeleteProject }: Proj
               </Button>
             </div>
           </div>
+
           {project.categories.map((category, categoryIndex) => (
             <div key={categoryIndex} className="ml-4 space-y-2">
               <div className="flex items-center justify-between">

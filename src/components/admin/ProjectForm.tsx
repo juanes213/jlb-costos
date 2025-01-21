@@ -6,11 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Category } from "@/types/project";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, categories: Category[]) => void;
+  onCreateProject: (name: string, categories: Category[], finalDate?: Date) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [newProjectName, setNewProjectName] = useState("");
+  const [finalDate, setFinalDate] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
 
@@ -80,8 +81,9 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       return;
     }
 
-    onCreateProject(newProjectName, categories);
+    onCreateProject(newProjectName, categories, finalDate ? new Date(finalDate) : undefined);
     setNewProjectName("");
+    setFinalDate("");
     setCategories([]);
 
     toast({
@@ -92,14 +94,26 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-2">Nombre del Proyecto</label>
-        <Input
-          value={newProjectName}
-          onChange={(e) => setNewProjectName(e.target.value)}
-          placeholder="Introduzca el nombre del proyecto"
-          className="border-blue-200 focus:border-blue-400"
-        />
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Nombre del Proyecto</label>
+          <Input
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            placeholder="Introduzca el nombre del proyecto"
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Fecha Final</label>
+          <Input
+            type="date"
+            value={finalDate}
+            onChange={(e) => setFinalDate(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
       </div>
 
       <div className="space-y-4">
