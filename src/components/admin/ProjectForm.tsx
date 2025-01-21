@@ -6,11 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Category } from "@/types/project";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, categories: Category[], initialDate?: Date, finalDate?: Date) => void;
+  onCreateProject: (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [newProjectName, setNewProjectName] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -64,6 +65,15 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       return;
     }
 
+    if (!projectId.trim()) {
+      toast({
+        title: "Error",
+        description: "El ID del proyecto es obligatorio",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (categories.some((c) => !c.name.trim())) {
       toast({
         title: "Error",
@@ -84,12 +94,14 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
 
     onCreateProject(
       newProjectName,
+      projectId,
       categories,
       initialDate ? new Date(initialDate) : undefined,
       finalDate ? new Date(finalDate) : undefined
     );
     
     setNewProjectName("");
+    setProjectId("");
     setInitialDate("");
     setFinalDate("");
     setCategories([]);
@@ -109,6 +121,16 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
             value={newProjectName}
             onChange={(e) => setNewProjectName(e.target.value)}
             placeholder="Introduzca el nombre del proyecto"
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">ID del Proyecto</label>
+          <Input
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            placeholder="Introduzca el ID del proyecto (alfanumérico)"
             className="border-blue-200 focus:border-blue-400"
           />
         </div>

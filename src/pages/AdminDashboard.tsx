@@ -8,10 +8,10 @@ import type { Category } from "@/types/project";
 export default function AdminDashboard() {
   const { projects, addProject, deleteProject, updateProject } = useProjects();
 
-  const handleCreateProject = (name: string, categories: Category[], initialDate?: Date, finalDate?: Date) => {
+  const handleCreateProject = (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date) => {
     addProject({
       name,
-      numberId: Math.floor(Math.random() * 10000),
+      numberId,
       categories: categories.map(category => ({
         ...category,
         cost: category.items.length === 0 ? 0 : undefined,
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
           cost: 0
         }))
       })),
-      status: "in-process", // Add default status
+      status: "in-process",
       initialDate,
       finalDate,
     });
@@ -28,6 +28,17 @@ export default function AdminDashboard() {
 
   return (
     <div className="container py-8 space-y-8 animate-fadeIn">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4">
+          <img 
+            src="/lovable-uploads/70cafcc8-321e-4b6c-8dbf-402cf4fd2c74.png" 
+            alt="JL Bedoya Group Logo" 
+            className="h-12"
+          />
+          <h1 className="text-3xl font-bold text-primary">Panel de Administración</h1>
+        </div>
+      </div>
+
       <ProjectHeader />
 
       <Card className="p-6 space-y-6 bg-white shadow-md">

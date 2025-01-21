@@ -15,7 +15,7 @@ export type ProjectStatus = "in-process" | "on-hold" | "paused" | "completed";
 
 export type Project = {
   id: string;
-  numberId: number;
+  numberId: string;
   name: string;
   categories: Category[];
   initialDate?: Date;
