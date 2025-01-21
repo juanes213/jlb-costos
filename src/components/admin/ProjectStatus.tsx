@@ -17,13 +17,13 @@ export function ProjectStatus({ status, onStatusChange }: ProjectStatusProps) {
   const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
       case "in-process":
-        return "#F97316"; // Orange
+        return "#42A5F5"; // Yellow
       case "on-hold":
-        return "#8E9196"; // Gray
+        return "#FFC107"; // Blue
       case "paused":
-        return "#8A898C"; // Darker Gray
+        return "#F44336"; // Red
       case "completed":
-        return "#8B5CF6"; // Purple
+        return "#81C784"; // Green
       default:
         return "#000000";
     }
