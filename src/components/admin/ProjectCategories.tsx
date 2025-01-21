@@ -5,6 +5,7 @@ import { Trash, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project } from "@/types/project";
 import { CategoryItems } from "./CategoryItems";
+import { CategoryCost } from "./CategoryCost";
 
 interface ProjectCategoriesProps {
   project: Project;
