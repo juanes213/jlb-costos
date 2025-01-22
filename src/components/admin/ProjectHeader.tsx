@@ -40,6 +40,9 @@ export function ProjectHeader() {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
 
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Projects");
+
     // Generate Excel file and trigger download
     XLSX.writeFile(wb, "all-projects.xlsx");
   };
