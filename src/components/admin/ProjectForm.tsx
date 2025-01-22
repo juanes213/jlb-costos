@@ -130,7 +130,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
           <Input
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            placeholder="Introduzca el ID del proyecto (alfanumérico)"
+            placeholder="Introduzca el ID del proyecto"
             className="border-blue-200 focus:border-blue-400"
           />
         </div>
