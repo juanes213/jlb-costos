@@ -41,10 +41,10 @@ export function ProjectStatus({ status, onStatusChange }: ProjectStatusProps) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="in-process">In Process</SelectItem>
-          <SelectItem value="on-hold">On Hold</SelectItem>
-          <SelectItem value="paused">Paused</SelectItem>
-          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="in-process">En Progreso</SelectItem>
+          <SelectItem value="on-hold">En Espera</SelectItem>
+          <SelectItem value="paused">Pausado</SelectItem>
+          <SelectItem value="completed">Completado</SelectItem>
         </SelectContent>
       </Select>
     </div>
