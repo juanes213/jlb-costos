@@ -18,7 +18,9 @@ export function ProjectHeader() {
             'Project ID': project.numberId,
             'Category': category.name,
             'Item': '-',
-            'Cost': category.cost || 0
+            'Cost': category.cost || 0,
+            'IVA': category.ivaAmount || 0,
+            'Total': (category.cost || 0) + (category.ivaAmount || 0)
           }];
         }
         
@@ -27,7 +29,9 @@ export function ProjectHeader() {
           'Project ID': project.numberId,
           'Category': category.name,
           'Item': item.name,
-          'Cost': item.cost
+          'Cost': item.cost,
+          'IVA': item.ivaAmount || 0,
+          'Total': item.cost + (item.ivaAmount || 0)
         }));
       });
     });
@@ -35,9 +39,6 @@ export function ProjectHeader() {
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
-
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Projects");
 
     // Generate Excel file and trigger download
     XLSX.writeFile(wb, "all-projects.xlsx");
