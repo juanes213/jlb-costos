@@ -16,6 +16,7 @@ export function ProjectHeader() {
           return [{
             'Project Name': project.name,
             'Project ID': project.numberId,
+            'Project Income': project.income || 0,
             'Category': category.name,
             'Item': '-',
             'Cost': category.cost || 0,
@@ -27,6 +28,7 @@ export function ProjectHeader() {
         return category.items.map(item => ({
           'Project Name': project.name,
           'Project ID': project.numberId,
+          'Project Income': project.income || 0,
           'Category': category.name,
           'Item': item.name,
           'Cost': item.cost,

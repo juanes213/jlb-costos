@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Category } from "@/types/project";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date) => void;
+  onCreateProject: (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date, income?: number) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
@@ -14,6 +14,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [projectId, setProjectId] = useState("");
   const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
+  const [income, setIncome] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
 
@@ -53,6 +54,21 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       (_, index) => index !== itemIndex
     );
     setCategories(newCategories);
+  };
+
+  const formatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(parseFloat(numericValue) || 0);
+  };
+
+  const handleIncomeChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setIncome(numericValue);
   };
 
   const handleCreateProject = () => {
@@ -97,13 +113,15 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       projectId,
       categories,
       initialDate ? new Date(initialDate) : undefined,
-      finalDate ? new Date(finalDate) : undefined
+      finalDate ? new Date(finalDate) : undefined,
+      income ? parseFloat(income) : 0
     );
     
     setNewProjectName("");
     setProjectId("");
     setInitialDate("");
     setFinalDate("");
+    setIncome("");
     setCategories([]);
 
     toast({
@@ -131,6 +149,16 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
             placeholder="Introduzca el ID del proyecto"
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Ingreso del Proyecto</label>
+          <Input
+            value={income ? formatCurrency(income) : ""}
+            onChange={(e) => handleIncomeChange(e.target.value)}
+            placeholder="$0"
             className="border-blue-200 focus:border-blue-400"
           />
         </div>

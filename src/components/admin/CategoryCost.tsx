@@ -14,13 +14,14 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
   const handleCostChange = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
-    const floatValue = parseFloat(numericValue) / 100;
+    const floatValue = parseFloat(numericValue);
     
     const newProject = { ...project };
     newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
@@ -41,7 +42,7 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
         type="text"
         value={formatCurrency(currentCost)}
         onChange={(e) => handleCostChange(e.target.value)}
-        placeholder="$0.00"
+        placeholder="$0"
         className="w-32 border-blue-200 focus:border-blue-400"
       />
       <IvaButton

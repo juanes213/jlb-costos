@@ -23,13 +23,14 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
   const handleCostChange = (itemIndex: number | null, value: string) => {
     const numericValue = value.replace(/\D/g, "");
-    const floatValue = parseFloat(numericValue) / 100;
+    const floatValue = parseFloat(numericValue);
     
     const newProject = { ...project };
     
@@ -119,7 +120,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
                 type="text"
                 value={formatCurrency(item.cost)}
                 onChange={(e) => handleCostChange(itemIndex, e.target.value)}
-                placeholder="$0.00"
+                placeholder="$0"
                 className="w-32 border-blue-200 focus:border-blue-400"
               />
               <IvaButton
