@@ -35,7 +35,6 @@ export default function AdminDashboard() {
             alt="JL Bedoya Group Logo" 
             className="h-12"
           />
-          <h1 className="text-3xl font-bold text-primary">Panel de Administración</h1>
         </div>
       </div>
 
