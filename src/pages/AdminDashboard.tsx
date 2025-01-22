@@ -8,10 +8,11 @@ import type { Category } from "@/types/project";
 export default function AdminDashboard() {
   const { projects, addProject, deleteProject, updateProject } = useProjects();
 
-  const handleCreateProject = (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date) => {
+  const handleCreateProject = (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date, income?: number) => {
     addProject({
       name,
       numberId,
+      income: income || 0,
       categories: categories.map(category => ({
         ...category,
         cost: category.items.length === 0 ? 0 : undefined,
