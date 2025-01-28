@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Project } from "@/types/project";
+import { IvaButton } from "@/components/shared/IvaButton";
 
 export default function GuestDashboard() {
   const { projects, updateProject } = useProjects();
@@ -28,13 +29,9 @@ export default function GuestDashboard() {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  const parseCurrencyInput = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
-    return parseFloat(numericValue) || 0;
   };
 
   const handleCostChange = (categoryIndex: number, itemIndex: number | null, value: string) => {
@@ -54,9 +51,7 @@ export default function GuestDashboard() {
   
     // Remove non-numeric characters except for digits
     const numericValue = value.replace(/\D/g, "");
-  
-    // Convert to a float by dividing by 100 to handle decimals
-    const floatValue = parseFloat(numericValue) / 100;
+    const floatValue = parseFloat(numericValue);
   
     // Update the project's cost
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
@@ -64,6 +59,19 @@ export default function GuestDashboard() {
       newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
     } else {
       newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
+    }
+  
+    updateProject(newProject);
+  };
+
+  const handleIvaCalculated = (categoryIndex: number, itemIndex: number | null, ivaAmount: number) => {
+    if (!selectedProject) return;
+  
+    const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
+    if (itemIndex === null) {
+      newProject.categories[categoryIndex].ivaAmount = ivaAmount;
+    } else {
+      newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
     }
   
     updateProject(newProject);
@@ -122,13 +130,24 @@ export default function GuestDashboard() {
                   {category.items.length === 0 ? (
                     <div className="flex items-center space-x-4">
                       <span className="flex-1">Costo de Categoría</span>
-                      <Input
-                        type="text"
-                        value={category.cost ? formatCurrency(category.cost) : ""}
-                        onChange={(e) => handleCostChange(categoryIndex, null, e.target.value)}
-                        placeholder="$0.00"
-                        className="w-32 border-blue-200 focus:border-blue-400"
-                      />
+                      <div className="flex items-center">
+                        <Input
+                          type="text"
+                          value={category.cost ? formatCurrency(category.cost) : ""}
+                          onChange={(e) => handleCostChange(categoryIndex, null, e.target.value)}
+                          placeholder="$0"
+                          className="w-32 border-blue-200 focus:border-blue-400"
+                        />
+                        <IvaButton
+                          cost={category.cost || 0}
+                          onIvaCalculated={(amount) => handleIvaCalculated(categoryIndex, null, amount)}
+                        />
+                        {category.ivaAmount && (
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            IVA: {formatCurrency(category.ivaAmount)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     category.items.map((item, itemIndex) => (
@@ -137,13 +156,24 @@ export default function GuestDashboard() {
                         className="flex items-center space-x-4"
                       >
                         <span className="flex-1">{item.name}</span>
-                        <Input
-                          type="text"
-                          value={item.cost ? formatCurrency(item.cost) : ""}
-                          onChange={(e) => handleCostChange(categoryIndex, itemIndex, e.target.value)}
-                          placeholder="$0.00"
-                          className="w-32 border-blue-200 focus:border-blue-400"
-                        />
+                        <div className="flex items-center">
+                          <Input
+                            type="text"
+                            value={item.cost ? formatCurrency(item.cost) : ""}
+                            onChange={(e) => handleCostChange(categoryIndex, itemIndex, e.target.value)}
+                            placeholder="$0"
+                            className="w-32 border-blue-200 focus:border-blue-400"
+                          />
+                          <IvaButton
+                            cost={item.cost}
+                            onIvaCalculated={(amount) => handleIvaCalculated(categoryIndex, itemIndex, amount)}
+                          />
+                          {item.ivaAmount && (
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              IVA: {formatCurrency(item.ivaAmount)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))
                   )}

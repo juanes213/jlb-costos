@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash, Pencil } from "lucide-react";
+import { Trash, Pencil, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project, ProjectStatus } from "@/types/project";
+import type { Project, ProjectStatus, Category } from "@/types/project";
 import { format } from "date-fns";
 import { ProjectCategories } from "./ProjectCategories";
 import { ProjectStatus as ProjectStatusComponent } from "./ProjectStatus";
@@ -18,12 +18,14 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(project.name);
   const [editedNumberId, setEditedNumberId] = useState(project.numberId);
+  const [editedIncome, setEditedIncome] = useState(project.income.toString());
   const [editedInitialDate, setEditedInitialDate] = useState(
     project.initialDate ? format(new Date(project.initialDate), 'yyyy-MM-dd') : ''
   );
   const [editedFinalDate, setEditedFinalDate] = useState(
     project.finalDate ? format(new Date(project.finalDate), 'yyyy-MM-dd') : ''
   );
+  const [editedCategories, setEditedCategories] = useState<Category[]>(project.categories);
   const { toast } = useToast();
 
   const handleSaveEdit = () => {
@@ -31,6 +33,8 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       ...project,
       name: editedName,
       numberId: editedNumberId,
+      income: parseFloat(editedIncome) || 0,
+      categories: editedCategories,
       initialDate: editedInitialDate ? new Date(editedInitialDate) : undefined,
       finalDate: editedFinalDate ? new Date(editedFinalDate) : undefined
     });
@@ -43,11 +47,52 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     });
   };
 
+  const handleAddCategory = () => {
+    setEditedCategories([...editedCategories, { name: "", items: [] }]);
+  };
+
+  const handleCategoryNameChange = (index: number, name: string) => {
+    const newCategories = [...editedCategories];
+    newCategories[index].name = name;
+    setEditedCategories(newCategories);
+  };
+
+  const handleDeleteCategory = (categoryIndex: number) => {
+    setEditedCategories(editedCategories.filter((_, index) => index !== categoryIndex));
+  };
+
+  const handleAddItem = (categoryIndex: number) => {
+    const newCategories = [...editedCategories];
+    newCategories[categoryIndex].items.push({ name: "", cost: 0 });
+    setEditedCategories(newCategories);
+  };
+
+  const handleItemNameChange = (categoryIndex: number, itemIndex: number, name: string) => {
+    const newCategories = [...editedCategories];
+    newCategories[categoryIndex].items[itemIndex].name = name;
+    setEditedCategories(newCategories);
+  };
+
   const handleStatusChange = (status: ProjectStatus) => {
     onUpdateProject({
       ...project,
       status
     });
+  };
+
+  const formatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(parseFloat(numericValue) || 0);
+  };
+
+  const handleIncomeChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setEditedIncome(numericValue);
   };
 
   return (
@@ -66,6 +111,12 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
               onChange={(e) => setEditedNumberId(e.target.value)}
               placeholder="ID del proyecto"
               className="border-blue-200 focus:border-blue-400 w-32"
+            />
+            <Input
+              value={editedIncome ? formatCurrency(editedIncome) : ""}
+              onChange={(e) => handleIncomeChange(e.target.value)}
+              placeholder="Ingreso del proyecto"
+              className="border-blue-200 focus:border-blue-400 w-40"
             />
             <Input
               type="date"
@@ -87,6 +138,9 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
           <div className="flex gap-4 items-center flex-wrap">
             <span className="font-medium text-primary">{project.name}</span>
             <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
+            <span className="text-sm text-muted-foreground">
+              Ingreso: {formatCurrency(project.income.toString())}
+            </span>
             {project.initialDate && (
               <span className="text-sm text-muted-foreground">
                 Fecha inicial: {format(new Date(project.initialDate), 'dd/MM/yyyy')}
@@ -123,10 +177,61 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
         </div>
       </div>
 
-      <ProjectCategories 
-        project={project}
-        onUpdateProject={onUpdateProject}
-      />
+      {isEditing ? (
+        <div className="space-y-4">
+          {editedCategories.map((category, categoryIndex) => (
+            <div key={categoryIndex} className="space-y-4 p-4 border rounded-lg border-blue-100">
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={category.name}
+                  onChange={(e) => handleCategoryNameChange(categoryIndex, e.target.value)}
+                  placeholder="Nombre de la categoría"
+                  className="border-blue-200 focus:border-blue-400"
+                />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleDeleteCategory(categoryIndex)}
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {category.items.map((item, itemIndex) => (
+                  <div key={itemIndex} className="flex items-center space-x-2">
+                    <Input
+                      value={item.name}
+                      onChange={(e) => handleItemNameChange(categoryIndex, itemIndex, e.target.value)}
+                      placeholder="Nombre del elemento"
+                      className="border-blue-200 focus:border-blue-400"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                onClick={() => handleAddItem(categoryIndex)}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Añadir elemento
+              </Button>
+            </div>
+          ))}
+
+          <Button onClick={handleAddCategory} variant="outline" size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Añadir categoría
+          </Button>
+        </div>
+      ) : (
+        <ProjectCategories 
+          project={project}
+          onUpdateProject={onUpdateProject}
+        />
+      )}
     </div>
   );
 }
