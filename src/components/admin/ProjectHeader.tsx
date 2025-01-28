@@ -3,10 +3,26 @@ import { useProjects } from "@/contexts/ProjectContext";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
+import { format } from "date-fns";
 
 export function ProjectHeader() {
   const navigate = useNavigate();
   const { projects } = useProjects();
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "in-process":
+        return "En Progreso";
+      case "on-hold":
+        return "En Espera";
+      case "paused":
+        return "Pausado";
+      case "completed":
+        return "Completado";
+      default:
+        return status;
+    }
+  };
 
   const exportToExcel = () => {
     // Transform projects data into a flat structure for Excel
@@ -17,6 +33,9 @@ export function ProjectHeader() {
             'Project Name': project.name,
             'Project ID': project.numberId,
             'Project Income': project.income || 0,
+            'Initial Date': project.initialDate ? format(new Date(project.initialDate), 'dd/MM/yyyy') : '-',
+            'Final Date': project.finalDate ? format(new Date(project.finalDate), 'dd/MM/yyyy') : '-',
+            'Status': getStatusLabel(project.status),
             'Category': category.name,
             'Item': '-',
             'Cost': category.cost || 0,
@@ -29,6 +48,9 @@ export function ProjectHeader() {
           'Project Name': project.name,
           'Project ID': project.numberId,
           'Project Income': project.income || 0,
+          'Initial Date': project.initialDate ? format(new Date(project.initialDate), 'dd/MM/yyyy') : '-',
+          'Final Date': project.finalDate ? format(new Date(project.finalDate), 'dd/MM/yyyy') : '-',
+          'Status': getStatusLabel(project.status),
           'Category': category.name,
           'Item': item.name,
           'Cost': item.cost,
@@ -42,10 +64,8 @@ export function ProjectHeader() {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
 
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Projects");
-
     // Generate Excel file and trigger download
+    XLSX.utils.book_append_sheet(wb, ws, "Projects");
     XLSX.writeFile(wb, "all-projects.xlsx");
   };
 
