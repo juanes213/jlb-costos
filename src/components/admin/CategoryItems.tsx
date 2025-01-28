@@ -43,7 +43,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     onUpdateProject(newProject);
   };
 
-  const handleIvaCalculated = (itemIndex: number | null, ivaAmount: number) => {
+  const handleIvaCalculated = (itemIndex: number | null, ivaAmount: number | undefined) => {
     const newProject = { ...project };
     
     if (itemIndex === null) {
@@ -126,6 +126,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
               <IvaButton
                 cost={item.cost}
                 onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
+                ivaAmount={item.ivaAmount}
               />
               {item.ivaAmount && (
                 <span className="ml-2 text-sm text-muted-foreground">

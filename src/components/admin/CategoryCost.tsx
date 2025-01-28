@@ -28,13 +28,14 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
     onUpdateProject(newProject);
   };
 
-  const handleIvaCalculated = (ivaAmount: number) => {
+  const handleIvaCalculated = (ivaAmount: number | undefined) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].ivaAmount = ivaAmount;
     onUpdateProject(newProject);
   };
 
   const currentCost = project.categories[categoryIndex].cost || 0;
+  const currentIvaAmount = project.categories[categoryIndex].ivaAmount;
 
   return (
     <div className="flex items-center gap-2">
@@ -48,10 +49,11 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
       <IvaButton
         cost={currentCost}
         onIvaCalculated={handleIvaCalculated}
+        ivaAmount={currentIvaAmount}
       />
-      {project.categories[categoryIndex].ivaAmount && (
+      {currentIvaAmount && (
         <span className="text-sm text-muted-foreground">
-          IVA: {formatCurrency(project.categories[categoryIndex].ivaAmount)}
+          IVA: {formatCurrency(currentIvaAmount)}
         </span>
       )}
     </div>
