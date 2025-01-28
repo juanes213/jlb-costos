@@ -37,7 +37,6 @@ export default function GuestDashboard() {
   const handleCostChange = (categoryIndex: number, itemIndex: number | null, value: string) => {
     if (!selectedProject) return;
   
-    // Handle empty input
     if (value === "") {
       const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
       if (itemIndex === null) {
@@ -49,11 +48,9 @@ export default function GuestDashboard() {
       return;
     }
   
-    // Remove non-numeric characters except for digits
     const numericValue = value.replace(/\D/g, "");
     const floatValue = parseFloat(numericValue);
   
-    // Update the project's cost
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
     if (itemIndex === null) {
       newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
@@ -64,7 +61,7 @@ export default function GuestDashboard() {
     updateProject(newProject);
   };
 
-  const handleIvaCalculated = (categoryIndex: number, itemIndex: number | null, ivaAmount: number) => {
+  const handleIvaCalculated = (categoryIndex: number, itemIndex: number | null, ivaAmount: number | undefined) => {
     if (!selectedProject) return;
   
     const newProject: Project = JSON.parse(JSON.stringify(selectedProject));
@@ -141,6 +138,7 @@ export default function GuestDashboard() {
                         <IvaButton
                           cost={category.cost || 0}
                           onIvaCalculated={(amount) => handleIvaCalculated(categoryIndex, null, amount)}
+                          ivaAmount={category.ivaAmount}
                         />
                         {category.ivaAmount && (
                           <span className="ml-2 text-sm text-muted-foreground">
@@ -167,6 +165,7 @@ export default function GuestDashboard() {
                           <IvaButton
                             cost={item.cost}
                             onIvaCalculated={(amount) => handleIvaCalculated(categoryIndex, itemIndex, amount)}
+                            ivaAmount={item.ivaAmount}
                           />
                           {item.ivaAmount && (
                             <span className="ml-2 text-sm text-muted-foreground">
