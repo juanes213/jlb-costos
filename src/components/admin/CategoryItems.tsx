@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Trash, Pencil } from "lucide-react";
+import { Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, Category, StorageItem } from "@/types/project";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CategoryItemSelector } from "./category/CategoryItemSelector";
+import { CategoryItemInput } from "./category/CategoryItemInput";
+import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
 
 interface CategoryItemsProps {
   project: Project;
@@ -19,12 +14,16 @@ interface CategoryItemsProps {
   onUpdateProject: (project: Project) => void;
 }
 
-export function CategoryItems({ project, category, categoryIndex, onUpdateProject }: CategoryItemsProps) {
-  const [editingItem, setEditingItem] = useState<{itemIndex: number} | null>(null);
-  const [editedItemName, setEditedItemName] = useState("");
+export function CategoryItems({
+  project,
+  category,
+  categoryIndex,
+  onUpdateProject,
+}: CategoryItemsProps) {
   const { toast } = useToast();
-
-  const storageItems: StorageItem[] = JSON.parse(localStorage.getItem("storageItems") || "[]");
+  const storageItems: StorageItem[] = JSON.parse(
+    localStorage.getItem("storageItems") || "[]"
+  );
 
   const formatCurrency = (value: number) => {
     if (!value) return "";
@@ -36,32 +35,16 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     }).format(value);
   };
 
-  const handleSaveItemEdit = () => {
-    if (!editingItem) return;
-
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].items[editingItem.itemIndex].name = editedItemName;
-    onUpdateProject(newProject);
-
-    setEditingItem(null);
-    setEditedItemName("");
-
-    toast({
-      title: "Éxito",
-      description: "Elemento actualizado con éxito",
-    });
-  };
-
   const handleDeleteProjectItem = (itemIndex: number) => {
     const newProject = { ...project };
-    newProject.categories[categoryIndex].items = newProject.categories[categoryIndex].items.filter(
-      (_, index) => index !== itemIndex
-    );
+    newProject.categories[categoryIndex].items = newProject.categories[
+      categoryIndex
+    ].items.filter((_, index) => index !== itemIndex);
     onUpdateProject(newProject);
   };
 
   const handleItemSelect = (itemIndex: number, storageItemId: string) => {
-    const selectedItem = storageItems.find(item => item.id === storageItemId);
+    const selectedItem = storageItems.find((item) => item.id === storageItemId);
     if (!selectedItem) return;
 
     const newProject = { ...project };
@@ -85,79 +68,45 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     onUpdateProject(newProject);
   };
 
+  const handleItemNameChange = (itemIndex: number, value: string) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].name = value;
+    onUpdateProject(newProject);
+  };
+
   return (
     <>
       {category.items.map((item, itemIndex) => (
-        <div key={itemIndex} className="flex items-center justify-between ml-4 flex-wrap gap-2">
-          {editingItem?.itemIndex === itemIndex ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={editedItemName}
-                onChange={(e) => setEditedItemName(e.target.value)}
-                className="w-48 border-blue-200 focus:border-blue-400"
+        <div
+          key={itemIndex}
+          className="flex items-center justify-between ml-4 flex-wrap gap-2"
+        >
+          <div className="flex items-center gap-2 flex-1">
+            {category.name === "Insumos" ? (
+              <CategoryItemSelector
+                storageItems={storageItems}
+                selectedItemName={item.name}
+                onItemSelect={(value) => handleItemSelect(itemIndex, value)}
               />
-              <Button onClick={handleSaveItemEdit} size="sm">Save</Button>
-              <Button 
-                onClick={() => setEditingItem(null)} 
-                variant="outline" 
-                size="sm"
-              >
-                Cancelar
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 flex-1">
-              {category.name === "Insumos" ? (
-                <Select
-                  value={item.name}
-                  onValueChange={(value) => handleItemSelect(itemIndex, value)}
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Seleccionar item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {storageItems
-                      .filter(si => si.categoryName === category.name)
-                      .map((si) => (
-                        <SelectItem key={si.id} value={si.id}>
-                          {si.name} - {formatCurrency(si.cost)} ({si.unit})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={item.name}
-                  onChange={(e) => {
-                    const newProject = { ...project };
-                    newProject.categories[categoryIndex].items[itemIndex].name = e.target.value;
-                    onUpdateProject(newProject);
-                  }}
-                  className="w-48 border-blue-200 focus:border-blue-400"
-                  placeholder="Nombre del item"
-                />
-              )}
-              {item.name && category.name === "Insumos" && (
-                <>
-                  <Input
-                    type="number"
-                    value={item.quantity || 1}
-                    onChange={(e) => handleQuantityChange(itemIndex, e.target.value)}
-                    className="w-20 border-blue-200 focus:border-blue-400"
-                    min="1"
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {item.unit}
-                  </span>
-                </>
-              )}
-              {item.cost && item.quantity && (
-                <span className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(item.cost * item.quantity)}
-                </span>
-              )}
-            </div>
-          )}
+            ) : (
+              <CategoryItemInput
+                name={item.name}
+                onChange={(value) => handleItemNameChange(itemIndex, value)}
+              />
+            )}
+            {item.name && category.name === "Insumos" && (
+              <CategoryItemQuantity
+                quantity={item.quantity || 1}
+                unit={item.unit || ""}
+                onChange={(value) => handleQuantityChange(itemIndex, value)}
+              />
+            )}
+            {item.cost && item.quantity && (
+              <span className="text-sm text-muted-foreground">
+                Total: {formatCurrency(item.cost * item.quantity)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="destructive"
