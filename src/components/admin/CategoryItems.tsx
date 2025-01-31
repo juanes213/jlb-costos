@@ -106,24 +106,37 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-1">
-              <Select
-                value={item.name}
-                onValueChange={(value) => handleItemSelect(itemIndex, value)}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Seleccionar item" />
-                </SelectTrigger>
-                <SelectContent>
-                  {storageItems
-                    .filter(si => si.categoryName === category.name)
-                    .map((si) => (
-                      <SelectItem key={si.id} value={si.id}>
-                        {si.name} - {formatCurrency(si.cost)}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              {item.name && (
+              {category.name === "Insumos" ? (
+                <Select
+                  value={item.name}
+                  onValueChange={(value) => handleItemSelect(itemIndex, value)}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Seleccionar item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storageItems
+                      .filter(si => si.categoryName === category.name)
+                      .map((si) => (
+                        <SelectItem key={si.id} value={si.id}>
+                          {si.name} - {formatCurrency(si.cost)}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={item.name}
+                  onChange={(e) => {
+                    const newProject = { ...project };
+                    newProject.categories[categoryIndex].items[itemIndex].name = e.target.value;
+                    onUpdateProject(newProject);
+                  }}
+                  className="w-48 border-blue-200 focus:border-blue-400"
+                  placeholder="Nombre del item"
+                />
+              )}
+              {item.name && category.name === "Insumos" && (
                 <Input
                   type="number"
                   value={item.quantity || 1}

@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -23,6 +23,7 @@ export default function GuestDashboard() {
   const [newCategory, setNewCategory] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
+  const [editingItem, setEditingItem] = useState<StorageItem | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -88,6 +89,52 @@ export default function GuestDashboard() {
     });
   };
 
+  const handleEditItem = (item: StorageItem) => {
+    setEditingItem(item);
+    setNewCategory(item.categoryName);
+    setNewItemName(item.name);
+    setNewItemCost(item.cost.toString());
+  };
+
+  const handleUpdateItem = () => {
+    if (!editingItem) return;
+
+    const numericCost = parseFloat(newItemCost.replace(/[^0-9]/g, ""));
+    
+    if (isNaN(numericCost)) {
+      toast({
+        title: "Error",
+        description: "El costo debe ser un número válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedItems = items.map(item => 
+      item.id === editingItem.id 
+        ? {
+            ...item,
+            categoryName: newCategory,
+            name: newItemName,
+            cost: numericCost,
+          }
+        : item
+    );
+
+    setItems(updatedItems);
+    localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+
+    setEditingItem(null);
+    setNewCategory("");
+    setNewItemName("");
+    setNewItemCost("");
+
+    toast({
+      title: "Éxito",
+      description: "Item actualizado correctamente",
+    });
+  };
+
   const handleCostChange = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
     setNewItemCost(numericValue);
@@ -129,9 +176,28 @@ export default function GuestDashboard() {
             className="border-blue-200 focus:border-blue-400"
           />
         </div>
-        <Button onClick={handleAddItem} className="w-full">
-          Agregar Item
-        </Button>
+        {editingItem ? (
+          <div className="flex gap-2">
+            <Button onClick={handleUpdateItem} className="flex-1">
+              Actualizar Item
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setEditingItem(null);
+                setNewCategory("");
+                setNewItemName("");
+                setNewItemCost("");
+              }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={handleAddItem} className="w-full">
+            Agregar Item
+          </Button>
+        )}
       </Card>
 
       <Card className="p-6 bg-white shadow-md">
@@ -152,13 +218,22 @@ export default function GuestDashboard() {
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{formatCurrency(item.cost)}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteItem(item.id)}
-                  >
-                    Eliminar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditItem(item)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteItem(item.id)}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
