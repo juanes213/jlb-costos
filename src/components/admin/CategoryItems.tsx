@@ -70,6 +70,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
       name: selectedItem.name,
       cost: selectedItem.cost,
       quantity: 1,
+      unit: selectedItem.unit,
     };
     onUpdateProject(newProject);
   };
@@ -119,7 +120,7 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
                       .filter(si => si.categoryName === category.name)
                       .map((si) => (
                         <SelectItem key={si.id} value={si.id}>
-                          {si.name} - {formatCurrency(si.cost)}
+                          {si.name} - {formatCurrency(si.cost)} ({si.unit})
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -137,13 +138,18 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
                 />
               )}
               {item.name && category.name === "Insumos" && (
-                <Input
-                  type="number"
-                  value={item.quantity || 1}
-                  onChange={(e) => handleQuantityChange(itemIndex, e.target.value)}
-                  className="w-20 border-blue-200 focus:border-blue-400"
-                  min="1"
-                />
+                <>
+                  <Input
+                    type="number"
+                    value={item.quantity || 1}
+                    onChange={(e) => handleQuantityChange(itemIndex, e.target.value)}
+                    className="w-20 border-blue-200 focus:border-blue-400"
+                    min="1"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {item.unit}
+                  </span>
+                </>
               )}
               {item.cost && item.quantity && (
                 <span className="text-sm text-muted-foreground">

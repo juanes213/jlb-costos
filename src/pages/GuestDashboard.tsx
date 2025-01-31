@@ -23,6 +23,7 @@ export default function GuestDashboard() {
   const [newCategory, setNewCategory] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
+  const [newItemUnit, setNewItemUnit] = useState("");
   const [editingItem, setEditingItem] = useState<StorageItem | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function GuestDashboard() {
   };
 
   const handleAddItem = () => {
-    if (!newCategory || !newItemName || !newItemCost) {
+    if (!newCategory || !newItemName || !newItemCost || !newItemUnit) {
       toast({
         title: "Error",
         description: "Por favor complete todos los campos",
@@ -62,6 +63,7 @@ export default function GuestDashboard() {
       categoryName: newCategory,
       name: newItemName,
       cost: numericCost,
+      unit: newItemUnit,
     };
 
     const updatedItems = [...items, newItem];
@@ -71,6 +73,7 @@ export default function GuestDashboard() {
     setNewCategory("");
     setNewItemName("");
     setNewItemCost("");
+    setNewItemUnit("");
 
     toast({
       title: "Éxito",
@@ -94,6 +97,7 @@ export default function GuestDashboard() {
     setNewCategory(item.categoryName);
     setNewItemName(item.name);
     setNewItemCost(item.cost.toString());
+    setNewItemUnit(item.unit);
   };
 
   const handleUpdateItem = () => {
@@ -117,6 +121,7 @@ export default function GuestDashboard() {
             categoryName: newCategory,
             name: newItemName,
             cost: numericCost,
+            unit: newItemUnit,
           }
         : item
     );
@@ -128,6 +133,7 @@ export default function GuestDashboard() {
     setNewCategory("");
     setNewItemName("");
     setNewItemCost("");
+    setNewItemUnit("");
 
     toast({
       title: "Éxito",
@@ -156,7 +162,7 @@ export default function GuestDashboard() {
       </div>
 
       <Card className="p-6 space-y-6 bg-white shadow-md">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             placeholder="Nombre de la categoría"
             value={newCategory}
@@ -175,6 +181,12 @@ export default function GuestDashboard() {
             onChange={(e) => handleCostChange(e.target.value)}
             className="border-blue-200 focus:border-blue-400"
           />
+          <Input
+            placeholder="Unidad (ej: kg, l, unidad)"
+            value={newItemUnit}
+            onChange={(e) => setNewItemUnit(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+          />
         </div>
         {editingItem ? (
           <div className="flex gap-2">
@@ -188,6 +200,7 @@ export default function GuestDashboard() {
                 setNewCategory("");
                 setNewItemName("");
                 setNewItemCost("");
+                setNewItemUnit("");
               }}
             >
               Cancelar
@@ -207,6 +220,7 @@ export default function GuestDashboard() {
             <TableRow>
               <TableHead>Categoría</TableHead>
               <TableHead>Item</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Costo</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
@@ -216,6 +230,7 @@ export default function GuestDashboard() {
               <TableRow key={item.id}>
                 <TableCell>{item.categoryName}</TableCell>
                 <TableCell>{item.name}</TableCell>
+                <TableCell>{item.unit}</TableCell>
                 <TableCell>{formatCurrency(item.cost)}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">

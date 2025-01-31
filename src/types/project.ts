@@ -3,6 +3,7 @@ export type Item = {
   cost: number;
   quantity?: number;
   ivaAmount?: number;
+  unit?: string;
 };
 
 export type StorageItem = {
@@ -10,6 +11,7 @@ export type StorageItem = {
   categoryName: string;
   name: string;
   cost: number;
+  unit: string;
 };
 
 export type Category = {
