@@ -1,7 +1,15 @@
 export type Item = {
   name: string;
   cost: number;
+  quantity?: number;
   ivaAmount?: number;
+};
+
+export type StorageItem = {
+  id: string;
+  categoryName: string;
+  name: string;
+  cost: number;
 };
 
 export type Category = {

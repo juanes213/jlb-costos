@@ -3,8 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project, Category } from "@/types/project";
-import { IvaButton } from "../shared/IvaButton";
+import type { Project, Category, StorageItem } from "@/types/project";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CategoryItemsProps {
   project: Project;
@@ -18,6 +24,8 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
   const [editedItemName, setEditedItemName] = useState("");
   const { toast } = useToast();
 
+  const storageItems: StorageItem[] = JSON.parse(localStorage.getItem("storageItems") || "[]");
+
   const formatCurrency = (value: number) => {
     if (!value) return "";
     return new Intl.NumberFormat("es-CO", {
@@ -26,33 +34,6 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  const handleCostChange = (itemIndex: number | null, value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    const floatValue = parseFloat(numericValue);
-    
-    const newProject = { ...project };
-    
-    if (itemIndex === null) {
-      newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
-    } else {
-      newProject.categories[categoryIndex].items[itemIndex].cost = isNaN(floatValue) ? 0 : floatValue;
-    }
-  
-    onUpdateProject(newProject);
-  };
-
-  const handleIvaCalculated = (itemIndex: number | null, ivaAmount: number | undefined) => {
-    const newProject = { ...project };
-    
-    if (itemIndex === null) {
-      newProject.categories[categoryIndex].ivaAmount = ivaAmount;
-    } else {
-      newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
-    }
-  
-    onUpdateProject(newProject);
   };
 
   const handleSaveItemEdit = () => {
@@ -79,6 +60,30 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
     onUpdateProject(newProject);
   };
 
+  const handleItemSelect = (itemIndex: number, storageItemId: string) => {
+    const selectedItem = storageItems.find(item => item.id === storageItemId);
+    if (!selectedItem) return;
+
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex] = {
+      ...newProject.categories[categoryIndex].items[itemIndex],
+      name: selectedItem.name,
+      cost: selectedItem.cost,
+      quantity: 1,
+    };
+    onUpdateProject(newProject);
+  };
+
+  const handleQuantityChange = (itemIndex: number, value: string) => {
+    const quantity = parseInt(value);
+    if (isNaN(quantity) || quantity < 1) return;
+
+    const newProject = { ...project };
+    const item = newProject.categories[categoryIndex].items[itemIndex];
+    item.quantity = quantity;
+    onUpdateProject(newProject);
+  };
+
   return (
     <>
       {category.items.map((item, itemIndex) => (
@@ -100,40 +105,41 @@ export function CategoryItems({ project, category, categoryIndex, onUpdateProjec
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <span>{item.name}</span>
-              <Button
-                onClick={() => {
-                  setEditingItem({ itemIndex });
-                  setEditedItemName(item.name);
-                }}
-                variant="ghost"
-                size="sm"
+            <div className="flex items-center gap-2 flex-1">
+              <Select
+                value={item.name}
+                onValueChange={(value) => handleItemSelect(itemIndex, value)}
               >
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              <Input
-                type="text"
-                value={formatCurrency(item.cost)}
-                onChange={(e) => handleCostChange(itemIndex, e.target.value)}
-                placeholder="$0"
-                className="w-32 border-blue-200 focus:border-blue-400"
-              />
-              <IvaButton
-                cost={item.cost}
-                onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
-                ivaAmount={item.ivaAmount}
-              />
-              {item.ivaAmount && (
-                <span className="ml-2 text-sm text-muted-foreground">
-                  IVA: {formatCurrency(item.ivaAmount)}
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Seleccionar item" />
+                </SelectTrigger>
+                <SelectContent>
+                  {storageItems
+                    .filter(si => si.categoryName === category.name)
+                    .map((si) => (
+                      <SelectItem key={si.id} value={si.id}>
+                        {si.name} - {formatCurrency(si.cost)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {item.name && (
+                <Input
+                  type="number"
+                  value={item.quantity || 1}
+                  onChange={(e) => handleQuantityChange(itemIndex, e.target.value)}
+                  className="w-20 border-blue-200 focus:border-blue-400"
+                  min="1"
+                />
+              )}
+              {item.cost && item.quantity && (
+                <span className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(item.cost * item.quantity)}
                 </span>
               )}
             </div>
+          )}
+          <div className="flex items-center gap-2">
             <Button
               variant="destructive"
               size="icon"

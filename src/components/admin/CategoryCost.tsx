@@ -19,13 +19,11 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
     }).format(value);
   };
 
-  const handleCostChange = (value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    const floatValue = parseFloat(numericValue);
-    
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].cost = isNaN(floatValue) ? 0 : floatValue;
-    onUpdateProject(newProject);
+  const calculateTotalCost = () => {
+    const category = project.categories[categoryIndex];
+    return category.items.reduce((total, item) => {
+      return total + (item.cost * (item.quantity || 1));
+    }, 0);
   };
 
   const handleIvaCalculated = (ivaAmount: number | undefined) => {
@@ -34,20 +32,16 @@ export function CategoryCost({ project, categoryIndex, onUpdateProject }: Catego
     onUpdateProject(newProject);
   };
 
-  const currentCost = project.categories[categoryIndex].cost || 0;
+  const totalCost = calculateTotalCost();
   const currentIvaAmount = project.categories[categoryIndex].ivaAmount;
 
   return (
     <div className="flex items-center gap-2">
-      <Input
-        type="text"
-        value={formatCurrency(currentCost)}
-        onChange={(e) => handleCostChange(e.target.value)}
-        placeholder="$0"
-        className="w-32 border-blue-200 focus:border-blue-400"
-      />
+      <span className="text-sm text-muted-foreground">
+        Total: {formatCurrency(totalCost)}
+      </span>
       <IvaButton
-        cost={currentCost}
+        cost={totalCost}
         onIvaCalculated={handleIvaCalculated}
         ivaAmount={currentIvaAmount}
       />
