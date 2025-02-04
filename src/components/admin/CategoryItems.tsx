@@ -124,20 +124,6 @@ export function CategoryItems({
             placeholder="Costo base de la categoría"
             className="w-40 border-blue-200 focus:border-blue-400"
           />
-          <IvaButton
-            cost={parseFloat(categoryBaseCost) || 0}
-            onIvaCalculated={(amount) => {
-              const newProject = { ...project };
-              newProject.categories[categoryIndex].ivaAmount = amount;
-              onUpdateProject(newProject);
-            }}
-            ivaAmount={category.ivaAmount}
-          />
-          {category.ivaAmount && (
-            <span className="text-sm text-muted-foreground">
-              IVA: {formatCurrency(category.ivaAmount)}
-            </span>
-          )}
         </div>
       )}
 
