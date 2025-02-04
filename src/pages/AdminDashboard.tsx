@@ -18,9 +18,8 @@ export default function AdminDashboard() {
       income: income || 0,
       categories: [
         { name: "Insumos", items: [] },
-        { name: "Mano de obra", items: [] },
         { name: "Transporte", items: [] },
-        { name: "Otros", items: [] }
+        { name: "Imprevistos", items: [] }
       ],
       status: "in-process",
       initialDate,
