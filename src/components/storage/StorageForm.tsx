@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,6 @@ interface StorageFormProps {
 }
 
 export function StorageForm({ onAddItem }: StorageFormProps) {
-  const [newCategory, setNewCategory] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
@@ -32,7 +32,7 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
   };
 
   const handleAddItem = () => {
-    if (!newCategory || !newItemName || !newItemCost || !newItemUnit) {
+    if (!newItemName || !newItemCost || !newItemUnit) {
       toast({
         title: "Error",
         description: "Por favor complete todos los campos",
@@ -54,7 +54,7 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
 
     const newItem: StorageItem = {
       id: crypto.randomUUID(),
-      categoryName: newCategory,
+      categoryName: "Insumos",
       name: newItemName,
       cost: numericCost,
       unit: newItemUnit,
@@ -62,7 +62,6 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
 
     onAddItem(newItem);
 
-    setNewCategory("");
     setNewItemName("");
     setNewItemCost("");
     setNewItemUnit("");
@@ -75,13 +74,7 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
 
   return (
     <Card className="p-6 space-y-6 bg-white shadow-md">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Input
-          placeholder="Nombre de la categoría"
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
-          className="border-blue-200 focus:border-blue-400"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Input
           placeholder="Nombre del item"
           value={newItemName}

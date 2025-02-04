@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash } from "lucide-react";
+import { Trash, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, Category, StorageItem } from "@/types/project";
 import { CategoryItemSelector } from "./category/CategoryItemSelector";
@@ -23,6 +24,7 @@ export function CategoryItems({
   onUpdateProject,
 }: CategoryItemsProps) {
   const { toast } = useToast();
+  const [categoryBaseCost, setCategoryBaseCost] = useState<string>(category.cost?.toString() || "");
   const storageItems: StorageItem[] = JSON.parse(
     localStorage.getItem("storageItems") || "[]"
   );
@@ -85,14 +87,59 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleCategoryBaseCostChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setCategoryBaseCost(numericValue);
+    
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].cost = parseFloat(numericValue) || 0;
+    onUpdateProject(newProject);
+  };
+
   const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
     onUpdateProject(newProject);
   };
 
+  const handleAddItem = () => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items.push({
+      name: "",
+      cost: 0,
+      quantity: 1
+    });
+    onUpdateProject(newProject);
+  };
+
   return (
-    <>
+    <div className="space-y-4">
+      {category.items.length === 0 && (
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            value={categoryBaseCost ? formatCurrency(parseFloat(categoryBaseCost)) : ""}
+            onChange={(e) => handleCategoryBaseCostChange(e.target.value)}
+            placeholder="Costo base de la categoría"
+            className="w-40 border-blue-200 focus:border-blue-400"
+          />
+          <IvaButton
+            cost={parseFloat(categoryBaseCost) || 0}
+            onIvaCalculated={(amount) => {
+              const newProject = { ...project };
+              newProject.categories[categoryIndex].ivaAmount = amount;
+              onUpdateProject(newProject);
+            }}
+            ivaAmount={category.ivaAmount}
+          />
+          {category.ivaAmount && (
+            <span className="text-sm text-muted-foreground">
+              IVA: {formatCurrency(category.ivaAmount)}
+            </span>
+          )}
+        </div>
+      )}
+
       {category.items.map((item, itemIndex) => (
         <div
           key={itemIndex}
@@ -125,10 +172,10 @@ export function CategoryItems({
               unit={item.unit || ""}
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
-            {item.cost && item.quantity && (
+            {item.cost && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(item.cost * item.quantity)}
+                  Total: {formatCurrency(item.cost * (item.quantity || 1))}
                 </span>
                 <IvaButton
                   cost={item.cost * (item.quantity || 1)}
@@ -154,6 +201,16 @@ export function CategoryItems({
           </div>
         </div>
       ))}
-    </>
+      
+      <Button
+        onClick={handleAddItem}
+        variant="outline"
+        size="sm"
+        className="mt-2"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Añadir item
+      </Button>
+    </div>
   );
 }
