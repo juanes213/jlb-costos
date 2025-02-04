@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, Category, StorageItem } from "@/types/project";
 import { CategoryItemSelector } from "./category/CategoryItemSelector";
 import { CategoryItemInput } from "./category/CategoryItemInput";
 import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
+import { IvaButton } from "../shared/IvaButton";
 
 interface CategoryItemsProps {
   project: Project;
@@ -74,6 +76,21 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleCostChange = (itemIndex: number, value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    const cost = parseFloat(numericValue);
+    
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].cost = cost;
+    onUpdateProject(newProject);
+  };
+
+  const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
+    onUpdateProject(newProject);
+  };
+
   return (
     <>
       {category.items.map((item, itemIndex) => (
@@ -89,22 +106,41 @@ export function CategoryItems({
                 onItemSelect={(value) => handleItemSelect(itemIndex, value)}
               />
             ) : (
-              <CategoryItemInput
-                name={item.name}
-                onChange={(value) => handleItemNameChange(itemIndex, value)}
-              />
+              <div className="flex items-center gap-2">
+                <CategoryItemInput
+                  name={item.name}
+                  onChange={(value) => handleItemNameChange(itemIndex, value)}
+                />
+                <Input
+                  type="text"
+                  value={item.cost ? formatCurrency(item.cost) : ""}
+                  onChange={(e) => handleCostChange(itemIndex, e.target.value)}
+                  placeholder="Costo"
+                  className="w-32 border-blue-200 focus:border-blue-400"
+                />
+              </div>
             )}
-            {item.name && category.name === "Insumos" && (
-              <CategoryItemQuantity
-                quantity={item.quantity || 1}
-                unit={item.unit || ""}
-                onChange={(value) => handleQuantityChange(itemIndex, value)}
-              />
-            )}
+            <CategoryItemQuantity
+              quantity={item.quantity || 1}
+              unit={item.unit || ""}
+              onChange={(value) => handleQuantityChange(itemIndex, value)}
+            />
             {item.cost && item.quantity && (
-              <span className="text-sm text-muted-foreground">
-                Total: {formatCurrency(item.cost * item.quantity)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(item.cost * item.quantity)}
+                </span>
+                <IvaButton
+                  cost={item.cost * (item.quantity || 1)}
+                  onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
+                  ivaAmount={item.ivaAmount}
+                />
+                {item.ivaAmount && (
+                  <span className="text-sm text-muted-foreground">
+                    IVA: {formatCurrency(item.ivaAmount)}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">

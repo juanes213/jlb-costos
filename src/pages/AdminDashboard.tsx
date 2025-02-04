@@ -3,24 +3,16 @@ import { useProjects } from "@/contexts/ProjectContext";
 import { ProjectHeader } from "@/components/admin/ProjectHeader";
 import { ProjectForm } from "@/components/admin/ProjectForm";
 import { ProjectList } from "@/components/admin/ProjectList";
-import type { Category } from "@/types/project";
 
 export default function AdminDashboard() {
   const { projects, addProject, deleteProject, updateProject } = useProjects();
 
-  const handleCreateProject = (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date, income?: number) => {
+  const handleCreateProject = (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => {
     addProject({
       name,
       numberId,
       income: income || 0,
-      categories: categories.map(category => ({
-        ...category,
-        cost: category.items.length === 0 ? 0 : undefined,
-        items: category.items.map(item => ({
-          ...item,
-          cost: 0
-        }))
-      })),
+      categories: [],
       status: "in-process",
       initialDate,
       finalDate,

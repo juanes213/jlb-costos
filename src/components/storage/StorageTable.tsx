@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Trash, Pencil } from "lucide-react";
+import { IvaButton } from "../shared/IvaButton";
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { StorageItem } from "@/types/project";
+import { useState } from "react";
 
 interface StorageTableProps {
   items: StorageItem[];
@@ -18,6 +20,8 @@ interface StorageTableProps {
 }
 
 export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTableProps) {
+  const [ivaAmounts, setIvaAmounts] = useState<Record<string, number>>({});
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -25,6 +29,13 @@ export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTablePr
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  const handleIvaCalculated = (itemId: string, ivaAmount: number | undefined) => {
+    setIvaAmounts(prev => ({
+      ...prev,
+      [itemId]: ivaAmount || 0
+    }));
   };
 
   return (
@@ -37,6 +48,7 @@ export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTablePr
             <TableHead>Item</TableHead>
             <TableHead>Unidad</TableHead>
             <TableHead>Costo</TableHead>
+            <TableHead>IVA</TableHead>
             <TableHead>Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -47,6 +59,20 @@ export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTablePr
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.unit}</TableCell>
               <TableCell>{formatCurrency(item.cost)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <IvaButton
+                    cost={item.cost}
+                    onIvaCalculated={(amount) => handleIvaCalculated(item.id, amount)}
+                    ivaAmount={ivaAmounts[item.id]}
+                  />
+                  {ivaAmounts[item.id] > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {formatCurrency(ivaAmounts[item.id])}
+                    </span>
+                  )}
+                </div>
+              </TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button

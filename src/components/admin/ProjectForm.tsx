@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Category } from "@/types/project";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, numberId: string, categories: Category[], initialDate?: Date, finalDate?: Date, income?: number) => void;
+  onCreateProject: (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
@@ -15,46 +13,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
   const [income, setIncome] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
-
-  const handleAddCategory = () => {
-    setCategories([...categories, { name: "", items: [] }]);
-  };
-
-  const handleCategoryNameChange = (index: number, name: string) => {
-    const newCategories = [...categories];
-    newCategories[index].name = name;
-    setCategories(newCategories);
-  };
-
-  const handleAddItem = (categoryIndex: number) => {
-    const newCategories = [...categories];
-    newCategories[categoryIndex].items.push({ name: "", cost: 0 });
-    setCategories(newCategories);
-  };
-
-  const handleItemNameChange = (
-    categoryIndex: number,
-    itemIndex: number,
-    name: string
-  ) => {
-    const newCategories = [...categories];
-    newCategories[categoryIndex].items[itemIndex].name = name;
-    setCategories(newCategories);
-  };
-
-  const handleDeleteCategory = (categoryIndex: number) => {
-    setCategories(categories.filter((_, index) => index !== categoryIndex));
-  };
-
-  const handleDeleteItem = (categoryIndex: number, itemIndex: number) => {
-    const newCategories = [...categories];
-    newCategories[categoryIndex].items = newCategories[categoryIndex].items.filter(
-      (_, index) => index !== itemIndex
-    );
-    setCategories(newCategories);
-  };
 
   const formatCurrency = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
@@ -90,28 +49,9 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       return;
     }
 
-    if (categories.some((c) => !c.name.trim())) {
-      toast({
-        title: "Error",
-        description: "Todas las categorías deben tener nombre",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (categories.some((c) => c.items.some((item) => !item.name.trim()))) {
-      toast({
-        title: "Error",
-        description: "Todos los artículos deben tener nombre",
-        variant: "destructive",
-      });
-      return;
-    }
-
     onCreateProject(
       newProjectName,
       projectId,
-      categories,
       initialDate ? new Date(initialDate) : undefined,
       finalDate ? new Date(finalDate) : undefined,
       income ? parseFloat(income) : 0
@@ -122,7 +62,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     setInitialDate("");
     setFinalDate("");
     setIncome("");
-    setCategories([]);
 
     toast({
       title: "Éxito",
@@ -184,73 +123,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
             />
           </div>
         </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-primary">Categorías</h3>
-          <Button onClick={handleAddCategory} size="sm" variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Añadir categoría
-          </Button>
-        </div>
-
-        {categories.map((category, categoryIndex) => (
-          <div key={categoryIndex} className="space-y-4 p-4 border rounded-lg border-blue-100">
-            <div className="flex items-center space-x-2">
-              <Input
-                value={category.name}
-                onChange={(e) =>
-                  handleCategoryNameChange(categoryIndex, e.target.value)
-                }
-                placeholder="Nombre de la categoría"
-                className="border-blue-200 focus:border-blue-400"
-              />
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => handleDeleteCategory(categoryIndex)}
-              >
-                <Trash className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              {category.items.map((item, itemIndex) => (
-                <div key={itemIndex} className="flex items-center space-x-2">
-                  <Input
-                    value={item.name}
-                    onChange={(e) =>
-                      handleItemNameChange(
-                        categoryIndex,
-                        itemIndex,
-                        e.target.value
-                      )
-                    }
-                    placeholder="Item name"
-                    className="border-blue-200 focus:border-blue-400"
-                  />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDeleteItem(categoryIndex, itemIndex)}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <Button
-              onClick={() => handleAddItem(categoryIndex)}
-              variant="outline"
-              size="sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Añadir elemento
-            </Button>
-          </div>
-        ))}
       </div>
 
       <Button onClick={handleCreateProject} className="w-full">
