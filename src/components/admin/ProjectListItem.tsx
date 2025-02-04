@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,13 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const [editedFinalDate, setEditedFinalDate] = useState(
     project.finalDate ? format(new Date(project.finalDate), 'yyyy-MM-dd') : ''
   );
-  const [editedCategories, setEditedCategories] = useState<Category[]>(project.categories);
   const { toast } = useToast();
+
+  const handleAddCategory = () => {
+    const newProject = { ...project };
+    newProject.categories = [...newProject.categories, { name: "", items: [] }];
+    onUpdateProject(newProject);
+  };
 
   const handleSaveEdit = () => {
     onUpdateProject({
@@ -34,7 +40,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       name: editedName,
       numberId: editedNumberId,
       income: parseFloat(editedIncome) || 0,
-      categories: editedCategories,
       initialDate: editedInitialDate ? new Date(editedInitialDate) : undefined,
       finalDate: editedFinalDate ? new Date(editedFinalDate) : undefined
     });
@@ -44,39 +49,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     toast({
       title: "Éxito",
       description: "Proyecto actualizado correctamente",
-    });
-  };
-
-  const handleAddCategory = () => {
-    setEditedCategories([...editedCategories, { name: "", items: [] }]);
-  };
-
-  const handleCategoryNameChange = (index: number, name: string) => {
-    const newCategories = [...editedCategories];
-    newCategories[index].name = name;
-    setEditedCategories(newCategories);
-  };
-
-  const handleDeleteCategory = (categoryIndex: number) => {
-    setEditedCategories(editedCategories.filter((_, index) => index !== categoryIndex));
-  };
-
-  const handleAddItem = (categoryIndex: number) => {
-    const newCategories = [...editedCategories];
-    newCategories[categoryIndex].items.push({ name: "", cost: 0 });
-    setEditedCategories(newCategories);
-  };
-
-  const handleItemNameChange = (categoryIndex: number, itemIndex: number, name: string) => {
-    const newCategories = [...editedCategories];
-    newCategories[categoryIndex].items[itemIndex].name = name;
-    setEditedCategories(newCategories);
-  };
-
-  const handleStatusChange = (status: ProjectStatus) => {
-    onUpdateProject({
-      ...project,
-      status
     });
   };
 
@@ -93,6 +65,13 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const handleIncomeChange = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
     setEditedIncome(numericValue);
+  };
+
+  const handleStatusChange = (status: ProjectStatus) => {
+    onUpdateProject({
+      ...project,
+      status
+    });
   };
 
   return (
@@ -177,61 +156,15 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
         </div>
       </div>
 
-      {isEditing ? (
-        <div className="space-y-4">
-          {editedCategories.map((category, categoryIndex) => (
-            <div key={categoryIndex} className="space-y-4 p-4 border rounded-lg border-blue-100">
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={category.name}
-                  onChange={(e) => handleCategoryNameChange(categoryIndex, e.target.value)}
-                  placeholder="Nombre de la categoría"
-                  className="border-blue-200 focus:border-blue-400"
-                />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDeleteCategory(categoryIndex)}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
-              </div>
+      <ProjectCategories 
+        project={project}
+        onUpdateProject={onUpdateProject}
+      />
 
-              <div className="space-y-2">
-                {category.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="flex items-center space-x-2">
-                    <Input
-                      value={item.name}
-                      onChange={(e) => handleItemNameChange(categoryIndex, itemIndex, e.target.value)}
-                      placeholder="Nombre del elemento"
-                      className="border-blue-200 focus:border-blue-400"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={() => handleAddItem(categoryIndex)}
-                variant="outline"
-                size="sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Añadir elemento
-              </Button>
-            </div>
-          ))}
-
-          <Button onClick={handleAddCategory} variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Añadir categoría
-          </Button>
-        </div>
-      ) : (
-        <ProjectCategories 
-          project={project}
-          onUpdateProject={onUpdateProject}
-        />
-      )}
+      <Button onClick={handleAddCategory} variant="outline" size="sm">
+        <Plus className="w-4 h-4 mr-2" />
+        Añadir categoría
+      </Button>
     </div>
   );
 }

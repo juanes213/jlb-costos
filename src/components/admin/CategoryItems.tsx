@@ -58,6 +58,7 @@ export function CategoryItems({
       cost: selectedItem.cost,
       quantity: 1,
       unit: selectedItem.unit,
+      ivaAmount: selectedItem.ivaAmount
     };
     onUpdateProject(newProject);
   };
@@ -147,11 +148,18 @@ export function CategoryItems({
         >
           <div className="flex items-center gap-2 flex-1">
             {category.name === "Insumos" ? (
-              <CategoryItemSelector
-                storageItems={storageItems}
-                selectedItemName={item.name}
-                onItemSelect={(value) => handleItemSelect(itemIndex, value)}
-              />
+              <div className="flex items-center gap-2">
+                <CategoryItemSelector
+                  storageItems={storageItems}
+                  selectedItemName={item.name}
+                  onItemSelect={(value) => handleItemSelect(itemIndex, value)}
+                />
+                <Input
+                  value={item.name}
+                  readOnly
+                  className="w-48 border-blue-200 focus:border-blue-400 bg-gray-50"
+                />
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <CategoryItemInput
