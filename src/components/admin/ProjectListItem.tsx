@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash, Pencil, Plus } from "lucide-react";
+import { Trash, Pencil, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project, ProjectStatus, Category } from "@/types/project";
+import type { Project, ProjectStatus } from "@/types/project";
 import { format } from "date-fns";
 import { ProjectCategories } from "./ProjectCategories";
 import { ProjectStatus as ProjectStatusComponent } from "./ProjectStatus";
@@ -17,6 +17,7 @@ interface ProjectListItemProps {
 
 export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: ProjectListItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [editedName, setEditedName] = useState(project.name);
   const [editedNumberId, setEditedNumberId] = useState(project.numberId);
   const [editedIncome, setEditedIncome] = useState(project.income.toString());
@@ -75,7 +76,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   };
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg border-blue-100">
+    <div className="space-y-4 p-4 border rounded-lg border-blue-100 animate-fadeIn">
       <div className="flex items-center justify-between flex-wrap gap-4">
         {isEditing ? (
           <div className="flex gap-2 flex-1 flex-wrap">
@@ -114,7 +115,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             </Button>
           </div>
         ) : (
-          <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex gap-4 items-center flex-wrap flex-1">
             <span className="font-medium text-primary">{project.name}</span>
             <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
             <span className="text-sm text-muted-foreground">
@@ -153,18 +154,34 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             <Trash className="w-4 h-4 mr-2" />
             Eliminar
           </Button>
+          <Button
+            onClick={() => setIsExpanded(!isExpanded)}
+            variant="outline"
+            size="sm"
+          >
+            {isExpanded ? (
+              <ChevronUp className="w-4 h-4 mr-2" />
+            ) : (
+              <ChevronDown className="w-4 h-4 mr-2" />
+            )}
+            {isExpanded ? "Ocultar detalles" : "Ver detalles"}
+          </Button>
         </div>
       </div>
 
-      <ProjectCategories 
-        project={project}
-        onUpdateProject={onUpdateProject}
-      />
+      {isExpanded && (
+        <div className="pt-4 border-t border-gray-100 animate-accordion-down">
+          <ProjectCategories 
+            project={project}
+            onUpdateProject={onUpdateProject}
+          />
 
-      <Button onClick={handleAddCategory} variant="outline" size="sm">
-        <Plus className="w-4 h-4 mr-2" />
-        Añadir categoría
-      </Button>
+          <Button onClick={handleAddCategory} variant="outline" size="sm" className="mt-4">
+            <Plus className="w-4 h-4 mr-2" />
+            Añadir categoría
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
