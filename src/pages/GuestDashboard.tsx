@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { read, utils } from "xlsx";
 import type { StorageItem } from "@/types/project";
 import { StorageHeader } from "@/components/storage/StorageHeader";
@@ -74,7 +74,7 @@ export default function GuestDashboard() {
 
   return (
     <div className="container py-8 space-y-8 animate-fadeIn">
-      <StorageHeader />
+      <StorageHeader setItems={setItems} />
       <div className="flex justify-between items-center">
         <StorageForm onAddItem={handleAddItem} />
         <div className="relative">
