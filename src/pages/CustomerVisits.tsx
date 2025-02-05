@@ -1,9 +1,11 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -39,6 +41,13 @@ export default function CustomerVisits() {
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,9 +85,15 @@ export default function CustomerVisits() {
     <div className="container py-8 space-y-8 animate-fadeIn">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Control de Visitas</h1>
-        <Button onClick={() => setIsFormOpen(!isFormOpen)}>
-          {isFormOpen ? "Cancelar" : "Nueva Visita"}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsFormOpen(!isFormOpen)}>
+            {isFormOpen ? "Cancelar" : "Nueva Visita"}
+          </Button>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar sesión
+          </Button>
+        </div>
       </div>
 
       {isFormOpen && (
