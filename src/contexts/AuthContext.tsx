@@ -1,8 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 type User = {
   username: string;
-  role: "admin" | "guest";
+  role: "admin" | "guest" | "visits";
 } | null;
 
 type AuthContextType = {
@@ -13,10 +14,16 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
+// Extended mock users with different roles
 const MOCK_USERS = {
-  admin: { password: "admin123", role: "admin" as const },
-  guest: { password: "guest123", role: "guest" as const },
+  admin1: { password: "admin123", role: "admin" as const },
+  admin2: { password: "admin456", role: "admin" as const },
+  admin3: { password: "admin789", role: "admin" as const },
+  admin4: { password: "admin321", role: "admin" as const },
+  admin5: { password: "admin654", role: "admin" as const },
+  storage1: { password: "storage123", role: "guest" as const },
+  storage2: { password: "storage456", role: "guest" as const },
+  visits: { password: "visits123", role: "visits" as const },
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

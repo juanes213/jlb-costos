@@ -19,7 +19,7 @@ function ProtectedRoute({
   requiredRole,
 }: {
   children: React.ReactNode;
-  requiredRole?: "admin" | "guest";
+  requiredRole?: "admin" | "guest" | "visits";
 }) {
   const { user } = useAuth();
 
@@ -73,7 +73,7 @@ const App = () => (
               <Route
                 path="/visits"
                 element={
-                  <ProtectedRoute requiredRole="admin">
+                  <ProtectedRoute requiredRole="visits">
                     <CustomerVisits />
                   </ProtectedRoute>
                 }

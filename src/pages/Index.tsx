@@ -10,7 +10,16 @@ const Index = () => {
   }
 
   // If user is logged in, redirect based on role
-  return <Navigate to={user.role === "admin" ? "/admin" : "/guest"} replace />;
+  switch (user.role) {
+    case "admin":
+      return <Navigate to="/admin" replace />;
+    case "guest":
+      return <Navigate to="/guest" replace />;
+    case "visits":
+      return <Navigate to="/visits" replace />;
+    default:
+      return <Navigate to="/login" replace />;
+  }
 };
 
 export default Index;
