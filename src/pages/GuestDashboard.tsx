@@ -6,8 +6,6 @@ import type { StorageItem } from "@/types/project";
 import { StorageHeader } from "@/components/storage/StorageHeader";
 import { StorageForm } from "@/components/storage/StorageForm";
 import { StorageTable } from "@/components/storage/StorageTable";
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
 
 export default function GuestDashboard() {
   const [items, setItems] = useState<StorageItem[]>(() => {
@@ -77,18 +75,6 @@ export default function GuestDashboard() {
       <StorageHeader setItems={setItems} />
       <div className="flex justify-between items-center">
         <StorageForm onAddItem={handleAddItem} />
-        <div className="relative">
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileUpload}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-          <Button variant="outline" className="relative">
-            <Upload className="w-4 h-4 mr-2" />
-            Importar Excel
-          </Button>
-        </div>
       </div>
       <StorageTable
         items={items}
