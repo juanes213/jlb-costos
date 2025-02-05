@@ -1,11 +1,20 @@
+
 import { Button } from "@/components/ui/button";
 import { LogOut, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { read, utils } from "xlsx";
+import { StorageItem } from "@/types/project";
+import { useToast } from "@/hooks/use-toast";
 
-export function StorageHeader() {
+interface StorageHeaderProps {
+  setItems: (items: StorageItem[]) => void;
+}
+
+export function StorageHeader({ setItems }: StorageHeaderProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { toast } = useToast();
 
   const handleLogout = () => {
     logout();
