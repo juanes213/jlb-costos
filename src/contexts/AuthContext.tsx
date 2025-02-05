@@ -19,7 +19,7 @@ const MOCK_USERS = {
   admin1: { password: "admin123", role: "admin" as const },
   admin2: { password: "admin456", role: "admin" as const },
   admin3: { password: "admin789", role: "admin" as const },
-  admin4: { password: "admin321", role: "admin" as const },
+  administrador2002: { password: "adminjlb2025", role: "admin" as const },
   admin5: { password: "admin654", role: "admin" as const },
   storage1: { password: "storage123", role: "guest" as const },
   storage2: { password: "storage456", role: "guest" as const },
