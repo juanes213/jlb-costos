@@ -2,13 +2,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash, Plus } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Plus } from "lucide-react";
 import type { Project, Category, StorageItem } from "@/types/project";
 import { CategoryItemSelector } from "./category/CategoryItemSelector";
 import { CategoryItemInput } from "./category/CategoryItemInput";
 import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
-import { IvaButton } from "../shared/IvaButton";
+import { CategoryBaseCost } from "./category/CategoryBaseCost";
+import { CategoryItemCosts } from "./category/CategoryItemCosts";
+import { CategoryItemActions } from "./category/CategoryItemActions";
 
 interface CategoryItemsProps {
   project: Project;
@@ -23,21 +24,10 @@ export function CategoryItems({
   categoryIndex,
   onUpdateProject,
 }: CategoryItemsProps) {
-  const { toast } = useToast();
   const [categoryBaseCost, setCategoryBaseCost] = useState<string>(category.cost?.toString() || "");
   const storageItems: StorageItem[] = JSON.parse(
     localStorage.getItem("storageItems") || "[]"
   );
-
-  const formatCurrency = (value: number) => {
-    if (!value) return "";
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   const handleDeleteProjectItem = (itemIndex: number) => {
     const newProject = { ...project };
@@ -116,15 +106,10 @@ export function CategoryItems({
   return (
     <div className="space-y-4">
       {category.items.length === 0 && (
-        <div className="flex items-center gap-2">
-          <Input
-            type="text"
-            value={categoryBaseCost ? formatCurrency(parseFloat(categoryBaseCost)) : ""}
-            onChange={(e) => handleCategoryBaseCostChange(e.target.value)}
-            placeholder="Costo base de la categoría"
-            className="w-40 border-blue-200 focus:border-blue-400"
-          />
-        </div>
+        <CategoryBaseCost
+          categoryBaseCost={categoryBaseCost}
+          onBaseCostChange={handleCategoryBaseCostChange}
+        />
       )}
 
       {category.items.map((item, itemIndex) => (
@@ -154,7 +139,12 @@ export function CategoryItems({
                 />
                 <Input
                   type="text"
-                  value={item.cost ? formatCurrency(item.cost) : ""}
+                  value={item.cost ? new Intl.NumberFormat("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(item.cost) : ""}
                   onChange={(e) => handleCostChange(itemIndex, e.target.value)}
                   placeholder="Costo"
                   className="w-32 border-blue-200 focus:border-blue-400"
@@ -167,32 +157,17 @@ export function CategoryItems({
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
             {item.cost && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(item.cost * (item.quantity || 1))}
-                </span>
-                <IvaButton
-                  cost={item.cost * (item.quantity || 1)}
-                  onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
-                  ivaAmount={item.ivaAmount}
-                />
-                {item.ivaAmount && (
-                  <span className="text-sm text-muted-foreground">
-                    IVA: {formatCurrency(item.ivaAmount)}
-                  </span>
-                )}
-              </div>
+              <CategoryItemCosts
+                cost={item.cost}
+                quantity={item.quantity || 1}
+                ivaAmount={item.ivaAmount}
+                onIvaCalculated={(amount) => handleIvaCalculated(itemIndex, amount)}
+              />
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => handleDeleteProjectItem(itemIndex)}
-            >
-              <Trash className="w-4 h-4" />
-            </Button>
-          </div>
+          <CategoryItemActions
+            onDelete={() => handleDeleteProjectItem(itemIndex)}
+          />
         </div>
       ))}
       
