@@ -28,7 +28,7 @@ export default function AdminDashboard() {
   };
 
   const filteredProjects = projects.filter(project => 
-    project.numberId.toLowerCase().includes(searchId.toLowerCase())
+    project.numberId?.toLowerCase().includes((searchId || '').toLowerCase())
   );
 
   return (
