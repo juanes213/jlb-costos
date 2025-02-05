@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import GuestDashboard from "./pages/GuestDashboard";
+import CustomerVisits from "./pages/CustomerVisits";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +67,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="guest">
                     <GuestDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/visits"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <CustomerVisits />
                   </ProtectedRoute>
                 }
               />
