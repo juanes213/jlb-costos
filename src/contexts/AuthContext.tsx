@@ -16,8 +16,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock users with different roles
 const MOCK_USERS = {
-  "admin@outlook.com": { password: "admin123", role: "admin" as const },
-  "admin2@outlook.com": { password: "admin456", role: "admin" as const },
+  "gerenteadm@jorgebedoya.com": { password: "juan20isa08", role: "admin" as const },
+  "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" as const },
+  "adminjlb2002": {password: "adminjlb2025", role: "admin" as const },
   "storage@outlook.com": { password: "storage123", role: "storage" as const },
   "storage2@outlook.com": { password: "storage456", role: "storage" as const },
   "visits@outlook.com": { password: "visits123", role: "visits" as const },
