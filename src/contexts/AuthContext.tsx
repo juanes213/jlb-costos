@@ -15,15 +15,15 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock users with different roles
-const MOCK_USERS = {
-  "admin": {password: "admin123", role: "admin" as const},
-  "gerenteadm@jorgebedoya.com": { password: "juan20isa08", role: "admin" as const },
-  "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" as const },
-  "adminjlb2002": {password: "adminjlb2025", role: "admin" as const },
-  "storage@outlook.com": { password: "storage123", role: "storage" as const },
-  "storage2@outlook.com": { password: "storage456", role: "storage" as const },
-  "visits@outlook.com": { password: "visits123", role: "visits" as const },
-  "visits2@outlook.com": { password: "visits456", role: "visits" as const },
+const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" | "visits" }> = {
+  "admin": { password: "admin123", role: "admin" },
+  "gerenteadm@jorgebedoya.com": { password: "juan20isa08", role: "admin" },
+  "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" },
+  "adminjlb2002": { password: "adminjlb2025", role: "admin" },
+  "storage@outlook.com": { password: "storage123", role: "storage" },
+  "storage2@outlook.com": { password: "storage456", role: "storage" },
+  "visits@outlook.com": { password: "visits123", role: "visits" },
+  "visits2@outlook.com": { password: "visits456", role: "visits" }
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -37,15 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    const mockUser = MOCK_USERS[username as keyof typeof MOCK_USERS];
-    
-    if (mockUser && mockUser.password === password) {
-      const user = { username, role: mockUser.role };
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
+    const lowercaseUsername = username.toLowerCase();
+    const mockUser = MOCK_USERS[lowercaseUsername];
+
+    if (!mockUser) {
+      console.log("User not found:", lowercaseUsername);
       throw new Error("Invalid credentials");
     }
+
+    if (mockUser.password !== password) {
+      console.log("Invalid password for user:", lowercaseUsername);
+      throw new Error("Invalid credentials");
+    }
+
+    const user = { username: lowercaseUsername, role: mockUser.role };
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user));
   };
 
   const logout = () => {
