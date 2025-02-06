@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +17,8 @@ export default function Login() {
     e.preventDefault();
     try {
       await login(username, password);
-      navigate("/");
+      const redirectPath = determineRedirectPath(username.toLowerCase());
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       toast({
         title: "Error",
@@ -24,6 +26,13 @@ export default function Login() {
         variant: "destructive",
       });
     }
+  };
+
+  const determineRedirectPath = (username: string) => {
+    if (username.includes("admin")) return "/admin";
+    if (username.includes("storage")) return "/storage";
+    if (username.includes("visits")) return "/visits";
+    return "/admin"; // Default path for unspecified cases
   };
 
   return (
