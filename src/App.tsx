@@ -11,15 +11,16 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import GuestDashboard from "./pages/GuestDashboard";
 import CustomerVisits from "./pages/CustomerVisits";
+import AdminNav from "./components/admin/AdminNav";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({
   children,
-  requiredRole,
+  allowedRoles,
 }: {
   children: React.ReactNode;
-  requiredRole?: "admin" | "guest" | "visits";
+  allowedRoles: ("admin" | "storage" | "visits")[];
 }) {
   const { user } = useAuth();
 
@@ -27,73 +28,82 @@ function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/" replace />;
+  if (!allowedRoles.includes(user.role)) {
+    // Redirect to appropriate dashboard based on role
+    switch (user.role) {
+      case "storage":
+        return <Navigate to="/storage" replace />;
+      case "visits":
+        return <Navigate to="/visits" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
   }
 
   return <>{children}</>;
 }
 
-function DashboardRouter() {
+function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  switch (user.role) {
-    case "admin":
-      return <Navigate to="/admin" replace />;
-    case "guest":
-      return <Navigate to="/guest" replace />;
-    case "visits":
-      return <Navigate to="/visits" replace />;
-    default:
-      return <Navigate to="/login" replace />;
-  }
+  if (user?.role !== "admin") return <>{children}</>;
+  
+  return (
+    <div>
+      <AdminNav />
+      {children}
+    </div>
+  );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ProjectProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/guest"
-                element={
-                  <ProtectedRoute requiredRole="guest">
-                    <GuestDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/visits"
-                element={
-                  <ProtectedRoute requiredRole="visits">
-                    <CustomerVisits />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<DashboardRouter />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ProjectProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ProjectProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                      <AdminLayout>
+                        <AdminDashboard />
+                      </AdminLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/storage"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "storage"]}>
+                      <AdminLayout>
+                        <GuestDashboard />
+                      </AdminLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/visits"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "visits"]}>
+                      <AdminLayout>
+                        <CustomerVisits />
+                      </AdminLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ProjectProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

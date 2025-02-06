@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut } from "lucide-react";
+import { LogOut, Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -40,6 +41,7 @@ export default function CustomerVisits() {
     return savedVisits ? JSON.parse(savedVisits) : [];
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<CustomerVisit | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -53,8 +55,8 @@ export default function CustomerVisits() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const newVisit: CustomerVisit = {
-      id: crypto.randomUUID(),
+    const visitData: CustomerVisit = {
+      id: editingVisit?.id || crypto.randomUUID(),
       customerName: formData.get("customerName") as string,
       contactName: formData.get("contactName") as string,
       email: formData.get("email") as string,
@@ -69,16 +71,43 @@ export default function CustomerVisits() {
       remarks: formData.get("remarks") as string,
     };
 
-    setVisits([...visits, newVisit]);
-    localStorage.setItem("customerVisits", JSON.stringify([...visits, newVisit]));
+    if (editingVisit) {
+      setVisits(visits.map(visit => visit.id === editingVisit.id ? visitData : visit));
+      toast({
+        title: "Éxito",
+        description: "Visita actualizada correctamente",
+      });
+    } else {
+      setVisits([...visits, visitData]);
+      toast({
+        title: "Éxito",
+        description: "Visita registrada correctamente",
+      });
+    }
     
-    toast({
-      title: "Éxito",
-      description: "Visita registrada correctamente",
-    });
+    localStorage.setItem("customerVisits", JSON.stringify(editingVisit 
+      ? visits.map(visit => visit.id === editingVisit.id ? visitData : visit)
+      : [...visits, visitData]
+    ));
     
     setIsFormOpen(false);
+    setEditingVisit(null);
     e.currentTarget.reset();
+  };
+
+  const handleEdit = (visit: CustomerVisit) => {
+    setEditingVisit(visit);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    const updatedVisits = visits.filter(visit => visit.id !== id);
+    setVisits(updatedVisits);
+    localStorage.setItem("customerVisits", JSON.stringify(updatedVisits));
+    toast({
+      title: "Éxito",
+      description: "Visita eliminada correctamente",
+    });
   };
 
   return (
@@ -86,7 +115,10 @@ export default function CustomerVisits() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Control de Visitas</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setIsFormOpen(!isFormOpen)}>
+          <Button onClick={() => {
+            setIsFormOpen(!isFormOpen);
+            setEditingVisit(null);
+          }}>
             {isFormOpen ? "Cancelar" : "Nueva Visita"}
           </Button>
           <Button variant="outline" onClick={handleLogout}>
@@ -100,27 +132,70 @@ export default function CustomerVisits() {
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input name="customerName" placeholder="Nombre del Cliente" required />
-              <Input name="contactName" placeholder="Nombre de Contacto" required />
-              <Input name="email" type="email" placeholder="Email" required />
-              <Input name="phone" placeholder="Teléfono" required />
-              <Input name="serviceType" placeholder="Tipo de Servicio" required />
-              <Input name="date" type="date" required />
-              <Input name="startTime" type="time" required />
-              <Input name="endTime" type="time" required />
+              <Input 
+                name="customerName" 
+                placeholder="Nombre del Cliente" 
+                required 
+                defaultValue={editingVisit?.customerName}
+              />
+              <Input 
+                name="contactName" 
+                placeholder="Nombre de Contacto" 
+                required 
+                defaultValue={editingVisit?.contactName}
+              />
+              <Input 
+                name="email" 
+                type="email" 
+                placeholder="Email" 
+                required 
+                defaultValue={editingVisit?.email}
+              />
+              <Input 
+                name="phone" 
+                placeholder="Teléfono" 
+                required 
+                defaultValue={editingVisit?.phone}
+              />
+              <Input 
+                name="serviceType" 
+                placeholder="Tipo de Servicio" 
+                required 
+                defaultValue={editingVisit?.serviceType}
+              />
+              <Input 
+                name="date" 
+                type="date" 
+                required 
+                defaultValue={editingVisit?.date}
+              />
+              <Input 
+                name="startTime" 
+                type="time" 
+                required 
+                defaultValue={editingVisit?.startTime}
+              />
+              <Input 
+                name="endTime" 
+                type="time" 
+                required 
+                defaultValue={editingVisit?.endTime}
+              />
               <Input
                 name="serviceValue"
                 type="number"
                 placeholder="Valor del Servicio"
                 required
+                defaultValue={editingVisit?.serviceValue}
               />
               <Input
                 name="bidValue"
                 type="number"
                 placeholder="Valor de la Oferta"
                 required
+                defaultValue={editingVisit?.bidValue}
               />
-              <Select name="status" required>
+              <Select name="status" required defaultValue={editingVisit?.status}>
                 <SelectTrigger>
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
@@ -132,8 +207,14 @@ export default function CustomerVisits() {
                 </SelectContent>
               </Select>
             </div>
-            <Textarea name="remarks" placeholder="Observaciones" />
-            <Button type="submit">Guardar Visita</Button>
+            <Textarea 
+              name="remarks" 
+              placeholder="Observaciones" 
+              defaultValue={editingVisit?.remarks}
+            />
+            <Button type="submit">
+              {editingVisit ? "Actualizar Visita" : "Guardar Visita"}
+            </Button>
           </form>
         </Card>
       )}
@@ -148,13 +229,27 @@ export default function CustomerVisits() {
                   {format(new Date(visit.date), "dd/MM/yyyy")} - {visit.startTime} a {visit.endTime}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="flex justify-end items-start gap-2">
                 <span className="inline-block px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
                   {visit.status === "pending" && "Pendiente"}
                   {visit.status === "completed" && "Completada"}
                   {visit.status === "converted" && "Convertida a OS"}
                   {visit.status === "cancelled" && "Cancelada"}
                 </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(visit)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(visit.id)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
               </div>
               <div className="md:col-span-2">
                 <p className="text-sm">

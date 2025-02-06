@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 type User = {
   username: string;
-  role: "admin" | "guest" | "visits";
+  role: "admin" | "storage" | "visits";
 } | null;
 
 type AuthContextType = {
@@ -14,16 +14,14 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Extended mock users with different roles
+// Mock users with different roles
 const MOCK_USERS = {
-  admin1: { password: "admin123", role: "admin" as const },
-  admin2: { password: "admin456", role: "admin" as const },
-  admin3: { password: "admin789", role: "admin" as const },
-  administrador2002: { password: "adminjlb2025", role: "admin" as const },
-  admin5: { password: "admin654", role: "admin" as const },
-  storage1: { password: "storage123", role: "guest" as const },
-  storage2: { password: "storage456", role: "guest" as const },
-  visits: { password: "visits123", role: "visits" as const },
+  "admin@outlook.com": { password: "admin123", role: "admin" as const },
+  "admin2@outlook.com": { password: "admin456", role: "admin" as const },
+  "storage@outlook.com": { password: "storage123", role: "storage" as const },
+  "storage2@outlook.com": { password: "storage456", role: "storage" as const },
+  "visits@outlook.com": { password: "visits123", role: "visits" as const },
+  "visits2@outlook.com": { password: "visits456", role: "visits" as const },
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
