@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,13 +8,22 @@ import type { StorageItem } from "@/types/project";
 
 interface StorageFormProps {
   onAddItem: (item: StorageItem) => void;
+  editingItem?: StorageItem | null;
 }
 
-export function StorageForm({ onAddItem }: StorageFormProps) {
+export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editingItem) {
+      setNewItemName(editingItem.name);
+      setNewItemCost(editingItem.cost.toString());
+      setNewItemUnit(editingItem.unit);
+    }
+  }, [editingItem]);
 
   const formatCurrency = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
@@ -31,7 +40,7 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
     setNewItemCost(numericValue);
   };
 
-  const handleAddItem = () => {
+  const handleSubmit = () => {
     if (!newItemName || !newItemCost || !newItemUnit) {
       toast({
         title: "Error",
@@ -52,24 +61,20 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
       return;
     }
 
-    const newItem: StorageItem = {
-      id: crypto.randomUUID(),
+    const item: StorageItem = {
+      id: editingItem ? editingItem.id : crypto.randomUUID(),
       categoryName: "Insumos",
       name: newItemName,
       cost: numericCost,
       unit: newItemUnit,
     };
 
-    onAddItem(newItem);
+    onAddItem(item);
 
+    // Reset form
     setNewItemName("");
     setNewItemCost("");
     setNewItemUnit("");
-
-    toast({
-      title: "Éxito",
-      description: "Item agregado correctamente",
-    });
   };
 
   return (
@@ -94,8 +99,8 @@ export function StorageForm({ onAddItem }: StorageFormProps) {
           className="border-blue-200 focus:border-blue-400"
         />
       </div>
-      <Button onClick={handleAddItem} className="w-full">
-        Agregar Item
+      <Button onClick={handleSubmit} className="w-full">
+        {editingItem ? "Actualizar Item" : "Agregar Item"}
       </Button>
     </Card>
   );

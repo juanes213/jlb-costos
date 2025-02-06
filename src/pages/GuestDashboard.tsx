@@ -12,6 +12,7 @@ export default function GuestDashboard() {
     const savedItems = localStorage.getItem("storageItems");
     return savedItems ? JSON.parse(savedItems) : [];
   });
+  const [editingItem, setEditingItem] = useState<StorageItem | null>(null);
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +51,28 @@ export default function GuestDashboard() {
   };
 
   const handleAddItem = (newItem: StorageItem) => {
-    const updatedItems = [...items, newItem];
-    setItems(updatedItems);
-    localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+    if (editingItem) {
+      const updatedItems = items.map(item => 
+        item.id === editingItem.id ? newItem : item
+      );
+      setItems(updatedItems);
+      localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+      setEditingItem(null);
+      
+      toast({
+        title: "Éxito",
+        description: "Item actualizado correctamente",
+      });
+    } else {
+      const updatedItems = [...items, newItem];
+      setItems(updatedItems);
+      localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+      
+      toast({
+        title: "Éxito",
+        description: "Item agregado correctamente",
+      });
+    }
   };
 
   const handleDeleteItem = (id: string) => {
@@ -67,14 +87,14 @@ export default function GuestDashboard() {
   };
 
   const handleEditItem = (item: StorageItem) => {
-    console.log("Edit item:", item);
+    setEditingItem(item);
   };
 
   return (
     <div className="container py-8 space-y-8 animate-fadeIn">
       <StorageHeader setItems={setItems} />
       <div className="flex justify-between items-center">
-        <StorageForm onAddItem={handleAddItem} />
+        <StorageForm onAddItem={handleAddItem} editingItem={editingItem} />
       </div>
       <StorageTable
         items={items}
