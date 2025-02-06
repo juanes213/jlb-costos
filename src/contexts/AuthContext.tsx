@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock users with different roles
 const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" | "visits" }> = {
   "admin": { password: "admin123", role: "admin" },
-  "gerenteadm@jorgebedoya.com": { password: "juan20isa08", role: "admin" },
+  "gerenteadm@jorgebedoya.com": { password: "juan02isa08", role: "admin" },
   "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" },
   "adminjlb2002": { password: "adminjlb2025", role: "admin" },
   "storage@outlook.com": { password: "storage123", role: "storage" },
