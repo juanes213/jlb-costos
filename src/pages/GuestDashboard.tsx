@@ -6,6 +6,7 @@ import type { StorageItem } from "@/types/project";
 import { StorageHeader } from "@/components/storage/StorageHeader";
 import { StorageForm } from "@/components/storage/StorageForm";
 import { StorageTable } from "@/components/storage/StorageTable";
+import { Header } from "@/components/shared/Header";
 
 export default function GuestDashboard() {
   const [items, setItems] = useState<StorageItem[]>(() => {
@@ -91,16 +92,19 @@ export default function GuestDashboard() {
   };
 
   return (
-    <div className="container py-8 space-y-8 animate-fadeIn">
-      <StorageHeader setItems={setItems} />
-      <div className="flex justify-between items-center">
-        <StorageForm onAddItem={handleAddItem} editingItem={editingItem} />
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container py-8 space-y-8 animate-fadeIn">
+        <StorageHeader setItems={setItems} />
+        <div className="flex justify-between items-center">
+          <StorageForm onAddItem={handleAddItem} editingItem={editingItem} />
+        </div>
+        <StorageTable
+          items={items}
+          onDeleteItem={handleDeleteItem}
+          onEditItem={handleEditItem}
+        />
       </div>
-      <StorageTable
-        items={items}
-        onDeleteItem={handleDeleteItem}
-        onEditItem={handleEditItem}
-      />
     </div>
   );
 }

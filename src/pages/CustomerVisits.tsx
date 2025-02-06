@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { Header } from "@/components/shared/Header";
 
 type VisitStatus = "pending" | "completed" | "converted" | "cancelled";
 
@@ -111,171 +111,168 @@ export default function CustomerVisits() {
   };
 
   return (
-    <div className="container py-8 space-y-8 animate-fadeIn">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Control de Visitas</h1>
-        <div className="flex gap-2">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container py-8 space-y-8 animate-fadeIn">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Control de Visitas</h1>
           <Button onClick={() => {
             setIsFormOpen(!isFormOpen);
             setEditingVisit(null);
           }}>
             {isFormOpen ? "Cancelar" : "Nueva Visita"}
           </Button>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Cerrar sesión
-          </Button>
         </div>
-      </div>
 
-      {isFormOpen && (
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input 
-                name="customerName" 
-                placeholder="Nombre del Cliente" 
-                required 
-                defaultValue={editingVisit?.customerName}
-              />
-              <Input 
-                name="contactName" 
-                placeholder="Nombre de Contacto" 
-                required 
-                defaultValue={editingVisit?.contactName}
-              />
-              <Input 
-                name="email" 
-                type="email" 
-                placeholder="Email" 
-                required 
-                defaultValue={editingVisit?.email}
-              />
-              <Input 
-                name="phone" 
-                placeholder="Teléfono" 
-                required 
-                defaultValue={editingVisit?.phone}
-              />
-              <Input 
-                name="serviceType" 
-                placeholder="Tipo de Servicio" 
-                required 
-                defaultValue={editingVisit?.serviceType}
-              />
-              <Input 
-                name="date" 
-                type="date" 
-                required 
-                defaultValue={editingVisit?.date}
-              />
-              <Input 
-                name="startTime" 
-                type="time" 
-                required 
-                defaultValue={editingVisit?.startTime}
-              />
-              <Input 
-                name="endTime" 
-                type="time" 
-                required 
-                defaultValue={editingVisit?.endTime}
-              />
-              <Input
-                name="serviceValue"
-                type="number"
-                placeholder="Valor del Servicio"
-                required
-                defaultValue={editingVisit?.serviceValue}
-              />
-              <Input
-                name="bidValue"
-                type="number"
-                placeholder="Valor de la Oferta"
-                required
-                defaultValue={editingVisit?.bidValue}
-              />
-              <Select name="status" required defaultValue={editingVisit?.status}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="completed">Completada</SelectItem>
-                  <SelectItem value="converted">Convertida a OS</SelectItem>
-                  <SelectItem value="cancelled">Cancelada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Textarea 
-              name="remarks" 
-              placeholder="Observaciones" 
-              defaultValue={editingVisit?.remarks}
-            />
-            <Button type="submit">
-              {editingVisit ? "Actualizar Visita" : "Guardar Visita"}
-            </Button>
-          </form>
-        </Card>
-      )}
-
-      <div className="space-y-4">
-        {visits.map((visit) => (
-          <Card key={visit.id} className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-semibold">{visit.customerName}</h3>
-                <p className="text-sm text-gray-600">
-                  {format(new Date(visit.date), "dd/MM/yyyy")} - {visit.startTime} a {visit.endTime}
-                </p>
+        {isFormOpen && (
+          <Card className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input 
+                  name="customerName" 
+                  placeholder="Nombre del Cliente" 
+                  required 
+                  defaultValue={editingVisit?.customerName}
+                />
+                <Input 
+                  name="contactName" 
+                  placeholder="Nombre de Contacto" 
+                  required 
+                  defaultValue={editingVisit?.contactName}
+                />
+                <Input 
+                  name="email" 
+                  type="email" 
+                  placeholder="Email" 
+                  required 
+                  defaultValue={editingVisit?.email}
+                />
+                <Input 
+                  name="phone" 
+                  placeholder="Teléfono" 
+                  required 
+                  defaultValue={editingVisit?.phone}
+                />
+                <Input 
+                  name="serviceType" 
+                  placeholder="Tipo de Servicio" 
+                  required 
+                  defaultValue={editingVisit?.serviceType}
+                />
+                <Input 
+                  name="date" 
+                  type="date" 
+                  required 
+                  defaultValue={editingVisit?.date}
+                />
+                <Input 
+                  name="startTime" 
+                  type="time" 
+                  required 
+                  defaultValue={editingVisit?.startTime}
+                />
+                <Input 
+                  name="endTime" 
+                  type="time" 
+                  required 
+                  defaultValue={editingVisit?.endTime}
+                />
+                <Input
+                  name="serviceValue"
+                  type="number"
+                  placeholder="Valor del Servicio"
+                  required
+                  defaultValue={editingVisit?.serviceValue}
+                />
+                <Input
+                  name="bidValue"
+                  type="number"
+                  placeholder="Valor de la Oferta"
+                  required
+                  defaultValue={editingVisit?.bidValue}
+                />
+                <Select name="status" required defaultValue={editingVisit?.status}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendiente</SelectItem>
+                    <SelectItem value="completed">Completada</SelectItem>
+                    <SelectItem value="converted">Convertida a OS</SelectItem>
+                    <SelectItem value="cancelled">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex justify-end items-start gap-2">
-                <span className="inline-block px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
-                  {visit.status === "pending" && "Pendiente"}
-                  {visit.status === "completed" && "Completada"}
-                  {visit.status === "converted" && "Convertida a OS"}
-                  {visit.status === "cancelled" && "Cancelada"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(visit)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(visit.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm">
-                  <strong>Contacto:</strong> {visit.contactName} - {visit.phone}
-                </p>
-                <p className="text-sm">
-                  <strong>Email:</strong> {visit.email}
-                </p>
-                <p className="text-sm">
-                  <strong>Tipo de Servicio:</strong> {visit.serviceType}
-                </p>
-                <p className="text-sm">
-                  <strong>Valor del Servicio:</strong> ${visit.serviceValue.toLocaleString()}
-                </p>
-                <p className="text-sm">
-                  <strong>Valor de la Oferta:</strong> ${visit.bidValue.toLocaleString()}
-                </p>
-                {visit.remarks && (
-                  <p className="text-sm mt-2">
-                    <strong>Observaciones:</strong> {visit.remarks}
-                  </p>
-                )}
-              </div>
-            </div>
+              <Textarea 
+                name="remarks" 
+                placeholder="Observaciones" 
+                defaultValue={editingVisit?.remarks}
+              />
+              <Button type="submit">
+                {editingVisit ? "Actualizar Visita" : "Guardar Visita"}
+              </Button>
+            </form>
           </Card>
-        ))}
+        )}
+
+        <div className="space-y-4">
+          {visits.map((visit) => (
+            <Card key={visit.id} className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">{visit.customerName}</h3>
+                  <p className="text-sm text-gray-600">
+                    {format(new Date(visit.date), "dd/MM/yyyy")} - {visit.startTime} a {visit.endTime}
+                  </p>
+                </div>
+                <div className="flex justify-end items-start gap-2">
+                  <span className="inline-block px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
+                    {visit.status === "pending" && "Pendiente"}
+                    {visit.status === "completed" && "Completada"}
+                    {visit.status === "converted" && "Convertida a OS"}
+                    {visit.status === "cancelled" && "Cancelada"}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(visit)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(visit.id)}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm">
+                    <strong>Contacto:</strong> {visit.contactName} - {visit.phone}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Email:</strong> {visit.email}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Tipo de Servicio:</strong> {visit.serviceType}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Valor del Servicio:</strong> ${visit.serviceValue.toLocaleString()}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Valor de la Oferta:</strong> ${visit.bidValue.toLocaleString()}
+                  </p>
+                  {visit.remarks && (
+                    <p className="text-sm mt-2">
+                      <strong>Observaciones:</strong> {visit.remarks}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

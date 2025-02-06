@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +38,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center">
+          <img
+            src="/lovable-uploads/69132a70-cbc6-4223-b3e1-5c6d82f46a1d.png"
+            alt="JL Bedoya Group Logo"
+            className="h-16 mx-auto mb-4"
+          />
           <h2 className="text-2xl font-bold">Bienvenido a JLB</h2>
           <p className="text-muted-foreground mt-2">
             Inicie sesión para continuar
