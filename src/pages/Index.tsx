@@ -13,8 +13,8 @@ const Index = () => {
   switch (user.role) {
     case "admin":
       return <Navigate to="/admin" replace />;
-    case "guest":
-      return <Navigate to="/guest" replace />;
+    case "storage":
+      return <Navigate to="/storage" replace />;
     case "visits":
       return <Navigate to="/visits" replace />;
     default:
