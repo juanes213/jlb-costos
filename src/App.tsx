@@ -20,7 +20,7 @@ function ProtectedRoute({
   allowedRoles,
 }: {
   children: React.ReactNode;
-  allowedRoles: ("admin" | "storage" | "visits")[];
+  allowedRoles: ("admin" | "storage" | "visits" | "projects")[];
 }) {
   const { user } = useAuth();
 
@@ -35,6 +35,8 @@ function ProtectedRoute({
         return <Navigate to="/storage" replace />;
       case "visits":
         return <Navigate to="/visits" replace />;
+      case "projects":
+        return <Navigate to="/admin" replace />;
       default:
         return <Navigate to="/login" replace />;
     }
@@ -69,7 +71,7 @@ function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute allowedRoles={["admin", "projects"]}>
                       <AdminLayout>
                         <AdminDashboard />
                       </AdminLayout>

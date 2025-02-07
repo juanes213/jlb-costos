@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 type User = {
   username: string;
-  role: "admin" | "storage" | "visits";
+  role: "admin" | "storage" | "visits" | "projects";
 } | null;
 
 type AuthContextType = {
@@ -15,7 +14,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock users with different roles
-const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" | "visits" }> = {
+const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" | "visits" | "projects" }> = {
   "admin": { password: "admin123", role: "admin" },
   "gerenteadm@jorgebedoya.com": { password: "juan02isa08", role: "admin" },
   "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" },
@@ -23,7 +22,8 @@ const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" |
   "storage@outlook.com": { password: "storage123", role: "storage" },
   "storage2@outlook.com": { password: "storage456", role: "storage" },
   "visits@outlook.com": { password: "visits123", role: "visits" },
-  "visits2@outlook.com": { password: "visits456", role: "visits" }
+  "visits2@outlook.com": { password: "visits456", role: "visits" },
+  "projects@outlook.com": { password: "projects123", role: "projects" }
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

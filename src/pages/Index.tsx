@@ -17,6 +17,8 @@ const Index = () => {
       return <Navigate to="/storage" replace />;
     case "visits":
       return <Navigate to="/visits" replace />;
+    case "projects":
+      return <Navigate to="/admin" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
