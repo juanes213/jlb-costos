@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { LogOut, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +14,7 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -77,10 +77,12 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
             Importar Excel
           </Button>
         </label>
-        <Button variant="outline" onClick={handleLogout}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Cerrar sesión
-        </Button>
+        {!user?.role?.includes("admin") && (
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar sesión
+          </Button>
+        )}
       </div>
     </div>
   );
