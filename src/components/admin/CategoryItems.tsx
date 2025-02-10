@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import type { Project, Category, StorageItem } from "@/types/project";
 import { CategoryItemSelector } from "./category/CategoryItemSelector";
-import { CategoryItemInput } from "./category/CategoryItemInput";
 import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
 import { CategoryBaseCost } from "./category/CategoryBaseCost";
 import { CategoryItemCosts } from "./category/CategoryItemCosts";
@@ -63,30 +62,6 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
-  const handleItemNameChange = (itemIndex: number, value: string) => {
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].items[itemIndex].name = value;
-    onUpdateProject(newProject);
-  };
-
-  const handleCostChange = (itemIndex: number, value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    const cost = parseFloat(numericValue);
-    
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].items[itemIndex].cost = cost;
-    onUpdateProject(newProject);
-  };
-
-  const handleCategoryBaseCostChange = (value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    setCategoryBaseCost(numericValue);
-    
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].cost = parseFloat(numericValue) || 0;
-    onUpdateProject(newProject);
-  };
-
   const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
@@ -119,37 +94,22 @@ export function CategoryItems({
         >
           <div className="flex items-center gap-2 flex-1">
             {category.name === "Insumos" ? (
-              <div className="flex items-center gap-2">
-                <CategoryItemSelector
-                  storageItems={storageItems}
-                  selectedItemName={item.name}
-                  onItemSelect={(value) => handleItemSelect(itemIndex, value)}
-                />
-                <Input
-                  value={item.name}
-                  readOnly
-                  className="w-48 border-blue-200 focus:border-blue-400 bg-gray-50"
-                />
-              </div>
+              <CategoryItemSelector
+                storageItems={storageItems}
+                selectedItemName={item.name}
+                onItemSelect={(value) => handleItemSelect(itemIndex, value)}
+              />
             ) : (
-              <div className="flex items-center gap-2">
-                <CategoryItemInput
-                  name={item.name}
-                  onChange={(value) => handleItemNameChange(itemIndex, value)}
-                />
-                <Input
-                  type="text"
-                  value={item.cost ? new Intl.NumberFormat("es-CO", {
-                    style: "currency",
-                    currency: "COP",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(item.cost) : ""}
-                  onChange={(e) => handleCostChange(itemIndex, e.target.value)}
-                  placeholder="Costo"
-                  className="w-32 border-blue-200 focus:border-blue-400"
-                />
-              </div>
+              <Input
+                value={item.name}
+                onChange={(e) => {
+                  const newProject = { ...project };
+                  newProject.categories[categoryIndex].items[itemIndex].name = e.target.value;
+                  onUpdateProject(newProject);
+                }}
+                placeholder="Nombre del item"
+                className="w-48 border-blue-200 focus:border-blue-400"
+              />
             )}
             <CategoryItemQuantity
               quantity={item.quantity || 1}

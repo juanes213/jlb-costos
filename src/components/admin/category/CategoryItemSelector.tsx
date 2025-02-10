@@ -1,3 +1,4 @@
+
 import {
   Select,
   SelectContent,
@@ -29,11 +30,13 @@ export function CategoryItemSelector({
 
   return (
     <Select
-      value={selectedItemName}
+      value={selectedItemName ? storageItems.find(item => item.name === selectedItemName)?.id : undefined}
       onValueChange={onItemSelect}
     >
-      <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Seleccionar item" />
+      <SelectTrigger className="w-[300px]">
+        <SelectValue placeholder="Seleccionar item">
+          {selectedItemName || "Seleccionar item"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {storageItems
