@@ -62,6 +62,15 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleCategoryBaseCostChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setCategoryBaseCost(numericValue);
+    
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].cost = parseFloat(numericValue) || 0;
+    onUpdateProject(newProject);
+  };
+
   const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
@@ -143,3 +152,4 @@ export function CategoryItems({
     </div>
   );
 }
+
