@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,22 +76,13 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
                 </Button>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              {category.items.length === 0 && (
-                <CategoryCost
-                  project={project}
-                  categoryIndex={categoryIndex}
-                  onUpdateProject={onUpdateProject}
-                />
-              )}
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => handleDeleteProjectCategory(categoryIndex)}
-              >
-                <Trash className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => handleDeleteProjectCategory(categoryIndex)}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
           </div>
           <CategoryItems
             project={project}
