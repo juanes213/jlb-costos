@@ -89,23 +89,13 @@ export function CategoryItems({
 
   return (
     <div className="space-y-4">
-      {/* Show category base cost input for categories other than "Insumos" when they have no items */}
-      {category.items.length === 0 && category.name !== "Insumos" && (
+      {/* Show base cost input for all categories */}
+      <div className="mb-4">
         <CategoryBaseCost
           categoryBaseCost={categoryBaseCost}
           onBaseCostChange={handleCategoryBaseCostChange}
         />
-      )}
-
-      {/* Allow entering a cost for non-empty categories that aren't "Insumos" */}
-      {category.items.length > 0 && category.name !== "Insumos" && (
-        <div className="mb-4">
-          <CategoryBaseCost
-            categoryBaseCost={categoryBaseCost}
-            onBaseCostChange={handleCategoryBaseCostChange}
-          />
-        </div>
-      )}
+      </div>
 
       {category.items.map((item, itemIndex) => (
         <div
@@ -136,7 +126,7 @@ export function CategoryItems({
               unit={item.unit || ""}
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
-            {item.cost && (
+            {item.cost !== undefined && (
               <CategoryItemCosts
                 cost={item.cost}
                 quantity={item.quantity || 1}
