@@ -89,11 +89,22 @@ export function CategoryItems({
 
   return (
     <div className="space-y-4">
-      {category.items.length === 0 && (
+      {/* Show category base cost input for categories other than "Insumos" when they have no items */}
+      {category.items.length === 0 && category.name !== "Insumos" && (
         <CategoryBaseCost
           categoryBaseCost={categoryBaseCost}
           onBaseCostChange={handleCategoryBaseCostChange}
         />
+      )}
+
+      {/* Allow entering a cost for non-empty categories that aren't "Insumos" */}
+      {category.items.length > 0 && category.name !== "Insumos" && (
+        <div className="mb-4">
+          <CategoryBaseCost
+            categoryBaseCost={categoryBaseCost}
+            onBaseCostChange={handleCategoryBaseCostChange}
+          />
+        </div>
       )}
 
       {category.items.map((item, itemIndex) => (
@@ -152,4 +163,3 @@ export function CategoryItems({
     </div>
   );
 }
-
