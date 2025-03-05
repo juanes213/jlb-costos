@@ -71,6 +71,15 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleItemCostChange = (itemIndex: number, value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    const cost = parseFloat(numericValue) || 0;
+    
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].cost = cost;
+    onUpdateProject(newProject);
+  };
+
   const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
@@ -85,6 +94,16 @@ export function CategoryItems({
       quantity: 1
     });
     onUpdateProject(newProject);
+  };
+
+  const formatCurrency = (value: number) => {
+    if (!value) return "";
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
@@ -126,6 +145,21 @@ export function CategoryItems({
               unit={item.unit || ""}
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
+            
+            {/* Add cost input field for all items */}
+            {category.name !== "Insumos" && (
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Costo:</label>
+                <Input
+                  type="text"
+                  value={item.cost ? formatCurrency(item.cost) : ""}
+                  onChange={(e) => handleItemCostChange(itemIndex, e.target.value)}
+                  placeholder="Costo del item"
+                  className="w-40 border-blue-200 focus:border-blue-400"
+                />
+              </div>
+            )}
+            
             {item.cost !== undefined && (
               <CategoryItemCosts
                 cost={item.cost}
