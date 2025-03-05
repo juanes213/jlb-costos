@@ -2,7 +2,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, LayoutDashboard } from "lucide-react";
 
 export default function AdminNav() {
   const { user, logout } = useAuth();
@@ -12,8 +12,6 @@ export default function AdminNav() {
     logout();
     navigate("/login");
   };
-
-  if (user?.role !== "admin") return null;
 
   return (
     <nav className="bg-white border-b p-4 mb-6">
@@ -27,6 +25,10 @@ export default function AdminNav() {
           </Button>
           <Button variant="ghost" onClick={() => navigate("/visits")}>
             Visitas
+          </Button>
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+            <LayoutDashboard className="w-4 h-4 mr-2" />
+            Dashboard
           </Button>
         </div>
         <Button variant="outline" onClick={handleLogout}>

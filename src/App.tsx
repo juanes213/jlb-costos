@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import GuestDashboard from "./pages/GuestDashboard";
 import CustomerVisits from "./pages/CustomerVisits";
+import ProjectsDashboard from "./pages/ProjectsDashboard";
 import AdminNav from "./components/admin/AdminNav";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,16 @@ function App() {
                     <ProtectedRoute allowedRoles={["admin", "visits"]}>
                       <AdminLayout>
                         <CustomerVisits />
+                      </AdminLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "projects", "storage", "visits"]}>
+                      <AdminLayout>
+                        <ProjectsDashboard />
                       </AdminLayout>
                     </ProtectedRoute>
                   }
