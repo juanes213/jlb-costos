@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { useProjects } from "@/contexts/ProjectContext";
 import { ProjectHeader } from "@/components/admin/ProjectHeader";
@@ -19,7 +20,9 @@ export default function AdminDashboard() {
       categories: [
         { name: "Insumos", items: [] },
         { name: "Transporte", items: [] },
-        { name: "Imprevistos", items: [] }
+        { name: "Viáticos", items: [] },
+        { name: "Imprevistos", items: [] },
+        { name: "Personal", items: [] }
       ],
       status: "in-process",
       initialDate,

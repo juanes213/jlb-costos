@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { StorageItem } from "@/types/project";
 
 interface StorageFormProps {
@@ -15,13 +22,17 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
+  const [categoryName, setCategoryName] = useState("Insumos");
   const { toast } = useToast();
+
+  const categories = ["Insumos", "Transporte", "Viáticos", "Imprevistos", "Personal"];
 
   useEffect(() => {
     if (editingItem) {
       setNewItemName(editingItem.name);
       setNewItemCost(editingItem.cost.toString());
       setNewItemUnit(editingItem.unit);
+      setCategoryName(editingItem.categoryName);
     }
   }, [editingItem]);
 
@@ -41,7 +52,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   };
 
   const handleSubmit = () => {
-    if (!newItemName || !newItemCost || !newItemUnit) {
+    if (!newItemName || !newItemCost || !newItemUnit || !categoryName) {
       toast({
         title: "Error",
         description: "Por favor complete todos los campos",
@@ -63,7 +74,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
 
     const item: StorageItem = {
       id: editingItem ? editingItem.id : crypto.randomUUID(),
-      categoryName: "Insumos",
+      categoryName: categoryName,
       name: newItemName,
       cost: numericCost,
       unit: newItemUnit,
@@ -75,11 +86,27 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
     setNewItemName("");
     setNewItemCost("");
     setNewItemUnit("");
+    setCategoryName("Insumos");
   };
 
   return (
     <Card className="p-6 space-y-6 bg-white shadow-md">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Select
+          value={categoryName}
+          onValueChange={setCategoryName}
+        >
+          <SelectTrigger className="w-full border-blue-200 focus:border-blue-400">
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Input
           placeholder="Nombre del item"
           value={newItemName}
