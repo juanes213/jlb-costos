@@ -19,8 +19,8 @@ const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" |
   "gerenteadm@jorgebedoya.com": { password: "juan02isa08", role: "admin" },
   "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" },
   "adminjlb2002": { password: "adminjlb2002", role: "admin" },
-  "doperaciones@jorgebedoya.com": {password: "fabian123", role: "admin"},
-  "cfinanciero@jorgebedoya.com": {password: "cfinanciero453", role: "admin"}
+  "doperaciones@jorgebedoya.com": {password: "Dojlb2025", role: "admin"},
+  "cfinanciero@jorgebedoya.com": {password: "cfinanciero453", role: "projects"}
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
