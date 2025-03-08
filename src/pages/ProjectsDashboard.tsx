@@ -61,17 +61,13 @@ export default function ProjectsDashboard() {
       }
       
       category.items.forEach(item => {
-        const itemTotal = (item.cost || 0) * (item.quantity || 1);
-        totalCost += itemTotal;
+        const itemCost = (item.cost || 0) * (item.quantity || 1);
+        totalCost += itemCost;
         
         if (item.ivaAmount) {
           totalCost += item.ivaAmount;
         }
       });
-      
-      if (category.ivaAmount) {
-        totalCost += category.ivaAmount;
-      }
     });
     
     return totalCost;

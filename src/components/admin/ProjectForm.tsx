@@ -1,11 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Textarea } from "@/components/ui/textarea";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number, observations?: string) => void;
+  onCreateProject: (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
@@ -14,7 +14,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
   const [income, setIncome] = useState("");
-  const [observations, setObservations] = useState("");
   const { toast } = useToast();
 
   const formatCurrency = (value: string) => {
@@ -59,8 +58,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       projectId,
       parsedInitialDate,
       parsedFinalDate,
-      income ? parseFloat(income) : 0,
-      observations.trim() || undefined
+      income ? parseFloat(income) : 0
     );
     
     setNewProjectName("");
@@ -68,7 +66,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     setInitialDate("");
     setFinalDate("");
     setIncome("");
-    setObservations("");
 
     toast({
       title: "Éxito",
@@ -129,17 +126,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
               className="border-blue-200 focus:border-blue-400"
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Observaciones</label>
-          <Textarea
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
-            placeholder="Añada observaciones sobre el proyecto"
-            className="border-blue-200 focus:border-blue-400"
-            rows={3}
-          />
         </div>
       </div>
 
