@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,11 +51,14 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       return;
     }
 
+    const parsedInitialDate = initialDate ? new Date(initialDate) : undefined;
+    const parsedFinalDate = finalDate ? new Date(finalDate) : undefined;
+
     onCreateProject(
       newProjectName,
       projectId,
-      initialDate ? new Date(initialDate) : undefined,
-      finalDate ? new Date(finalDate) : undefined,
+      parsedInitialDate,
+      parsedFinalDate,
       income ? parseFloat(income) : 0,
       observations.trim() || undefined
     );

@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -38,7 +37,6 @@ export default function ProjectsDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
 
-  // Filter projects based on search query and status
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
       const matchesSearch =
@@ -50,28 +48,27 @@ export default function ProjectsDashboard() {
     });
   }, [projects, searchQuery, statusFilter]);
 
-  // Calculate total cost for a project
   const calculateProjectCost = (project: Project) => {
     let totalCost = 0;
     
     project.categories.forEach(category => {
-      // Add category base cost if it exists
+      if (category.name === "Personal") {
+        return;
+      }
+      
       if (category.cost) {
         totalCost += category.cost;
       }
       
-      // Add costs from items
       category.items.forEach(item => {
         const itemTotal = (item.cost || 0) * (item.quantity || 1);
         totalCost += itemTotal;
         
-        // Add IVA if it exists
         if (item.ivaAmount) {
           totalCost += item.ivaAmount;
         }
       });
       
-      // Add category IVA if it exists
       if (category.ivaAmount) {
         totalCost += category.ivaAmount;
       }
@@ -80,7 +77,6 @@ export default function ProjectsDashboard() {
     return totalCost;
   };
 
-  // Calculate analytics for selected projects or all filtered projects
   const analytics = useMemo(() => {
     const projectsToAnalyze = selectedProjects.length > 0
       ? filteredProjects.filter(p => selectedProjects.includes(p.id))
@@ -108,11 +104,10 @@ export default function ProjectsDashboard() {
     };
   }, [filteredProjects, selectedProjects]);
 
-  // Data for charts
   const barChartData = useMemo(() => {
     const projectsToShow = selectedProjects.length > 0
       ? filteredProjects.filter(p => selectedProjects.includes(p.id))
-      : filteredProjects.slice(0, 5); // Show only first 5 projects if none selected
+      : filteredProjects.slice(0, 5);
     
     return projectsToShow.map(project => {
       const cost = calculateProjectCost(project);
@@ -127,53 +122,50 @@ export default function ProjectsDashboard() {
 
   const pieChartData = useMemo(() => {
     if (selectedProjects.length === 0 && filteredProjects.length > 0) {
-      // If no specific projects selected, show category breakdown of first project
       const project = filteredProjects[0];
-      return project.categories.map(category => {
-        let categoryCost = category.cost || 0;
-        
-        // Add costs from items
-        category.items.forEach(item => {
-          categoryCost += (item.cost || 0) * (item.quantity || 1);
-          if (item.ivaAmount) categoryCost += item.ivaAmount;
+      return project.categories
+        .filter(category => category.name !== "Personal")
+        .map(category => {
+          let categoryCost = category.cost || 0;
+          
+          category.items.forEach(item => {
+            categoryCost += (item.cost || 0) * (item.quantity || 1);
+            if (item.ivaAmount) categoryCost += item.ivaAmount;
+          });
+          
+          if (category.ivaAmount) {
+            categoryCost += category.ivaAmount;
+          }
+          
+          return {
+            name: category.name,
+            value: categoryCost,
+          };
         });
-        
-        // Add category IVA if it exists
-        if (category.ivaAmount) {
-          categoryCost += category.ivaAmount;
-        }
-        
-        return {
-          name: category.name,
-          value: categoryCost,
-        };
-      });
     } else if (selectedProjects.length === 1) {
-      // If one project selected, show its category breakdown
       const project = filteredProjects.find(p => p.id === selectedProjects[0]);
       if (!project) return [];
       
-      return project.categories.map(category => {
-        let categoryCost = category.cost || 0;
-        
-        // Add costs from items
-        category.items.forEach(item => {
-          categoryCost += (item.cost || 0) * (item.quantity || 1);
-          if (item.ivaAmount) categoryCost += item.ivaAmount;
+      return project.categories
+        .filter(category => category.name !== "Personal")
+        .map(category => {
+          let categoryCost = category.cost || 0;
+          
+          category.items.forEach(item => {
+            categoryCost += (item.cost || 0) * (item.quantity || 1);
+            if (item.ivaAmount) categoryCost += item.ivaAmount;
+          });
+          
+          if (category.ivaAmount) {
+            categoryCost += category.ivaAmount;
+          }
+          
+          return {
+            name: category.name,
+            value: categoryCost,
+          };
         });
-        
-        // Add category IVA if it exists
-        if (category.ivaAmount) {
-          categoryCost += category.ivaAmount;
-        }
-        
-        return {
-          name: category.name,
-          value: categoryCost,
-        };
-      });
     } else {
-      // If multiple projects selected, show cost per project
       return selectedProjects.map(projectId => {
         const project = filteredProjects.find(p => p.id === projectId);
         if (!project) return { name: "", value: 0 };
@@ -186,10 +178,8 @@ export default function ProjectsDashboard() {
     }
   }, [filteredProjects, selectedProjects]);
 
-  // Colors for pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-  // Toggle project selection
   const toggleProjectSelection = (projectId: string) => {
     if (selectedProjects.includes(projectId)) {
       setSelectedProjects(selectedProjects.filter(id => id !== projectId));
@@ -198,7 +188,6 @@ export default function ProjectsDashboard() {
     }
   };
 
-  // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -218,7 +207,6 @@ export default function ProjectsDashboard() {
           <h1 className="text-2xl font-bold text-primary">Dashboard de Proyectos</h1>
         </div>
         
-        {/* Filters */}
         <Card className="p-4">
           <CardContent className="p-2 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
@@ -250,7 +238,6 @@ export default function ProjectsDashboard() {
           </CardContent>
         </Card>
         
-        {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -317,7 +304,6 @@ export default function ProjectsDashboard() {
           </Card>
         </div>
         
-        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
@@ -381,7 +367,6 @@ export default function ProjectsDashboard() {
           </Card>
         </div>
         
-        {/* Projects Table */}
         <Card>
           <CardHeader>
             <CardTitle>Proyectos</CardTitle>

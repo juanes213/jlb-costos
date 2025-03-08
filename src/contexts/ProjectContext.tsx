@@ -76,13 +76,21 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newProject = {
       ...project,
       id: crypto.randomUUID(),
+      // Ensure dates are preserved as Date objects
+      initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+      finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
     };
     saveProjects([...projects, newProject]);
   };
 
   const updateProject = (updatedProject: Project) => {
     const newProjects = projects.map((p) =>
-      p.id === updatedProject.id ? updatedProject : p
+      p.id === updatedProject.id ? {
+        ...updatedProject,
+        // Ensure dates are preserved as Date objects
+        initialDate: updatedProject.initialDate ? new Date(updatedProject.initialDate) : undefined,
+        finalDate: updatedProject.finalDate ? new Date(updatedProject.finalDate) : undefined,
+      } : p
     );
     saveProjects(newProjects);
   };

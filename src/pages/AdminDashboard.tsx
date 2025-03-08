@@ -24,7 +24,7 @@ export default function AdminDashboard() {
         { name: "Imprevistos", items: [] },
         { name: "Personal", items: [] }
       ],
-      status: "on-hold", // Default status is now "on-hold" (waiting)
+      status: "on-hold", // Default status is "on-hold" (waiting)
       initialDate,
       finalDate,
       observations,
