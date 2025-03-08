@@ -13,9 +13,9 @@ export function CategoryItemQuantity({
   onChange,
 }: CategoryItemQuantityProps) {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Convert to number to avoid string concatenation problems
-    const newValue = e.target.value;
-    onChange(newValue);
+    // Convert string value to number to avoid concatenation
+    const value = parseFloat(e.target.value);
+    onChange(isNaN(value) ? "0" : value.toString());
   };
 
   return (
@@ -28,9 +28,11 @@ export function CategoryItemQuantity({
         min="0.1"
         step="0.1"
       />
-      <span className="text-sm text-muted-foreground">
-        {unit}
-      </span>
+      {unit && (
+        <span className="text-sm text-muted-foreground">
+          {unit}
+        </span>
+      )}
     </div>
   );
 }

@@ -6,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import type { StorageItem } from "@/types/project";
 
 interface CategoryItemSelectorProps {
@@ -21,6 +23,8 @@ export function CategoryItemSelector({
   onItemSelect,
   onManualSelect,
 }: CategoryItemSelectorProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -29,6 +33,11 @@ export function CategoryItemSelector({
       maximumFractionDigits: 0,
     }).format(value);
   };
+
+  // Filter items based on search query
+  const filteredItems = storageItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Select
@@ -47,12 +56,20 @@ export function CategoryItemSelector({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
+        <div className="p-2">
+          <Input
+            placeholder="Buscar por nombre..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="mb-2 border-blue-200 focus:border-blue-400"
+          />
+        </div>
         <SelectItem value="manual">Entrada manual</SelectItem>
-        {storageItems
+        {filteredItems
           .filter(si => si.categoryName === "Insumos")
           .map((si) => (
             <SelectItem key={si.id} value={si.id}>
-              {si.name} - {formatCurrency(si.cost)} ({si.unit})
+              {si.name} - {formatCurrency(si.cost)} {si.unit ? `(${si.unit})` : ''}
             </SelectItem>
           ))}
       </SelectContent>

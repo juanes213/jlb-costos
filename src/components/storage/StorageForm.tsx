@@ -31,7 +31,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
     if (editingItem) {
       setNewItemName(editingItem.name);
       setNewItemCost(editingItem.cost.toString());
-      setNewItemUnit(editingItem.unit);
+      setNewItemUnit(editingItem.unit || "");
       setCategoryName(editingItem.categoryName);
     }
   }, [editingItem]);
@@ -52,10 +52,10 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   };
 
   const handleSubmit = () => {
-    if (!newItemName || !newItemCost || !newItemUnit || !categoryName) {
+    if (!newItemName || !newItemCost || !categoryName) {
       toast({
         title: "Error",
-        description: "Por favor complete todos los campos",
+        description: "Por favor complete al menos el nombre, categoría y costo",
         variant: "destructive",
       });
       return;
@@ -77,7 +77,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
       categoryName: categoryName,
       name: newItemName,
       cost: numericCost,
-      unit: newItemUnit,
+      unit: newItemUnit || "",
     };
 
     onAddItem(item);
@@ -120,7 +120,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
           className="border-blue-200 focus:border-blue-400"
         />
         <Input
-          placeholder="Unidad (ej: kg, l, unidad)"
+          placeholder="Unidad (opcional)"
           value={newItemUnit}
           onChange={(e) => setNewItemUnit(e.target.value)}
           className="border-blue-200 focus:border-blue-400"

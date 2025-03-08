@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,9 +26,15 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Treemap,
+  Scatter,
+  ScatterChart,
+  ZAxis,
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChartBarIcon, DollarSign, PercentIcon, PieChartIcon } from "lucide-react";
+import { ChartBarIcon, DollarSign, PercentIcon, PieChartIcon, TrendingUp, Calendar, Activity } from "lucide-react";
 import type { Project } from "@/types/project";
 
 export default function ProjectsDashboard() {
@@ -36,7 +43,8 @@ export default function ProjectsDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-
+  const [visibleRows, setVisibleRows] = useState(10);
+  
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
       const matchesSearch =
@@ -91,24 +99,39 @@ export default function ProjectsDashboard() {
     const totalMargin = totalIncome - totalCost;
     const marginPercentage = totalIncome > 0 ? (totalMargin / totalIncome) * 100 : 0;
     
+    // Calculate average project metrics
+    const avgCost = projectsToAnalyze.length > 0 ? totalCost / projectsToAnalyze.length : 0;
+    const avgIncome = projectsToAnalyze.length > 0 ? totalIncome / projectsToAnalyze.length : 0;
+    const avgMargin = projectsToAnalyze.length > 0 ? totalMargin / projectsToAnalyze.length : 0;
+    
+    // Calculate profitable vs unprofitable projects count
+    const profitableProjects = projectsToAnalyze.filter(p => 
+      (p.income || 0) > calculateProjectCost(p)).length;
+    const unprofitableProjects = projectsToAnalyze.length - profitableProjects;
+    
     return {
       totalCost,
       totalIncome,
       totalMargin,
       marginPercentage: marginPercentage.toFixed(2),
       projectCount: projectsToAnalyze.length,
+      avgCost,
+      avgIncome,
+      avgMargin,
+      profitableProjects,
+      unprofitableProjects
     };
   }, [filteredProjects, selectedProjects]);
 
   const barChartData = useMemo(() => {
     const projectsToShow = selectedProjects.length > 0
       ? filteredProjects.filter(p => selectedProjects.includes(p.id))
-      : filteredProjects.slice(0, 5);
+      : filteredProjects.slice(0, 8);
     
     return projectsToShow.map(project => {
       const cost = calculateProjectCost(project);
       return {
-        name: project.name.length > 15 ? project.name.substring(0, 15) + '...' : project.name,
+        name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
         cost,
         income: project.income || 0,
         margin: (project.income || 0) - cost,
@@ -167,14 +190,80 @@ export default function ProjectsDashboard() {
         if (!project) return { name: "", value: 0 };
         
         return {
-          name: project.name.length > 15 ? project.name.substring(0, 15) + '...' : project.name,
+          name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
           value: calculateProjectCost(project),
         };
       });
     }
   }, [filteredProjects, selectedProjects]);
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  // Add data for new visualizations
+  const treemapData = useMemo(() => {
+    return {
+      name: 'Proyectos',
+      children: filteredProjects.slice(0, 15).map(project => {
+        const cost = calculateProjectCost(project);
+        return {
+          name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
+          size: project.income || 0,
+          cost: cost
+        };
+      })
+    };
+  }, [filteredProjects]);
+
+  const scatterData = useMemo(() => {
+    return filteredProjects.map(project => {
+      const cost = calculateProjectCost(project);
+      const income = project.income || 0;
+      return {
+        name: project.name.length > 10 ? project.name.substring(0, 10) + '...' : project.name,
+        cost,
+        income,
+        margin: income - cost
+      };
+    });
+  }, [filteredProjects]);
+
+  const profitabilityDistribution = useMemo(() => {
+    const margins = filteredProjects.map(project => {
+      const cost = calculateProjectCost(project);
+      const income = project.income || 0;
+      const margin = income - cost;
+      const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
+      
+      return {
+        name: project.name,
+        marginPercentage
+      };
+    });
+    
+    // Group by margin percentage ranges
+    const ranges = [
+      { range: '<-20%', count: 0 },
+      { range: '-20% a -10%', count: 0 },
+      { range: '-10% a 0%', count: 0 },
+      { range: '0% a 10%', count: 0 },
+      { range: '10% a 20%', count: 0 },
+      { range: '20% a 30%', count: 0 },
+      { range: '>30%', count: 0 }
+    ];
+    
+    margins.forEach(item => {
+      const mp = item.marginPercentage;
+      if (mp < -20) ranges[0].count++;
+      else if (mp < -10) ranges[1].count++;
+      else if (mp < 0) ranges[2].count++;
+      else if (mp < 10) ranges[3].count++;
+      else if (mp < 20) ranges[4].count++;
+      else if (mp < 30) ranges[5].count++;
+      else ranges[6].count++;
+    });
+    
+    return ranges;
+  }, [filteredProjects]);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
   const toggleProjectSelection = (projectId: string) => {
     if (selectedProjects.includes(projectId)) {
@@ -191,6 +280,10 @@ export default function ProjectsDashboard() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  const loadMoreProjects = () => {
+    setVisibleRows(prev => prev + 10);
   };
 
   return (
@@ -299,6 +392,72 @@ export default function ProjectsDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Activity className="w-4 h-4 mr-1 text-blue-500" />
+                Costo Promedio
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold">{formatCurrency(analytics.avgCost)}</p>
+              <p className="text-xs text-muted-foreground">
+                Por proyecto
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
+                Ingreso Promedio
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold">{formatCurrency(analytics.avgIncome)}</p>
+              <p className="text-xs text-muted-foreground">
+                Por proyecto
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Calendar className="w-4 h-4 mr-1 text-indigo-500" />
+                Proyectos Rentables
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-green-500">{analytics.profitableProjects}</p>
+              <p className="text-xs text-muted-foreground">
+                {analytics.projectCount > 0 ? 
+                  `${((analytics.profitableProjects / analytics.projectCount) * 100).toFixed(1)}% del total` : 
+                  'No hay proyectos seleccionados'}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Calendar className="w-4 h-4 mr-1 text-red-500" />
+                Proyectos No Rentables
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-red-500">{analytics.unprofitableProjects}</p>
+              <p className="text-xs text-muted-foreground">
+                {analytics.projectCount > 0 ? 
+                  `${((analytics.unprofitableProjects / analytics.projectCount) * 100).toFixed(1)}% del total` : 
+                  'No hay proyectos seleccionados'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
@@ -362,6 +521,85 @@ export default function ProjectsDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+                Distribución de Márgenes de Rentabilidad
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={profitabilityDistribution}
+                  margin={{ top: 20, right: 30, left: 30, bottom: 40 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="range" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={70}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" name="Número de proyectos" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-blue-500" />
+                Relación Costo vs Ingreso
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
+                  <CartesianGrid />
+                  <XAxis 
+                    type="number" 
+                    dataKey="cost" 
+                    name="Costo" 
+                    unit=" COP"
+                    tickFormatter={(value) => (value / 1000000).toFixed(0) + 'M'}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="income" 
+                    name="Ingreso" 
+                    unit=" COP"
+                    tickFormatter={(value) => (value / 1000000).toFixed(0) + 'M'}
+                  />
+                  <ZAxis 
+                    type="number" 
+                    dataKey="margin" 
+                    range={[50, 400]} 
+                    name="Margen" 
+                    unit=" COP"
+                  />
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
+                  <Legend />
+                  <Scatter 
+                    name="Proyectos" 
+                    data={scatterData} 
+                    fill="#8884d8"
+                  />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
         
         <Card>
           <CardHeader>
@@ -389,7 +627,7 @@ export default function ProjectsDashboard() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProjects.map((project) => {
+                  filteredProjects.slice(0, visibleRows).map((project) => {
                     const cost = calculateProjectCost(project);
                     const income = project.income || 0;
                     const margin = income - cost;
@@ -428,6 +666,13 @@ export default function ProjectsDashboard() {
                 )}
               </TableBody>
             </Table>
+            {filteredProjects.length > visibleRows && (
+              <div className="mt-4 text-center">
+                <Button variant="outline" onClick={loadMoreProjects}>
+                  Cargar más proyectos
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
