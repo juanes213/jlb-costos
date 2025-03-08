@@ -12,12 +12,14 @@ interface CategoryItemSelectorProps {
   storageItems: StorageItem[];
   selectedItemName: string;
   onItemSelect: (itemId: string) => void;
+  onManualSelect: () => void;
 }
 
 export function CategoryItemSelector({
   storageItems,
   selectedItemName,
   onItemSelect,
+  onManualSelect,
 }: CategoryItemSelectorProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -31,7 +33,13 @@ export function CategoryItemSelector({
   return (
     <Select
       value={selectedItemName ? storageItems.find(item => item.name === selectedItemName)?.id : undefined}
-      onValueChange={onItemSelect}
+      onValueChange={(value) => {
+        if (value === "manual") {
+          onManualSelect();
+        } else {
+          onItemSelect(value);
+        }
+      }}
     >
       <SelectTrigger className="w-[300px]">
         <SelectValue placeholder="Seleccionar item">
@@ -39,6 +47,7 @@ export function CategoryItemSelector({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value="manual">Entrada manual</SelectItem>
         {storageItems
           .filter(si => si.categoryName === "Insumos")
           .map((si) => (

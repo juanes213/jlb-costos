@@ -24,6 +24,8 @@ export function CategoryItems({
   onUpdateProject,
 }: CategoryItemsProps) {
   const [categoryBaseCost, setCategoryBaseCost] = useState<string>(category.cost?.toString() || "");
+  const [manualEntryMode, setManualEntryMode] = useState<Record<number, boolean>>({});
+  
   const storageItems: StorageItem[] = JSON.parse(
     localStorage.getItem("storageItems") || "[]"
   );
@@ -55,6 +57,13 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleManualSelect = (itemIndex: number) => {
+    setManualEntryMode(prev => ({
+      ...prev,
+      [itemIndex]: true
+    }));
+  };
+
   const handleQuantityChange = (itemIndex: number, value: string) => {
     const quantity = parseFloat(value);
     if (isNaN(quantity) || quantity <= 0) return;
@@ -80,6 +89,18 @@ export function CategoryItems({
     
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].cost = cost;
+    onUpdateProject(newProject);
+  };
+
+  const handleItemNameChange = (itemIndex: number, value: string) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].name = value;
+    onUpdateProject(newProject);
+  };
+
+  const handleItemUnitChange = (itemIndex: number, value: string) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].unit = value;
     onUpdateProject(newProject);
   };
 
@@ -129,19 +150,33 @@ export function CategoryItems({
         >
           <div className="flex items-center gap-2 flex-1">
             {isStorageCategory ? (
-              <CategoryItemSelector
-                storageItems={storageItems.filter(si => si.categoryName === category.name)}
-                selectedItemName={item.name}
-                onItemSelect={(value) => handleItemSelect(itemIndex, value)}
-              />
+              manualEntryMode[itemIndex] ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={item.name}
+                    onChange={(e) => handleItemNameChange(itemIndex, e.target.value)}
+                    placeholder="Nombre del item"
+                    className="w-48 border-blue-200 focus:border-blue-400"
+                  />
+                  <Input
+                    value={item.unit || ""}
+                    onChange={(e) => handleItemUnitChange(itemIndex, e.target.value)}
+                    placeholder="Unidad"
+                    className="w-20 border-blue-200 focus:border-blue-400"
+                  />
+                </div>
+              ) : (
+                <CategoryItemSelector
+                  storageItems={storageItems.filter(si => si.categoryName === category.name)}
+                  selectedItemName={item.name}
+                  onItemSelect={(value) => handleItemSelect(itemIndex, value)}
+                  onManualSelect={() => handleManualSelect(itemIndex)}
+                />
+              )
             ) : (
               <Input
                 value={item.name}
-                onChange={(e) => {
-                  const newProject = { ...project };
-                  newProject.categories[categoryIndex].items[itemIndex].name = e.target.value;
-                  onUpdateProject(newProject);
-                }}
+                onChange={(e) => handleItemNameChange(itemIndex, e.target.value)}
                 placeholder="Nombre del item"
                 className="w-48 border-blue-200 focus:border-blue-400"
               />
@@ -152,8 +187,8 @@ export function CategoryItems({
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
             
-            {/* Add cost input field for non-storage items */}
-            {!isStorageCategory && (
+            {/* Add cost input field for non-storage items or manual mode */}
+            {(!isStorageCategory || manualEntryMode[itemIndex]) && (
               <div className="flex items-center gap-2">
                 <label className="text-sm text-muted-foreground">Costo:</label>
                 <Input
