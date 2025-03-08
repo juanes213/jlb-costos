@@ -34,4 +34,5 @@ export type Project = {
   initialDate?: Date;
   finalDate?: Date;
   status: ProjectStatus;
+  observations?: string;
 };

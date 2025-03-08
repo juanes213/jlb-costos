@@ -26,6 +26,47 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Check and update project status based on dates
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const updatedProjects = projects.map(project => {
+      let updatedStatus = project.status;
+
+      // Check if initial date has arrived and project is in waiting status
+      if (project.initialDate && project.status === "on-hold") {
+        const initialDate = new Date(project.initialDate);
+        initialDate.setHours(0, 0, 0, 0);
+        
+        if (initialDate <= today) {
+          updatedStatus = "in-process";
+        }
+      }
+
+      // Check if final date has arrived and project is in progress
+      if (project.finalDate && project.status === "in-process") {
+        const finalDate = new Date(project.finalDate);
+        finalDate.setHours(0, 0, 0, 0);
+        
+        if (finalDate <= today) {
+          updatedStatus = "completed";
+        }
+      }
+
+      // Return the project with updated status if it has changed
+      if (updatedStatus !== project.status) {
+        return { ...project, status: updatedStatus };
+      }
+      return project;
+    });
+
+    // Only save if there are actually changes
+    if (JSON.stringify(updatedProjects) !== JSON.stringify(projects)) {
+      saveProjects(updatedProjects);
+    }
+  }, [projects]);
+
   const saveProjects = (newProjects: Project[]) => {
     setProjects(newProjects);
     localStorage.setItem("projects", JSON.stringify(newProjects));

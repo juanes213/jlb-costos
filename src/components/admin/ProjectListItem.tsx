@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Trash, Pencil, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, ProjectStatus } from "@/types/project";
@@ -27,6 +28,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const [editedFinalDate, setEditedFinalDate] = useState(
     project.finalDate ? format(new Date(project.finalDate), 'yyyy-MM-dd') : ''
   );
+  const [editedObservations, setEditedObservations] = useState(project.observations || "");
   const { toast } = useToast();
 
   const handleAddCategory = () => {
@@ -42,7 +44,8 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       numberId: editedNumberId,
       income: parseFloat(editedIncome) || 0,
       initialDate: editedInitialDate ? new Date(editedInitialDate) : undefined,
-      finalDate: editedFinalDate ? new Date(editedFinalDate) : undefined
+      finalDate: editedFinalDate ? new Date(editedFinalDate) : undefined,
+      observations: editedObservations || undefined
     });
 
     setIsEditing(false);
@@ -168,6 +171,26 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
           </Button>
         </div>
       </div>
+
+      {isEditing && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Observaciones</label>
+          <Textarea
+            value={editedObservations}
+            onChange={(e) => setEditedObservations(e.target.value)}
+            placeholder="Añada observaciones sobre el proyecto"
+            className="border-blue-200 focus:border-blue-400"
+            rows={3}
+          />
+        </div>
+      )}
+
+      {!isEditing && project.observations && (
+        <div className="mt-2 p-3 bg-blue-50 rounded-md">
+          <h4 className="text-sm font-medium mb-1">Observaciones:</h4>
+          <p className="text-sm text-gray-600">{project.observations}</p>
+        </div>
+      )}
 
       {isExpanded && (
         <div className="pt-4 border-t border-gray-100 animate-accordion-down">

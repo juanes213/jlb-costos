@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const { projects, addProject, deleteProject, updateProject } = useProjects();
   const [searchId, setSearchId] = useState("");
 
-  const handleCreateProject = (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => {
+  const handleCreateProject = (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number, observations?: string) => {
     addProject({
       name,
       numberId,
@@ -24,9 +24,10 @@ export default function AdminDashboard() {
         { name: "Imprevistos", items: [] },
         { name: "Personal", items: [] }
       ],
-      status: "in-process",
+      status: "on-hold", // Default status is now "on-hold" (waiting)
       initialDate,
       finalDate,
+      observations,
     });
   };
 
