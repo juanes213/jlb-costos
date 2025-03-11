@@ -19,10 +19,26 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
 
+  // Load projects from localStorage on component mount
   useEffect(() => {
-    const storedProjects = localStorage.getItem("projects");
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects));
+    try {
+      const storedProjects = localStorage.getItem("projects");
+      if (storedProjects) {
+        // Parse the projects from localStorage
+        const parsedProjects = JSON.parse(storedProjects);
+        
+        // Convert date strings back to Date objects
+        const projectsWithDates = parsedProjects.map((project: any) => ({
+          ...project,
+          initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+          finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+        }));
+        
+        setProjects(projectsWithDates);
+        console.log("Projects loaded from localStorage:", projectsWithDates);
+      }
+    } catch (error) {
+      console.error("Error loading projects from localStorage:", error);
     }
   }, []);
 
@@ -68,8 +84,22 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   }, [projects]);
 
   const saveProjects = (newProjects: Project[]) => {
-    setProjects(newProjects);
-    localStorage.setItem("projects", JSON.stringify(newProjects));
+    try {
+      setProjects(newProjects);
+      // Use a more consistent format for saving to localStorage
+      const projectsToSave = JSON.stringify(newProjects, (key, value) => {
+        // Handle Date objects explicitly
+        if (key === 'initialDate' || key === 'finalDate') {
+          return value instanceof Date ? value.toISOString() : value;
+        }
+        return value;
+      });
+      
+      localStorage.setItem("projects", projectsToSave);
+      console.log("Projects saved to localStorage:", newProjects);
+    } catch (error) {
+      console.error("Error saving projects to localStorage:", error);
+    }
   };
 
   const addProject = (project: Omit<Project, "id">) => {

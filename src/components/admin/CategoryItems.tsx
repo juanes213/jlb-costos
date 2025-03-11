@@ -65,12 +65,12 @@ export function CategoryItems({
   };
 
   const handleQuantityChange = (itemIndex: number, value: string) => {
+    // Convert to float and update the project
     const quantity = parseFloat(value);
-    if (isNaN(quantity) || quantity <= 0) return;
-
+    
     const newProject = { ...project };
     const item = newProject.categories[categoryIndex].items[itemIndex];
-    item.quantity = quantity;
+    item.quantity = isNaN(quantity) ? 0 : quantity;
     onUpdateProject(newProject);
   };
 
