@@ -1,13 +1,13 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Trash, Pencil, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Project, ProjectStatus } from "@/types/project";
-import { format } from "date-fns";
 import { ProjectCategories } from "./ProjectCategories";
-import { ProjectStatus as ProjectStatusComponent } from "./ProjectStatus";
+import { ProjectHeader } from "./project-item/ProjectHeader";
+import { ProjectEditForm } from "./project-item/ProjectEditForm";
+import { ProjectObservations } from "./project-item/ProjectObservations";
 
 interface ProjectListItemProps {
   project: Project;
@@ -55,16 +55,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     });
   };
 
-  const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/\D/g, "");
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(parseFloat(numericValue) || 0);
-  };
-
   const handleIncomeChange = (value: string) => {
     const numericValue = value.replace(/\D/g, "");
     setEditedIncome(numericValue);
@@ -79,116 +69,34 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
 
   return (
     <div className="space-y-4 p-4 border rounded-lg border-blue-100 animate-fadeIn">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        {isEditing ? (
-          <div className="flex gap-2 flex-1 flex-wrap">
-            <Input
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              placeholder="Nombre del proyecto"
-              className="border-blue-200 focus:border-blue-400 min-w-[200px]"
-            />
-            <Input
-              value={editedNumberId}
-              onChange={(e) => setEditedNumberId(e.target.value)}
-              placeholder="ID del proyecto"
-              className="border-blue-200 focus:border-blue-400 w-32"
-            />
-            <Input
-              value={editedIncome ? formatCurrency(editedIncome) : ""}
-              onChange={(e) => handleIncomeChange(e.target.value)}
-              placeholder="Ingreso del proyecto"
-              className="border-blue-200 focus:border-blue-400 w-40"
-            />
-            <Input
-              type="date"
-              value={editedInitialDate}
-              onChange={(e) => setEditedInitialDate(e.target.value)}
-              className="border-blue-200 focus:border-blue-400 w-40"
-            />
-            <Input
-              type="date"
-              value={editedFinalDate}
-              onChange={(e) => setEditedFinalDate(e.target.value)}
-              className="border-blue-200 focus:border-blue-400 w-40"
-            />
-            <Button onClick={handleSaveEdit} size="sm">
-              Guardar
-            </Button>
-          </div>
-        ) : (
-          <div className="flex gap-4 items-center flex-wrap flex-1">
-            <span className="font-medium text-primary">{project.name}</span>
-            <span className="text-sm text-muted-foreground">ID: {project.numberId}</span>
-            <span className="text-sm text-muted-foreground">
-              Ingreso: {formatCurrency(project.income.toString())}
-            </span>
-            {project.initialDate && (
-              <span className="text-sm text-muted-foreground">
-                Fecha inicial: {format(new Date(project.initialDate), 'dd/MM/yyyy')}
-              </span>
-            )}
-            {project.finalDate && (
-              <span className="text-sm text-muted-foreground">
-                Fecha final: {format(new Date(project.finalDate), 'dd/MM/yyyy')}
-              </span>
-            )}
-          </div>
-        )}
-        <div className="flex items-center gap-2 flex-wrap">
-          <ProjectStatusComponent
-            status={project.status}
+      {isEditing ? (
+        <ProjectEditForm
+          editedName={editedName}
+          editedNumberId={editedNumberId}
+          editedIncome={editedIncome}
+          editedInitialDate={editedInitialDate}
+          editedFinalDate={editedFinalDate}
+          editedObservations={editedObservations}
+          onNameChange={setEditedName}
+          onNumberIdChange={setEditedNumberId}
+          onIncomeChange={handleIncomeChange}
+          onInitialDateChange={setEditedInitialDate}
+          onFinalDateChange={setEditedFinalDate}
+          onObservationsChange={setEditedObservations}
+          onSave={handleSaveEdit}
+        />
+      ) : (
+        <>
+          <ProjectHeader
+            project={project}
+            isExpanded={isExpanded}
             onStatusChange={handleStatusChange}
+            onEdit={() => setIsEditing(true)}
+            onDelete={() => onDeleteProject(project.id)}
+            onToggleExpand={() => setIsExpanded(!isExpanded)}
           />
-          <Button
-            onClick={() => setIsEditing(!isEditing)}
-            variant="outline"
-            size="sm"
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            {isEditing ? "Cancelar" : "Editar"}
-          </Button>
-          <Button
-            onClick={() => onDeleteProject(project.id)}
-            variant="destructive"
-            size="sm"
-          >
-            <Trash className="w-4 h-4 mr-2" />
-            Eliminar
-          </Button>
-          <Button
-            onClick={() => setIsExpanded(!isExpanded)}
-            variant="outline"
-            size="sm"
-          >
-            {isExpanded ? (
-              <ChevronUp className="w-4 h-4 mr-2" />
-            ) : (
-              <ChevronDown className="w-4 h-4 mr-2" />
-            )}
-            {isExpanded ? "Ocultar detalles" : "Ver detalles"}
-          </Button>
-        </div>
-      </div>
-
-      {isEditing && (
-        <div>
-          <label className="block text-sm font-medium mb-2">Observaciones</label>
-          <Textarea
-            value={editedObservations}
-            onChange={(e) => setEditedObservations(e.target.value)}
-            placeholder="Añada observaciones sobre el proyecto"
-            className="border-blue-200 focus:border-blue-400"
-            rows={3}
-          />
-        </div>
-      )}
-
-      {!isEditing && project.observations && (
-        <div className="mt-2 p-3 bg-blue-50 rounded-md">
-          <h4 className="text-sm font-medium mb-1">Observaciones:</h4>
-          <p className="text-sm text-gray-600">{project.observations}</p>
-        </div>
+          <ProjectObservations observations={project.observations} />
+        </>
       )}
 
       {isExpanded && (
