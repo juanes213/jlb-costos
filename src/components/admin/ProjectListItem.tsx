@@ -8,6 +8,7 @@ import { ProjectCategories } from "./ProjectCategories";
 import { ProjectHeader } from "./project-item/ProjectHeader";
 import { ProjectEditForm } from "./project-item/ProjectEditForm";
 import { ProjectObservations } from "./project-item/ProjectObservations";
+import { format } from "date-fns";
 
 interface ProjectListItemProps {
   project: Project;
