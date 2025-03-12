@@ -13,8 +13,9 @@ export function CategoryItemQuantity({
   onChange,
 }: CategoryItemQuantityProps) {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allow empty value for fresh input, then convert to string
-    const value = e.target.value === "" ? "0" : e.target.value;
+    // Get the direct value from the input
+    const value = e.target.value;
+    // Pass the raw value to parent component
     onChange(value);
   };
 

@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Project } from "@/types/project";
+import { useAuth } from "./AuthContext";
 
 type ProjectContextType = {
   projects: Project[];
@@ -16,13 +17,17 @@ type ProjectContextType = {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
+// A central storage key that's app-wide, not user-specific
+const PROJECTS_STORAGE_KEY = "jlb_projects_v1";
+
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
-
-  // Load projects from localStorage on component mount
+  const { user } = useAuth();
+  
+  // Load projects from localStorage on component mount or when user changes
   useEffect(() => {
     try {
-      const storedProjects = localStorage.getItem("projects");
+      const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
       if (storedProjects) {
         // Parse the projects from localStorage
         const parsedProjects = JSON.parse(storedProjects);
@@ -40,7 +45,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error loading projects from localStorage:", error);
     }
-  }, []);
+  }, [user]);
 
   // Check and update project status based on dates
   useEffect(() => {
@@ -95,8 +100,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         return value;
       });
       
-      localStorage.setItem("projects", projectsToSave);
-      console.log("Projects saved to localStorage:", newProjects);
+      localStorage.setItem(PROJECTS_STORAGE_KEY, projectsToSave);
+      console.log("Projects saved to localStorage with key:", PROJECTS_STORAGE_KEY, newProjects);
     } catch (error) {
       console.error("Error saving projects to localStorage:", error);
     }
