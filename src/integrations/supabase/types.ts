@@ -77,30 +77,30 @@ export type Database = {
       }
       storage_items: {
         Row: {
-          categoryName: string
-          cost: number | null
+          categoryname: string
+          cost: number
           created_at: string | null
-          id: number
-          ivaAmount: number | null
-          name: string | null
+          id: string
+          ivaamount: number | null
+          name: string
           unit: string | null
         }
         Insert: {
-          categoryName: string
-          cost?: number | null
+          categoryname: string
+          cost: number
           created_at?: string | null
-          id?: number
-          ivaAmount?: number | null
-          name?: string | null
+          id?: string
+          ivaamount?: number | null
+          name: string
           unit?: string | null
         }
         Update: {
-          categoryName?: string
-          cost?: number | null
+          categoryname?: string
+          cost?: number
           created_at?: string | null
-          id?: number
-          ivaAmount?: number | null
-          name?: string | null
+          id?: string
+          ivaamount?: number | null
+          name?: string
           unit?: string | null
         }
         Relationships: []

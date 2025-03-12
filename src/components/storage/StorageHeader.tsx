@@ -45,7 +45,7 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
       }
 
       const newItems: StorageItem[] = jsonData.map((row: any) => ({
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID(), // Using UUID v4 for new items
         categoryName: row.categoryName || "Insumos",
         name: row.name,
         cost: Number(row.cost) || 0,
@@ -53,21 +53,21 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
         ivaAmount: row.ivaAmount ? Number(row.ivaAmount) : undefined,
       }));
 
-      // Save to Supabase
       console.log("Saving imported items to Supabase:", newItems);
       let successCount = 0;
       let errorCount = 0;
       
       for (const item of newItems) {
-        const { error } = await supabase.from('storage_items').insert({
-          id: item.id,
-          categoryName: item.categoryName,
-          name: item.name,
-          cost: item.cost,
-          unit: item.unit || null,
-          ivaAmount: item.ivaAmount || null,
-          created_at: new Date().toISOString()
-        });
+        const { error } = await supabase
+          .from('storage_items')
+          .insert({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || null,
+            ivaAmount: item.ivaAmount || null,
+          });
         
         if (error) {
           console.error("Error saving imported item to Supabase:", error, item);
@@ -77,10 +77,18 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
         }
       }
 
-      setItems(newItems);
-      
-      // Also save to localStorage as fallback
-      localStorage.setItem("storageItems", JSON.stringify(newItems));
+      // Only update state and localStorage if some items were successfully saved
+      if (successCount > 0) {
+        const { data: updatedItems } = await supabase
+          .from('storage_items')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (updatedItems) {
+          setItems(updatedItems as StorageItem[]);
+          localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+        }
+      }
 
       if (errorCount > 0) {
         toast({
@@ -103,7 +111,6 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
       });
     }
     
-    // Clear the input so the same file can be uploaded again if needed
     event.target.value = '';
   };
 
