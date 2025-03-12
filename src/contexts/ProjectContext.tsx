@@ -45,8 +45,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         console.log("Fetching projects for user:", user.id);
         const { data: supabaseProjects, error } = await supabase
           .from('projects')
-          .select('*')
-          .eq('created_by', user.id);
+          .select('*');
         
         if (error) {
           console.error("Error fetching projects from Supabase:", error);
@@ -103,8 +102,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   income: project.income || 0,
                   categories: project.categories,
                   observations: project.observations || null,
-                  created_at: new Date().toISOString(),
-                  created_by: user.id
+                  created_at: new Date().toISOString()
                 });
                 
                 if (insertError) {
@@ -216,8 +214,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             finalDate: project.finalDate ? project.finalDate.toISOString() : null,
             income: project.income || 0,
             categories: project.categories,
-            observations: project.observations || null,
-            created_by: user.id
+            observations: project.observations || null
           };
           
           const { error } = await supabase
