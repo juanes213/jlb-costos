@@ -74,29 +74,29 @@ export interface Database {
       storage_items: {
         Row: {
           id: string
-          categoryName: string
+          categoryname: string
           name: string
           cost: number
           unit: string | null
-          ivaAmount: number | null
+          ivaamount: number | null
           created_at: string
         }
         Insert: {
           id: string
-          categoryName: string
+          categoryname: string
           name: string
           cost: number
           unit?: string | null
-          ivaAmount?: number | null
+          ivaamount?: number | null
           created_at?: string
         }
         Update: {
           id?: string
-          categoryName?: string
+          categoryname?: string
           name?: string
           cost?: number
           unit?: string | null
-          ivaAmount?: number | null
+          ivaamount?: number | null
           created_at?: string
         }
       }
