@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "./AuthContext";
+import { supabase } from "@/lib/supabase";
 
 type ProjectContextType = {
   projects: Project[];
@@ -13,6 +14,7 @@ type ProjectContextType = {
     margin: number;
     marginPercentage: number;
   };
+  isLoading: boolean;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -22,33 +24,125 @@ const PROJECTS_STORAGE_KEY = "jlb_projects_v1";
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   
-  // Load projects from localStorage on component mount or when user changes
+  // Load projects from Supabase or localStorage when user changes
   useEffect(() => {
-    try {
-      const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
-      if (storedProjects) {
-        // Parse the projects from localStorage
-        const parsedProjects = JSON.parse(storedProjects);
-        
-        // Convert date strings back to Date objects
-        const projectsWithDates = parsedProjects.map((project: any) => ({
-          ...project,
-          initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
-          finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
-        }));
-        
-        setProjects(projectsWithDates);
-        console.log("Projects loaded from localStorage:", projectsWithDates);
-      }
-    } catch (error) {
-      console.error("Error loading projects from localStorage:", error);
+    if (!user) {
+      setProjects([]);
+      setIsLoading(false);
+      return;
     }
+    
+    const loadProjects = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Try to fetch projects from Supabase
+        const { data: supabaseProjects, error } = await supabase
+          .from('projects')
+          .select('*');
+        
+        if (error) {
+          console.error("Error fetching projects from Supabase:", error);
+          // Fall back to localStorage
+          fallbackToLocalStorage();
+          return;
+        }
+        
+        if (supabaseProjects && supabaseProjects.length > 0) {
+          // Convert Supabase projects to our Project type
+          const formattedProjects: Project[] = supabaseProjects.map(project => ({
+            id: project.id,
+            name: project.name,
+            numberId: project.numberId,
+            status: project.status,
+            initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+            finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+            income: project.income,
+            categories: project.categories as any,
+            observations: project.observations || undefined
+          }));
+          
+          setProjects(formattedProjects);
+          console.log("Projects loaded from Supabase:", formattedProjects);
+        } else {
+          // If no projects in Supabase, check localStorage and migrate if needed
+          const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
+          
+          if (storedProjects && user.role === 'admin') {
+            // Parse the projects from localStorage
+            const parsedProjects = JSON.parse(storedProjects);
+            
+            // Convert date strings back to Date objects
+            const projectsWithDates = parsedProjects.map((project: any) => ({
+              ...project,
+              initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+              finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+            }));
+            
+            // Migrate localStorage projects to Supabase
+            for (const project of projectsWithDates) {
+              await supabase.from('projects').insert({
+                id: project.id,
+                name: project.name,
+                numberId: project.numberId || '',
+                status: project.status,
+                initialDate: project.initialDate ? project.initialDate.toISOString() : null,
+                finalDate: project.finalDate ? project.finalDate.toISOString() : null,
+                income: project.income || 0,
+                categories: project.categories,
+                observations: project.observations || null,
+                created_at: new Date().toISOString(),
+                created_by: user.id
+              });
+            }
+            
+            setProjects(projectsWithDates);
+            console.log("Projects migrated from localStorage to Supabase:", projectsWithDates);
+          } else {
+            setProjects([]);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading projects:", error);
+        // Fall back to localStorage
+        fallbackToLocalStorage();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    const fallbackToLocalStorage = () => {
+      try {
+        const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
+        if (storedProjects) {
+          // Parse the projects from localStorage
+          const parsedProjects = JSON.parse(storedProjects);
+          
+          // Convert date strings back to Date objects
+          const projectsWithDates = parsedProjects.map((project: any) => ({
+            ...project,
+            initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+            finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+          }));
+          
+          setProjects(projectsWithDates);
+          console.log("Projects loaded from localStorage fallback:", projectsWithDates);
+        }
+      } catch (error) {
+        console.error("Error loading projects from localStorage:", error);
+      }
+    };
+    
+    loadProjects();
   }, [user]);
 
   // Check and update project status based on dates
   useEffect(() => {
+    if (isLoading || projects.length === 0) return;
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -86,11 +180,53 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     if (JSON.stringify(updatedProjects) !== JSON.stringify(projects)) {
       saveProjects(updatedProjects);
     }
-  }, [projects]);
+  }, [projects, isLoading]);
 
-  const saveProjects = (newProjects: Project[]) => {
+  const saveProjects = async (newProjects: Project[]) => {
     try {
       setProjects(newProjects);
+      
+      if (user) {
+        // Save to Supabase
+        for (const project of newProjects) {
+          const supabaseProject = {
+            id: project.id,
+            name: project.name,
+            numberId: project.numberId || '',
+            status: project.status,
+            initialDate: project.initialDate ? project.initialDate.toISOString() : null,
+            finalDate: project.finalDate ? project.finalDate.toISOString() : null,
+            income: project.income || 0,
+            categories: project.categories,
+            observations: project.observations || null,
+            created_by: user.id
+          };
+          
+          const { error } = await supabase
+            .from('projects')
+            .upsert(supabaseProject);
+            
+          if (error) {
+            console.error("Error saving project to Supabase:", error);
+            // Fall back to localStorage
+            saveToLocalStorage(newProjects);
+          }
+        }
+        
+        console.log("Projects saved to Supabase:", newProjects);
+      } else {
+        // Fall back to localStorage if user is not available
+        saveToLocalStorage(newProjects);
+      }
+    } catch (error) {
+      console.error("Error saving projects:", error);
+      // Fall back to localStorage
+      saveToLocalStorage(newProjects);
+    }
+  };
+  
+  const saveToLocalStorage = (newProjects: Project[]) => {
+    try {
       // Use a more consistent format for saving to localStorage
       const projectsToSave = JSON.stringify(newProjects, (key, value) => {
         // Handle Date objects explicitly
@@ -107,32 +243,65 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addProject = (project: Omit<Project, "id">) => {
-    const newProject = {
-      ...project,
-      id: crypto.randomUUID(),
-      // Ensure dates are preserved as Date objects
-      initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
-      finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
-    };
-    saveProjects([...projects, newProject]);
-  };
-
-  const updateProject = (updatedProject: Project) => {
-    const newProjects = projects.map((p) =>
-      p.id === updatedProject.id ? {
-        ...updatedProject,
+  const addProject = async (project: Omit<Project, "id">) => {
+    try {
+      if (isLoading) return;
+      
+      const newProject = {
+        ...project,
+        id: crypto.randomUUID(),
         // Ensure dates are preserved as Date objects
-        initialDate: updatedProject.initialDate ? new Date(updatedProject.initialDate) : undefined,
-        finalDate: updatedProject.finalDate ? new Date(updatedProject.finalDate) : undefined,
-      } : p
-    );
-    saveProjects(newProjects);
+        initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+        finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+      };
+      
+      saveProjects([...projects, newProject]);
+    } catch (error) {
+      console.error("Error adding project:", error);
+    }
   };
 
-  const deleteProject = (id: string) => {
-    const newProjects = projects.filter((p) => p.id !== id);
-    saveProjects(newProjects);
+  const updateProject = async (updatedProject: Project) => {
+    try {
+      if (isLoading) return;
+      
+      const newProjects = projects.map((p) =>
+        p.id === updatedProject.id ? {
+          ...updatedProject,
+          // Ensure dates are preserved as Date objects
+          initialDate: updatedProject.initialDate ? new Date(updatedProject.initialDate) : undefined,
+          finalDate: updatedProject.finalDate ? new Date(updatedProject.finalDate) : undefined,
+        } : p
+      );
+      
+      saveProjects(newProjects);
+    } catch (error) {
+      console.error("Error updating project:", error);
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      if (isLoading) return;
+      
+      const newProjects = projects.filter((p) => p.id !== id);
+      
+      // Delete from Supabase
+      if (user) {
+        const { error } = await supabase
+          .from('projects')
+          .delete()
+          .eq('id', id);
+          
+        if (error) {
+          console.error("Error deleting project from Supabase:", error);
+        }
+      }
+      
+      saveProjects(newProjects);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
   };
 
   const calculateProjectCost = (project: Project) => {
@@ -167,7 +336,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, addProject, updateProject, deleteProject, calculateProjectCost }}
+      value={{ projects, addProject, updateProject, deleteProject, calculateProjectCost, isLoading }}
     >
       {children}
     </ProjectContext.Provider>

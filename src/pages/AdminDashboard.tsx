@@ -7,9 +7,10 @@ import { ProjectList } from "@/components/admin/ProjectList";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Header } from "@/components/shared/Header";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function AdminDashboard() {
-  const { projects, addProject, deleteProject, updateProject } = useProjects();
+  const { projects, addProject, deleteProject, updateProject, isLoading } = useProjects();
   const [searchId, setSearchId] = useState("");
 
   const handleCreateProject = (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => {
@@ -33,6 +34,17 @@ export default function AdminDashboard() {
   const filteredProjects = projects.filter(project => 
     project.numberId?.toLowerCase().includes((searchId || '').toLowerCase())
   );
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-8 flex justify-center items-center h-[70vh]">
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

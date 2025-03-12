@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { LogOut, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -5,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { read, utils } from "xlsx";
 import { StorageItem } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface StorageHeaderProps {
   setItems: (items: StorageItem[]) => void;
@@ -40,7 +42,24 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
         ivaAmount: row.ivaAmount ? Number(row.ivaAmount) : undefined,
       }));
 
+      // Save to Supabase if user is logged in
+      if (user) {
+        for (const item of newItems) {
+          await supabase.from('storage_items').insert({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || null,
+            ivaAmount: item.ivaAmount || null,
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+
       setItems(newItems);
+      
+      // Also save to localStorage as fallback
       localStorage.setItem("storageItems", JSON.stringify(newItems));
 
       toast({

@@ -13,6 +13,7 @@ import GuestDashboard from "./pages/GuestDashboard";
 import CustomerVisits from "./pages/CustomerVisits";
 import ProjectsDashboard from "./pages/ProjectsDashboard";
 import AdminNav from "./components/admin/AdminNav";
+import { LoadingSpinner } from "./components/ui/loading-spinner";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,15 @@ function ProtectedRoute({
   children: React.ReactNode;
   allowedRoles: ("admin" | "storage" | "visits" | "projects")[];
 }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
