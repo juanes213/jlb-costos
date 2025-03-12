@@ -23,6 +23,7 @@ export default function GuestDashboard() {
     const loadItems = async () => {
       try {
         setIsLoading(true);
+        console.log("Loading storage items...");
         
         // Try to fetch from Supabase
         const { data: supabaseItems, error } = await supabase
@@ -37,9 +38,13 @@ export default function GuestDashboard() {
         }
         
         if (supabaseItems && supabaseItems.length > 0) {
-          setItems(supabaseItems as StorageItem[]);
           console.log("Storage items loaded from Supabase:", supabaseItems);
+          setItems(supabaseItems as StorageItem[]);
+          
+          // Also update localStorage as backup
+          localStorage.setItem("storageItems", JSON.stringify(supabaseItems));
         } else {
+          console.log("No storage items found in Supabase, checking localStorage");
           // If no items in Supabase, check localStorage and migrate if needed
           fallbackToLocalStorage(true);
         }
@@ -55,13 +60,15 @@ export default function GuestDashboard() {
       const savedItems = localStorage.getItem("storageItems");
       const localItems = savedItems ? JSON.parse(savedItems) : [];
       
+      console.log("Loading storage items from localStorage:", localItems);
       setItems(localItems);
       
       // Migrate to Supabase if requested and user is admin
       if (migrateToSupabase && localItems.length > 0 && user?.role === 'admin') {
+        console.log("Migrating storage items from localStorage to Supabase");
         try {
           for (const item of localItems) {
-            await supabase.from('storage_items').insert({
+            const { error } = await supabase.from('storage_items').insert({
               id: item.id,
               categoryName: item.categoryName,
               name: item.name,
@@ -70,6 +77,10 @@ export default function GuestDashboard() {
               ivaAmount: item.ivaAmount || null,
               created_at: new Date().toISOString()
             });
+            
+            if (error) {
+              console.error("Error migrating item to Supabase:", error, item);
+            }
           }
           console.log("Storage items migrated from localStorage to Supabase");
         } catch (error) {
@@ -81,120 +92,76 @@ export default function GuestDashboard() {
     loadItems();
   }, [user]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = utils.sheet_to_json(worksheet);
-
-      const newItems: StorageItem[] = jsonData.map((row: any) => ({
-        id: crypto.randomUUID(),
-        categoryName: row.categoryName || "Insumos",
-        name: row.name,
-        cost: Number(row.cost),
-        unit: row.unit || "unidad",
-        ivaAmount: row.ivaAmount ? Number(row.ivaAmount) : undefined,
-      }));
-
-      // Save to Supabase and update state
-      if (user) {
-        for (const item of newItems) {
-          await supabase.from('storage_items').insert({
-            id: item.id,
-            categoryName: item.categoryName,
-            name: item.name,
-            cost: item.cost,
-            unit: item.unit || null,
-            ivaAmount: item.ivaAmount || null,
-            created_at: new Date().toISOString()
-          });
-        }
-      }
-      
-      setItems(newItems);
-      
-      // Also save to localStorage as fallback
-      localStorage.setItem("storageItems", JSON.stringify(newItems));
-
-      toast({
-        title: "Éxito",
-        description: "Datos importados correctamente",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Error al importar el archivo Excel",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleAddItem = async (newItem: StorageItem) => {
     try {
       if (editingItem) {
         // Update existing item
+        console.log("Updating item:", newItem);
         const updatedItems = items.map(item => 
           item.id === editingItem.id ? newItem : item
         );
         
         // Update in Supabase
-        if (user) {
-          const { error } = await supabase
-            .from('storage_items')
-            .update({
-              categoryName: newItem.categoryName,
-              name: newItem.name,
-              cost: newItem.cost,
-              unit: newItem.unit || null,
-              ivaAmount: newItem.ivaAmount || null
-            })
-            .eq('id', newItem.id);
-            
-          if (error) {
-            console.error("Error updating item in Supabase:", error);
-          }
+        const { error } = await supabase
+          .from('storage_items')
+          .update({
+            categoryName: newItem.categoryName,
+            name: newItem.name,
+            cost: newItem.cost,
+            unit: newItem.unit || null,
+            ivaAmount: newItem.ivaAmount || null
+          })
+          .eq('id', newItem.id);
+          
+        if (error) {
+          console.error("Error updating item in Supabase:", error, newItem);
+          toast({
+            title: "Error",
+            description: "Error al actualizar el item en la base de datos",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Éxito",
+            description: "Item actualizado correctamente",
+          });
         }
         
         setItems(updatedItems);
         localStorage.setItem("storageItems", JSON.stringify(updatedItems));
         setEditingItem(null);
-        
-        toast({
-          title: "Éxito",
-          description: "Item actualizado correctamente",
-        });
       } else {
         // Add new item
+        console.log("Adding new item:", newItem);
         const updatedItems = [...items, newItem];
         
         // Add to Supabase
-        if (user) {
-          const { error } = await supabase.from('storage_items').insert({
-            id: newItem.id,
-            categoryName: newItem.categoryName,
-            name: newItem.name,
-            cost: newItem.cost,
-            unit: newItem.unit || null,
-            ivaAmount: newItem.ivaAmount || null,
-            created_at: new Date().toISOString()
+        const { error } = await supabase.from('storage_items').insert({
+          id: newItem.id,
+          categoryName: newItem.categoryName,
+          name: newItem.name,
+          cost: newItem.cost,
+          unit: newItem.unit || null,
+          ivaAmount: newItem.ivaAmount || null,
+          created_at: new Date().toISOString()
+        });
+        
+        if (error) {
+          console.error("Error adding item to Supabase:", error, newItem);
+          toast({
+            title: "Error",
+            description: "Error al guardar el item en la base de datos",
+            variant: "destructive",
           });
-          
-          if (error) {
-            console.error("Error adding item to Supabase:", error);
-          }
+        } else {
+          toast({
+            title: "Éxito",
+            description: "Item agregado correctamente",
+          });
         }
         
         setItems(updatedItems);
         localStorage.setItem("storageItems", JSON.stringify(updatedItems));
-        
-        toast({
-          title: "Éxito",
-          description: "Item agregado correctamente",
-        });
       }
     } catch (error) {
       console.error("Error saving item:", error);
@@ -208,27 +175,31 @@ export default function GuestDashboard() {
 
   const handleDeleteItem = async (id: string) => {
     try {
+      console.log("Deleting item:", id);
       const updatedItems = items.filter(item => item.id !== id);
       
       // Delete from Supabase
-      if (user) {
-        const { error } = await supabase
-          .from('storage_items')
-          .delete()
-          .eq('id', id);
-          
-        if (error) {
-          console.error("Error deleting item from Supabase:", error);
-        }
+      const { error } = await supabase
+        .from('storage_items')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error("Error deleting item from Supabase:", error);
+        toast({
+          title: "Error",
+          description: "Error al eliminar el item de la base de datos",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Éxito",
+          description: "Item eliminado correctamente",
+        });
       }
       
       setItems(updatedItems);
       localStorage.setItem("storageItems", JSON.stringify(updatedItems));
-
-      toast({
-        title: "Éxito",
-        description: "Item eliminado correctamente",
-      });
     } catch (error) {
       console.error("Error deleting item:", error);
       toast({

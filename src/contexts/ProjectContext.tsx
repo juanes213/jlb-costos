@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 type ProjectContextType = {
   projects: Project[];
@@ -26,6 +27,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
   
   // Load projects from Supabase or localStorage when user changes
   useEffect(() => {
@@ -40,9 +42,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         
         // Try to fetch projects from Supabase
+        console.log("Fetching projects for user:", user.id);
         const { data: supabaseProjects, error } = await supabase
           .from('projects')
-          .select('*');
+          .select('*')
+          .eq('created_by', user.id);
         
         if (error) {
           console.error("Error fetching projects from Supabase:", error);
@@ -67,11 +71,14 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           
           setProjects(formattedProjects);
           console.log("Projects loaded from Supabase:", formattedProjects);
+          
+          // Also update localStorage as backup
+          localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(formattedProjects));
         } else {
           // If no projects in Supabase, check localStorage and migrate if needed
           const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
           
-          if (storedProjects && user.role === 'admin') {
+          if (storedProjects) {
             // Parse the projects from localStorage
             const parsedProjects = JSON.parse(storedProjects);
             
@@ -83,24 +90,31 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             }));
             
             // Migrate localStorage projects to Supabase
-            for (const project of projectsWithDates) {
-              await supabase.from('projects').insert({
-                id: project.id,
-                name: project.name,
-                numberId: project.numberId || '',
-                status: project.status,
-                initialDate: project.initialDate ? project.initialDate.toISOString() : null,
-                finalDate: project.finalDate ? project.finalDate.toISOString() : null,
-                income: project.income || 0,
-                categories: project.categories,
-                observations: project.observations || null,
-                created_at: new Date().toISOString(),
-                created_by: user.id
-              });
+            if (user.role === 'admin' || user.role === 'projects') {
+              console.log("Migrating projects from localStorage to Supabase");
+              for (const project of projectsWithDates) {
+                const { error: insertError } = await supabase.from('projects').insert({
+                  id: project.id,
+                  name: project.name,
+                  numberId: project.numberId || '',
+                  status: project.status,
+                  initialDate: project.initialDate ? project.initialDate.toISOString() : null,
+                  finalDate: project.finalDate ? project.finalDate.toISOString() : null,
+                  income: project.income || 0,
+                  categories: project.categories,
+                  observations: project.observations || null,
+                  created_at: new Date().toISOString(),
+                  created_by: user.id
+                });
+                
+                if (insertError) {
+                  console.error("Error migrating project to Supabase:", insertError);
+                }
+              }
             }
             
             setProjects(projectsWithDates);
-            console.log("Projects migrated from localStorage to Supabase:", projectsWithDates);
+            console.log("Projects loaded from localStorage:", projectsWithDates);
           } else {
             setProjects([]);
           }
@@ -186,8 +200,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     try {
       setProjects(newProjects);
       
+      // Always save to localStorage as a backup
+      saveToLocalStorage(newProjects);
+      
       if (user) {
         // Save to Supabase
+        console.log("Saving projects to Supabase:", newProjects);
         for (const project of newProjects) {
           const supabaseProject = {
             id: project.id,
@@ -204,19 +222,22 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           
           const { error } = await supabase
             .from('projects')
-            .upsert(supabaseProject);
+            .upsert(supabaseProject, { 
+              onConflict: 'id',
+              ignoreDuplicates: false 
+            });
             
           if (error) {
-            console.error("Error saving project to Supabase:", error);
-            // Fall back to localStorage
-            saveToLocalStorage(newProjects);
+            console.error("Error saving project to Supabase:", error, supabaseProject);
+            toast({
+              title: "Error",
+              description: "No se pudo guardar el proyecto en la base de datos.",
+              variant: "destructive"
+            });
+          } else {
+            console.log("Project saved to Supabase successfully:", supabaseProject.id);
           }
         }
-        
-        console.log("Projects saved to Supabase:", newProjects);
-      } else {
-        // Fall back to localStorage if user is not available
-        saveToLocalStorage(newProjects);
       }
     } catch (error) {
       console.error("Error saving projects:", error);
@@ -237,7 +258,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       });
       
       localStorage.setItem(PROJECTS_STORAGE_KEY, projectsToSave);
-      console.log("Projects saved to localStorage with key:", PROJECTS_STORAGE_KEY, newProjects);
+      console.log("Projects saved to localStorage with key:", PROJECTS_STORAGE_KEY);
     } catch (error) {
       console.error("Error saving projects to localStorage:", error);
     }
@@ -255,9 +276,20 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
       };
       
+      console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
+      
+      toast({
+        title: "Éxito",
+        description: "Proyecto creado correctamente"
+      });
     } catch (error) {
       console.error("Error adding project:", error);
+      toast({
+        title: "Error",
+        description: "Error al crear el proyecto",
+        variant: "destructive"
+      });
     }
   };
 
@@ -274,9 +306,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         } : p
       );
       
+      console.log("Updating project:", updatedProject);
       saveProjects(newProjects);
     } catch (error) {
       console.error("Error updating project:", error);
+      toast({
+        title: "Error",
+        description: "Error al actualizar el proyecto",
+        variant: "destructive"
+      });
     }
   };
 
@@ -288,6 +326,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       
       // Delete from Supabase
       if (user) {
+        console.log("Deleting project from Supabase:", id);
         const { error } = await supabase
           .from('projects')
           .delete()
@@ -295,12 +334,27 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           
         if (error) {
           console.error("Error deleting project from Supabase:", error);
+          toast({
+            title: "Error",
+            description: "No se pudo eliminar el proyecto de la base de datos",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Éxito",
+            description: "Proyecto eliminado correctamente"
+          });
         }
       }
       
       saveProjects(newProjects);
     } catch (error) {
       console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: "Error al eliminar el proyecto",
+        variant: "destructive"
+      });
     }
   };
 

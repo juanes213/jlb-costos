@@ -33,27 +33,47 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = utils.sheet_to_json(worksheet);
 
+      console.log("Excel data imported:", jsonData);
+      
+      if (jsonData.length === 0) {
+        toast({
+          title: "Error",
+          description: "El archivo Excel no contiene datos válidos",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const newItems: StorageItem[] = jsonData.map((row: any) => ({
         id: crypto.randomUUID(),
         categoryName: row.categoryName || "Insumos",
         name: row.name,
-        cost: Number(row.cost),
+        cost: Number(row.cost) || 0,
         unit: row.unit || "unidad",
         ivaAmount: row.ivaAmount ? Number(row.ivaAmount) : undefined,
       }));
 
-      // Save to Supabase if user is logged in
-      if (user) {
-        for (const item of newItems) {
-          await supabase.from('storage_items').insert({
-            id: item.id,
-            categoryName: item.categoryName,
-            name: item.name,
-            cost: item.cost,
-            unit: item.unit || null,
-            ivaAmount: item.ivaAmount || null,
-            created_at: new Date().toISOString()
-          });
+      // Save to Supabase
+      console.log("Saving imported items to Supabase:", newItems);
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const item of newItems) {
+        const { error } = await supabase.from('storage_items').insert({
+          id: item.id,
+          categoryName: item.categoryName,
+          name: item.name,
+          cost: item.cost,
+          unit: item.unit || null,
+          ivaAmount: item.ivaAmount || null,
+          created_at: new Date().toISOString()
+        });
+        
+        if (error) {
+          console.error("Error saving imported item to Supabase:", error, item);
+          errorCount++;
+        } else {
+          successCount++;
         }
       }
 
@@ -62,17 +82,29 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
       // Also save to localStorage as fallback
       localStorage.setItem("storageItems", JSON.stringify(newItems));
 
-      toast({
-        title: "Éxito",
-        description: "Datos importados correctamente",
-      });
+      if (errorCount > 0) {
+        toast({
+          title: "Advertencia",
+          description: `Importados ${successCount} items. ${errorCount} items no pudieron ser guardados en la base de datos.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Éxito",
+          description: `${successCount} items importados correctamente`,
+        });
+      }
     } catch (error) {
+      console.error("Error importing Excel file:", error);
       toast({
         title: "Error",
         description: "Error al importar el archivo Excel",
         variant: "destructive",
       });
     }
+    
+    // Clear the input so the same file can be uploaded again if needed
+    event.target.value = '';
   };
 
   return (
