@@ -42,7 +42,7 @@ export interface Database {
           categories: Json
           observations: string | null
           created_at: string
-          created_by: string
+          updated_at: string
         }
         Insert: {
           id: string
@@ -55,7 +55,7 @@ export interface Database {
           categories: Json
           observations?: string | null
           created_at?: string
-          created_by: string
+          updated_at: string
         }
         Update: {
           id?: string
@@ -68,7 +68,7 @@ export interface Database {
           categories?: Json
           observations?: string | null
           created_at?: string
-          created_by?: string
+          updated_at?: string
         }
       }
       storage_items: {
