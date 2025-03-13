@@ -1,29 +1,73 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // If user is already logged in, redirect to appropriate page
+  useEffect(() => {
+    if (user) {
+      const redirectPath = determineRedirectPath(user.username.toLowerCase());
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Clear any previous auth state on component mount
+  useEffect(() => {
+    const checkAndClearState = async () => {
+      try {
+        // Check if Supabase has a session but our app doesn't
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session && !user) {
+          console.log("Found orphaned Supabase session, signing out to clean state");
+          await supabase.auth.signOut();
+        }
+      } catch (error) {
+        console.error("Error checking for orphaned sessions:", error);
+      }
+    };
+    
+    checkAndClearState();
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
       await login(username, password);
+      
+      // Login is successful if we reach here
       const redirectPath = determineRedirectPath(username.toLowerCase());
       navigate(redirectPath, { replace: true });
+      
+      toast({
+        title: "¡Bienvenido!",
+        description: "Has iniciado sesión exitosamente",
+      });
     } catch (error) {
+      console.error("Login failed:", error);
       toast({
         title: "Error",
         description: "Credenciales inválidas",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -61,6 +105,7 @@ export default function Login() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 className="mt-1"
+                disabled={isSubmitting}
               />
             </div>
             <div>
@@ -74,11 +119,12 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="mt-1"
+                disabled={isSubmitting}
               />
             </div>
           </div>
-          <Button type="submit" className="w-full">
-            Iniciar sesión
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
           </Button>
         </form>
       </div>

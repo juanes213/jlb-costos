@@ -32,74 +32,71 @@ export type Database = {
       }
       projects: {
         Row: {
-          categories: Json | null
+          categories: string | null
           created_at: string | null
           finalDate: string | null
-          id: number
+          id: string
           income: number | null
           initialDate: string | null
           name: string | null
-          numberId: string
+          numberId: string | null
           observations: string | null
           status: string | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
-          categories?: Json | null
+          categories?: string | null
           created_at?: string | null
           finalDate?: string | null
-          id?: number
+          id?: string
           income?: number | null
           initialDate?: string | null
           name?: string | null
-          numberId: string
+          numberId?: string | null
           observations?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
-          categories?: Json | null
+          categories?: string | null
           created_at?: string | null
           finalDate?: string | null
-          id?: number
+          id?: string
           income?: number | null
           initialDate?: string | null
           name?: string | null
-          numberId?: string
+          numberId?: string | null
           observations?: string | null
           status?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
       storage_items: {
         Row: {
-          categoryname: string
+          categoryName: string
           cost: number
           created_at: string | null
           id: string
-          ivaamount: number | null
+          ivaAmount: number | null
           name: string
           unit: string | null
         }
         Insert: {
-          categoryname: string
+          categoryName: string
           cost: number
           created_at?: string | null
           id?: string
-          ivaamount?: number | null
+          ivaAmount?: number | null
           name: string
           unit?: string | null
         }
         Update: {
-          categoryname?: string
+          categoryName?: string
           cost?: number
           created_at?: string | null
           id?: string
-          ivaamount?: number | null
+          ivaAmount?: number | null
           name?: string
           unit?: string | null
         }

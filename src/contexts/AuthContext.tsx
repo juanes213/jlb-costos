@@ -11,7 +11,7 @@ type User = {
 type AuthContextType = {
   user: User;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 };
 
@@ -41,6 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (session) {
+          console.log("Found Supabase session:", session.user.id);
+          
           // Get user profile from profiles table
           const { data: profile } = await supabase
             .from('profiles')
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               username: profile.username,
               role: profile.role
             });
+            console.log("User profile loaded from Supabase:", profile);
           }
         } else {
           // Fall back to localStorage if no Supabase session
@@ -64,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ...parsedUser,
               id: parsedUser.username // Using username as ID for localStorage users
             });
+            console.log("User loaded from localStorage:", parsedUser);
           }
         }
       } catch (error) {
@@ -73,7 +77,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
+    // Setup auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
+        
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          localStorage.removeItem("user");
+          console.log("User signed out, cleared state and localStorage");
+        } else if (event === 'SIGNED_IN' && session) {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUser({
+                id: profile.id,
+                username: profile.username,
+                role: profile.role
+              });
+              console.log("User signed in, profile loaded:", profile);
+            }
+          } catch (error) {
+            console.error("Error loading profile after sign in:", error);
+          }
+        }
+      }
+    );
+    
     checkSession();
+    
+    // Clean up the listener when the component unmounts
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -113,17 +154,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Try to create a profile in Supabase for this mock user
         try {
-          await supabase.from('profiles').upsert({
+          const { error: profileError } = await supabase.from('profiles').upsert({
             id: lowercaseUsername,
             username: lowercaseUsername,
             role: mockUser.role,
             created_at: new Date().toISOString()
           });
+          
+          if (profileError) {
+            console.error("Error creating profile for mock user:", profileError);
+          } else {
+            console.log("Profile created/updated for mock user:", lowercaseUsername);
+          }
         } catch (profileError) {
           console.error("Error creating profile for mock user:", profileError);
         }
       } else if (data.user) {
         // Supabase login successful
+        console.log("Supabase login successful:", data.user.id);
+        
         // Get user profile from profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -141,9 +190,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             created_at: new Date().toISOString()
           };
           
-          await supabase.from('profiles').insert(newProfile);
-          setUser(newProfile);
+          const { error: insertError } = await supabase.from('profiles').insert(newProfile);
+          
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+          } else {
+            console.log("New profile created:", newProfile);
+            setUser(newProfile);
+          }
         } else {
+          console.log("Existing profile loaded:", profile);
           setUser({
             id: profile.id,
             username: profile.username,
@@ -162,11 +218,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       setIsLoading(true);
+      
       // Sign out from Supabase
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out from Supabase:", error);
+      } else {
+        console.log("Successfully signed out from Supabase");
+      }
+      
       // Clear local state
       setUser(null);
       localStorage.removeItem("user");
+      
+      // Clear any session data that might be cached
+      sessionStorage.clear();
+      
+      console.log("Logout complete, all states cleared");
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
