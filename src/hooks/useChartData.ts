@@ -26,7 +26,13 @@ export function useChartData(
   const pieChartData = useMemo(() => {
     if (selectedProjects.length === 0 && filteredProjects.length > 0) {
       const project = filteredProjects[0];
-      return project.categories
+      
+      // Ensure categories is an array before mapping
+      const categories = Array.isArray(project.categories) 
+        ? project.categories 
+        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+      
+      return categories
         .filter(category => category.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
@@ -49,7 +55,12 @@ export function useChartData(
       const project = filteredProjects.find(p => p.id === selectedProjects[0]);
       if (!project) return [];
       
-      return project.categories
+      // Ensure categories is an array before mapping
+      const categories = Array.isArray(project.categories) 
+        ? project.categories 
+        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+      
+      return categories
         .filter(category => category.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
