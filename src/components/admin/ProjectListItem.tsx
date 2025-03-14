@@ -31,8 +31,24 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const [editedObservations, setEditedObservations] = useState(project.observations || "");
   const { toast } = useToast();
 
+  // Ensure project.categories is an array
+  const parsedProject = {
+    ...project,
+    categories: Array.isArray(project.categories) 
+      ? project.categories 
+      : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
+  };
+
   const handleAddCategory = () => {
     const newProject = { ...project };
+    
+    // Ensure categories is an array before adding a new one
+    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
+      newProject.categories = JSON.parse(newProject.categories);
+    } else if (!Array.isArray(newProject.categories)) {
+      newProject.categories = [];
+    }
+    
     newProject.categories = [...newProject.categories, { name: "", items: [] }];
     onUpdateProject(newProject);
   };
@@ -103,7 +119,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       {isExpanded && (
         <div className="pt-4 border-t border-gray-100 animate-accordion-down">
           <ProjectCategories 
-            project={project}
+            project={parsedProject}
             onUpdateProject={onUpdateProject}
           />
 

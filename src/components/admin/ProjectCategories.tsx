@@ -18,10 +18,21 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
   const [editedCategoryName, setEditedCategoryName] = useState("");
   const { toast } = useToast();
 
+  // Ensure categories is an array, parse it if it's a string
+  const categories = Array.isArray(project.categories) 
+    ? project.categories 
+    : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+
   const handleSaveCategoryEdit = () => {
     if (!editingCategory) return;
 
     const newProject = { ...project };
+    
+    // Ensure categories is an array before updating
+    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
+      newProject.categories = JSON.parse(newProject.categories);
+    }
+    
     newProject.categories[editingCategory.categoryIndex].name = editedCategoryName;
     onUpdateProject(newProject);
 
@@ -36,13 +47,19 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
 
   const handleDeleteProjectCategory = (categoryIndex: number) => {
     const newProject = { ...project };
+    
+    // Ensure categories is an array before filtering
+    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
+      newProject.categories = JSON.parse(newProject.categories);
+    }
+    
     newProject.categories = newProject.categories.filter((_, index) => index !== categoryIndex);
     onUpdateProject(newProject);
   };
 
   return (
     <>
-      {project.categories.map((category, categoryIndex) => (
+      {categories.map((category, categoryIndex) => (
         <div key={categoryIndex} className="ml-4 space-y-2">
           <div className="flex items-center justify-between">
             {editingCategory?.categoryIndex === categoryIndex ? (
