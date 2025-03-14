@@ -9,7 +9,12 @@ const Index = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // If user is logged in, redirect based on role
+  // Special handling for cfinanciero user who has projects role but should access admin
+  if (user.username === "cfinanciero@jorgebedoya.com") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // For other users, redirect based on role
   switch (user.role) {
     case "admin":
       return <Navigate to="/admin" replace />;

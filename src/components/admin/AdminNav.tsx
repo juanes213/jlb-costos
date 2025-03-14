@@ -3,14 +3,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogOut, LayoutDashboard } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminNav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Sesión cerrada correctamente");
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("Error al cerrar sesión");
+    }
   };
 
   return (

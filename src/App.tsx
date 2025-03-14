@@ -38,6 +38,12 @@ function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
+  // Special case for cfinanciero user
+  if (user.username === "cfinanciero@jorgebedoya.com") {
+    // Allow access to all admin routes
+    return <>{children}</>;
+  }
+
   if (!allowedRoles.includes(user.role)) {
     // Redirect to appropriate dashboard based on role
     switch (user.role) {
@@ -57,7 +63,7 @@ function ProtectedRoute({
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  if (user?.role !== "admin") return <>{children}</>;
+  if (user?.role !== "admin" && user?.username !== "cfinanciero@jorgebedoya.com") return <>{children}</>;
   
   return (
     <div>

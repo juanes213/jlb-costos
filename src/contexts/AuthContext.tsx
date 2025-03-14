@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -204,18 +205,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Error signing out from Supabase:", error);
-      } else {
-        console.log("Successfully signed out from Supabase");
-      }
-      
-      // Clear local state
+      // First, clear local state before attempting Supabase signout
+      // This ensures the UI updates even if there's an issue with Supabase
       setUser(null);
       localStorage.removeItem("user");
+      
+      // Try to sign out from Supabase (but don't wait for it to complete)
+      supabase.auth.signOut().then(({ error }) => {
+        if (error) {
+          console.error("Error signing out from Supabase:", error);
+        } else {
+          console.log("Successfully signed out from Supabase");
+        }
+      }).catch(error => {
+        console.error("Exception during Supabase signOut:", error);
+      });
       
       // Clear any session data that might be cached
       sessionStorage.clear();
