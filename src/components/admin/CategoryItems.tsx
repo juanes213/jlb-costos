@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +29,6 @@ export function CategoryItems({
     localStorage.getItem("storageItems") || "[]"
   );
 
-  // Get the list of storage categories
   const storageCategories = Array.from(new Set(storageItems.map(item => item.categoryName)));
 
   const handleDeleteProjectItem = (itemIndex: number) => {
@@ -65,8 +63,7 @@ export function CategoryItems({
   };
 
   const handleQuantityChange = (itemIndex: number, value: string) => {
-    // Convert to float and update the project
-    const quantity = parseFloat(value);
+    const quantity = value === '' ? 0 : parseInt(value, 10);
     
     const newProject = { ...project };
     const item = newProject.categories[categoryIndex].items[itemIndex];
@@ -130,12 +127,10 @@ export function CategoryItems({
     }).format(value);
   };
 
-  // Check if this category has items in storage
   const isStorageCategory = storageCategories.includes(category.name);
 
   return (
     <div className="space-y-4">
-      {/* Show base cost input for all categories */}
       <div className="mb-4">
         <CategoryBaseCost
           categoryBaseCost={categoryBaseCost}
@@ -187,7 +182,6 @@ export function CategoryItems({
               onChange={(value) => handleQuantityChange(itemIndex, value)}
             />
             
-            {/* Add cost input field for non-storage items or manual mode */}
             {(!isStorageCategory || manualEntryMode[itemIndex]) && (
               <div className="flex items-center gap-2">
                 <label className="text-sm text-muted-foreground">Costo:</label>

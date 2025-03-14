@@ -13,10 +13,12 @@ export function CategoryItemQuantity({
   onChange,
 }: CategoryItemQuantityProps) {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Get the direct value from the input
-    const value = e.target.value;
+    // Only accept integer values
+    const value = e.target.value.replace(/\D/g, '');
+    // Parse as integer (or empty string if value is empty)
+    const parsedValue = value === '' ? '' : value;
     // Pass the raw value to parent component
-    onChange(value);
+    onChange(parsedValue);
   };
 
   return (
@@ -26,8 +28,8 @@ export function CategoryItemQuantity({
         value={quantity === 0 ? "" : quantity}
         onChange={handleQuantityChange}
         className="w-20 border-blue-200 focus:border-blue-400"
-        min="0.1"
-        step="0.1"
+        min="1"
+        step="1"
       />
       {unit && (
         <span className="text-sm text-muted-foreground">
