@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -152,23 +151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user);
         localStorage.setItem("user", JSON.stringify(user));
         
-        // Try to create a profile in Supabase for this mock user
-        try {
-          const { error: profileError } = await supabase.from('profiles').upsert({
-            id: lowercaseUsername,
-            username: lowercaseUsername,
-            role: mockUser.role,
-            created_at: new Date().toISOString()
-          });
-          
-          if (profileError) {
-            console.error("Error creating profile for mock user:", profileError);
-          } else {
-            console.log("Profile created/updated for mock user:", lowercaseUsername);
-          }
-        } catch (profileError) {
-          console.error("Error creating profile for mock user:", profileError);
-        }
+        // For mock users, we'll skip creating profiles in Supabase
+        // This avoids the type mismatch between string emails and bigint IDs
+        console.log("Using mock user without creating Supabase profile:", lowercaseUsername);
       } else if (data.user) {
         // Supabase login successful
         console.log("Supabase login successful:", data.user.id);
