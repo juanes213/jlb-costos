@@ -63,7 +63,6 @@ export function PersonnelTab() {
         const { error } = await supabase
           .from('employees')
           .update({
-            code: newEmployee.code,
             name: newEmployee.name,
             isActive: newEmployee.isActive,
             salary: newEmployee.salary,
@@ -98,7 +97,6 @@ export function PersonnelTab() {
           .from('employees')
           .insert({
             id: newEmployee.id,
-            code: newEmployee.code,
             name: newEmployee.name,
             isActive: newEmployee.isActive,
             salary: newEmployee.salary,
