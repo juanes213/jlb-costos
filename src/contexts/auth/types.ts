@@ -22,5 +22,5 @@ export const MOCK_USERS: Record<string, { password: string; role: "admin" | "sto
   "adminjlb2002": { password: "adminjlb2002", role: "admin" },
   "doperaciones@jorgebedoya.com": {password: "Dojlb2025", role: "admin"},
   "cfinanciero@jorgebedoya.com": {password: "cfinanciero453", role: "admin"},
-  "cps@jorgebedoya.com": {password: "chj1234567", role: "admin"}
+  "cps@jorgebedoya.com": {password: "chg1234567", role: "admin"}
 };
