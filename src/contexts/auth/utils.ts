@@ -1,5 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 import { User, MOCK_USERS } from "./types";
 
 // Helper to check for existing Supabase session

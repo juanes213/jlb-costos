@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Header } from "@/components/shared/Header";
 import AdminNav from "@/components/admin/AdminNav";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AnalyticsSection } from "@/components/dashboard/AnalyticsSection";
 import { ChartSection } from "@/components/dashboard/ChartSection";

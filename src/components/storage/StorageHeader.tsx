@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { LogOut, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { read, utils } from "xlsx";
 import { StorageItem } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";

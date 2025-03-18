@@ -7,7 +7,7 @@ import { StorageTable } from "@/components/storage/StorageTable";
 import { Header } from "@/components/shared/Header";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 export default function GuestDashboard() {
   const [items, setItems] = useState<StorageItem[]>([]);
@@ -16,7 +16,6 @@ export default function GuestDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load storage items from Supabase
   useEffect(() => {
     const loadItems = async () => {
       try {
@@ -80,7 +79,6 @@ export default function GuestDashboard() {
           throw error;
         }
         
-        // Fetch updated items list
         const { data: updatedItems } = await supabase
           .from('storage_items')
           .select('*')
@@ -115,7 +113,6 @@ export default function GuestDashboard() {
           throw error;
         }
         
-        // Fetch updated items list
         const { data: updatedItems } = await supabase
           .from('storage_items')
           .select('*')
@@ -153,7 +150,6 @@ export default function GuestDashboard() {
         throw error;
       }
       
-      // Fetch updated items list
       const { data: updatedItems } = await supabase
         .from('storage_items')
         .select('*')

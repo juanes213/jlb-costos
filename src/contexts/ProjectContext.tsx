@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Project } from "@/types/project";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
