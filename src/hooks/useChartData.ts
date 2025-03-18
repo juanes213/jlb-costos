@@ -1,6 +1,7 @@
 
 import { useMemo } from "react";
 import type { Project } from "@/types/project";
+import { format } from "date-fns";
 
 export function useChartData(
   filteredProjects: Project[],
@@ -37,10 +38,12 @@ export function useChartData(
         .map(category => {
           let categoryCost = category.cost || 0;
           
-          category.items.forEach(item => {
-            categoryCost += (item.cost || 0) * (item.quantity || 1);
-            if (item.ivaAmount) categoryCost += item.ivaAmount;
-          });
+          if (Array.isArray(category.items)) {
+            category.items.forEach(item => {
+              categoryCost += (item.cost || 0) * (item.quantity || 1);
+              if (item.ivaAmount) categoryCost += item.ivaAmount;
+            });
+          }
           
           if (category.ivaAmount) {
             categoryCost += category.ivaAmount;
@@ -65,10 +68,12 @@ export function useChartData(
         .map(category => {
           let categoryCost = category.cost || 0;
           
-          category.items.forEach(item => {
-            categoryCost += (item.cost || 0) * (item.quantity || 1);
-            if (item.ivaAmount) categoryCost += item.ivaAmount;
-          });
+          if (Array.isArray(category.items)) {
+            category.items.forEach(item => {
+              categoryCost += (item.cost || 0) * (item.quantity || 1);
+              if (item.ivaAmount) categoryCost += item.ivaAmount;
+            });
+          }
           
           if (category.ivaAmount) {
             categoryCost += category.ivaAmount;
@@ -143,10 +148,38 @@ export function useChartData(
     return ranges;
   }, [filteredProjects, calculateProjectCost]);
 
+  // New trend data for time series analysis
+  const trendData = useMemo(() => {
+    const projectsWithDates = filteredProjects
+      .filter(project => project.initialDate)
+      .sort((a, b) => {
+        const dateA = a.initialDate instanceof Date ? a.initialDate : new Date(a.initialDate);
+        const dateB = b.initialDate instanceof Date ? b.initialDate : new Date(b.initialDate);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+    return projectsWithDates.map(project => {
+      const cost = calculateProjectCost(project);
+      const income = project.income || 0;
+      const initialDate = project.initialDate instanceof Date 
+        ? project.initialDate 
+        : new Date(project.initialDate);
+      
+      return {
+        date: format(initialDate, 'MMM yyyy'),
+        cost,
+        income,
+        margin: income - cost,
+        name: project.name
+      };
+    });
+  }, [filteredProjects, calculateProjectCost]);
+
   return {
     barChartData,
     pieChartData,
     scatterData,
-    profitabilityDistribution
+    profitabilityDistribution,
+    trendData
   };
 }

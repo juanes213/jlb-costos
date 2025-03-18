@@ -13,6 +13,7 @@ import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { useChartData } from "@/hooks/useChartData";
 import { formatCurrency } from "@/utils/formatters";
 import { calculateProjectCost } from "@/utils/projectCalculations";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProjectsDashboard() {
   const { projects } = useProjects();
@@ -34,7 +35,7 @@ export default function ProjectsDashboard() {
 
   const analytics = useDashboardAnalytics(filteredProjects, selectedProjects, calculateProjectCost);
   
-  const { barChartData, pieChartData, scatterData, profitabilityDistribution } = 
+  const { barChartData, pieChartData, scatterData, profitabilityDistribution, trendData } = 
     useChartData(filteredProjects, selectedProjects, calculateProjectCost);
 
   const toggleProjectSelection = (projectId: string) => {
@@ -52,7 +53,7 @@ export default function ProjectsDashboard() {
       
       <div className="container py-8 space-y-6 animate-fadeIn">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Dashboard de Proyectos</h1>
+          <h1 className="text-3xl font-bold text-primary">Dashboard de Proyectos</h1>
         </div>
         
         <DashboardHeader 
@@ -62,33 +63,45 @@ export default function ProjectsDashboard() {
           setStatusFilter={setStatusFilter}
         />
         
-        <AnalyticsSection 
-          analytics={analytics}
-          formatCurrency={formatCurrency}
-        />
-        
-        <ChartSection 
-          barChartData={barChartData}
-          pieChartData={pieChartData}
-          profitabilityDistribution={profitabilityDistribution}
-          scatterData={scatterData}
-          formatCurrency={formatCurrency}
-        />
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Proyectos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProjectsTable 
-              filteredProjects={filteredProjects}
-              selectedProjects={selectedProjects}
-              toggleProjectSelection={toggleProjectSelection}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Resumen</TabsTrigger>
+            <TabsTrigger value="analytics">Análisis Detallado</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <AnalyticsSection 
+              analytics={analytics}
               formatCurrency={formatCurrency}
-              calculateProjectCost={calculateProjectCost}
             />
-          </CardContent>
-        </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Proyectos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProjectsTable 
+                  filteredProjects={filteredProjects}
+                  selectedProjects={selectedProjects}
+                  toggleProjectSelection={toggleProjectSelection}
+                  formatCurrency={formatCurrency}
+                  calculateProjectCost={calculateProjectCost}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="space-y-6">
+            <ChartSection 
+              barChartData={barChartData}
+              pieChartData={pieChartData}
+              profitabilityDistribution={profitabilityDistribution}
+              scatterData={scatterData}
+              trendData={trendData}
+              formatCurrency={formatCurrency}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

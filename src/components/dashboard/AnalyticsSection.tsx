@@ -1,7 +1,6 @@
 
 import { StatCard } from "./StatCard";
-import { DollarSign, PercentIcon, Activity, TrendingUp, Calendar } from "lucide-react";
-import type { Project } from "@/types/project";
+import { DollarSign, PercentIcon, Activity, TrendingUp } from "lucide-react";
 
 interface AnalyticsSectionProps {
   analytics: {
@@ -13,8 +12,6 @@ interface AnalyticsSectionProps {
     avgCost: number;
     avgIncome: number;
     avgMargin: number;
-    profitableProjects: number;
-    unprofitableProjects: number;
   };
   formatCurrency: (value: number) => string;
 }
@@ -58,43 +55,30 @@ export function AnalyticsSection({ analytics, formatCurrency }: AnalyticsSection
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          title="Costo Promedio"
+          title="Costo Promedio por Proyecto"
           value={formatCurrency(analytics.avgCost)}
           icon={Activity}
           iconColor="text-blue-500"
-          subtitle="Por proyecto"
+          subtitle="Media de costos entre proyectos"
         />
         
         <StatCard
-          title="Ingreso Promedio"
+          title="Ingreso Promedio por Proyecto"
           value={formatCurrency(analytics.avgIncome)}
           icon={TrendingUp}
           iconColor="text-green-500"
-          subtitle="Por proyecto"
+          subtitle="Media de ingresos entre proyectos"
         />
         
         <StatCard
-          title="Proyectos Rentables"
-          value={analytics.profitableProjects}
-          icon={Calendar}
-          iconColor="text-indigo-500"
-          valueColor="text-green-500"
-          subtitle={analytics.projectCount > 0 ? 
-            `${((analytics.profitableProjects / analytics.projectCount) * 100).toFixed(1)}% del total` : 
-            'No hay proyectos seleccionados'}
-        />
-        
-        <StatCard
-          title="Proyectos No Rentables"
-          value={analytics.unprofitableProjects}
-          icon={Calendar}
-          iconColor="text-red-500"
-          valueColor="text-red-500"
-          subtitle={analytics.projectCount > 0 ? 
-            `${((analytics.unprofitableProjects / analytics.projectCount) * 100).toFixed(1)}% del total` : 
-            'No hay proyectos seleccionados'}
+          title="Margen Promedio por Proyecto"
+          value={formatCurrency(analytics.avgMargin)}
+          icon={TrendingUp}
+          iconColor="text-purple-500"
+          valueColor={analytics.avgMargin < 0 ? "text-red-500" : "text-green-500"}
+          subtitle="Media de márgenes entre proyectos"
         />
       </div>
     </>

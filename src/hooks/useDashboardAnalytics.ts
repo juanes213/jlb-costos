@@ -30,11 +30,6 @@ export function useDashboardAnalytics(
     const avgIncome = projectsToAnalyze.length > 0 ? totalIncome / projectsToAnalyze.length : 0;
     const avgMargin = projectsToAnalyze.length > 0 ? totalMargin / projectsToAnalyze.length : 0;
     
-    // Calculate profitable vs unprofitable projects count
-    const profitableProjects = projectsToAnalyze.filter(p => 
-      (p.income || 0) > calculateProjectCost(p)).length;
-    const unprofitableProjects = projectsToAnalyze.length - profitableProjects;
-    
     return {
       totalCost,
       totalIncome,
@@ -43,9 +38,7 @@ export function useDashboardAnalytics(
       projectCount: projectsToAnalyze.length,
       avgCost,
       avgIncome,
-      avgMargin,
-      profitableProjects,
-      unprofitableProjects
+      avgMargin
     };
   }, [filteredProjects, selectedProjects, calculateProjectCost]);
 
