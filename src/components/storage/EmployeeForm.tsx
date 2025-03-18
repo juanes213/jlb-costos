@@ -50,7 +50,7 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
         
         if (!isNaN(parsedSalary)) {
           // Calculate hourly rate (salary / 30 days / 8 hours)
-          const hourly = parsedSalary / 30 / 8;
+          const hourly = parsedSalary / 230;
           setHourlyRate(hourly.toFixed(2));
           
           // Calculate daily rate (salary / 30 days)
