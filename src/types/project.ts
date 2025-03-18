@@ -1,3 +1,4 @@
+
 export type Item = {
   name: string;
   cost: number;
@@ -13,6 +14,35 @@ export type StorageItem = {
   cost: number;
   unit?: string;
   ivaAmount?: number;
+};
+
+export type OvertimeType = 
+  | "ordinary_daytime" 
+  | "ordinary_night" 
+  | "ordinary_overtime" 
+  | "night_overtime" 
+  | "sunday_daytime" 
+  | "sunday_night" 
+  | "sunday_daytime_overtime" 
+  | "sunday_night_overtime";
+
+export type OvertimeRate = {
+  type: OvertimeType;
+  name: string;
+  surchargePercentage: number;
+  surchargeMultiplier: number;
+};
+
+export type Employee = {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  salary: number;
+  position: string;
+  group: string;
+  hourlyRate: number;
+  dailyRate: number;
 };
 
 export type Category = {

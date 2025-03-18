@@ -1,9 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { StorageItem } from "@/types/project";
 import { StorageHeader } from "@/components/storage/StorageHeader";
 import { StorageForm } from "@/components/storage/StorageForm";
 import { StorageTable } from "@/components/storage/StorageTable";
+import { PersonnelTab } from "@/components/storage/PersonnelTab";
 import { Header } from "@/components/shared/Header";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +18,7 @@ export default function GuestDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("items");
 
   useEffect(() => {
     const loadItems = async () => {
@@ -194,14 +198,28 @@ export default function GuestDashboard() {
       <Header />
       <div className="container py-8 space-y-8 animate-fadeIn">
         <StorageHeader setItems={setItems} />
-        <div className="flex justify-between items-center">
-          <StorageForm onAddItem={handleAddItem} editingItem={editingItem} />
-        </div>
-        <StorageTable
-          items={items}
-          onDeleteItem={handleDeleteItem}
-          onEditItem={handleEditItem}
-        />
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="items">Insumos</TabsTrigger>
+            <TabsTrigger value="personnel">Personal</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="items" className="space-y-8">
+            <div className="flex justify-between items-center">
+              <StorageForm onAddItem={handleAddItem} editingItem={editingItem} />
+            </div>
+            <StorageTable
+              items={items}
+              onDeleteItem={handleDeleteItem}
+              onEditItem={handleEditItem}
+            />
+          </TabsContent>
+          
+          <TabsContent value="personnel">
+            <PersonnelTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
