@@ -5,6 +5,15 @@ export type Item = {
   quantity?: number;
   ivaAmount?: number;
   unit?: string;
+  overtimeRecords?: OvertimeRecord[];
+};
+
+export type OvertimeRecord = {
+  id: string;
+  employeeId: string;
+  overtimeType: OvertimeType;
+  hours: number;
+  cost: number;
 };
 
 export type StorageItem = {
