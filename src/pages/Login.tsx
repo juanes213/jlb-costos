@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +39,11 @@ export default function Login() {
     };
     
     checkAndClearState();
+    
+    // Also clear any localStorage user data that might be left over
+    if (!sessionStorage.getItem("user")) {
+      localStorage.removeItem("user");
+    }
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,6 +79,7 @@ export default function Login() {
     if (username.includes("admin")) return "/admin";
     if (username.includes("storage")) return "/storage";
     if (username.includes("visits")) return "/visits";
+    if (username === "cfinanciero@jorgebedoya.com") return "/admin";
     return "/admin"; // Default path for unspecified cases
   };
 

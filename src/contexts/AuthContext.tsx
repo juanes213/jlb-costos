@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
+  // Check for existing session on mount and set up beforeunload event
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -60,14 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           // Fall back to localStorage if no Supabase session
-          const storedUser = localStorage.getItem("user");
+          const storedUser = sessionStorage.getItem("user");
           if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
             setUser({
               ...parsedUser,
               id: parsedUser.username // Using username as ID for localStorage users
             });
-            console.log("User loaded from localStorage:", parsedUser);
+            console.log("User loaded from sessionStorage:", parsedUser);
           }
         }
       } catch (error) {
@@ -84,8 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (event === 'SIGNED_OUT') {
           setUser(null);
+          sessionStorage.removeItem("user");
           localStorage.removeItem("user");
-          console.log("User signed out, cleared state and localStorage");
+          console.log("User signed out, cleared state and storage");
         } else if (event === 'SIGNED_IN' && session) {
           try {
             const { data: profile } = await supabase
@@ -109,11 +110,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
     
+    // Handle page unload (closing tab/browser)
+    const handleBeforeUnload = () => {
+      console.log("Page is being closed, cleaning up session");
+      sessionStorage.removeItem("user");
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     checkSession();
     
-    // Clean up the listener when the component unmounts
+    // Clean up the listeners when the component unmounts
     return () => {
       authListener?.subscription.unsubscribe();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
@@ -150,7 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         
         setUser(user);
-        localStorage.setItem("user", JSON.stringify(user));
+        // Store in sessionStorage instead of localStorage
+        sessionStorage.setItem("user", JSON.stringify(user));
         
         // For mock users, we'll skip creating profiles in Supabase
         // This avoids the type mismatch between string emails and bigint IDs
@@ -209,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // This ensures the UI updates even if there's an issue with Supabase
       setUser(null);
       localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
       
       // Try to sign out from Supabase (but don't wait for it to complete)
       supabase.auth.signOut().then(({ error }) => {
