@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,7 +14,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // If user is already logged in, redirect to appropriate page
   useEffect(() => {
     if (user) {
       const redirectPath = determineRedirectPath(user.username.toLowerCase());
@@ -22,11 +21,9 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  // Clear any previous auth state on component mount
   useEffect(() => {
     const checkAndClearState = async () => {
       try {
-        // Check if Supabase has a session but our app doesn't
         const { data } = await supabase.auth.getSession();
         
         if (data.session && !user) {
@@ -40,7 +37,6 @@ export default function Login() {
     
     checkAndClearState();
     
-    // Also clear any localStorage user data that might be left over
     if (!sessionStorage.getItem("user")) {
       localStorage.removeItem("user");
     }
@@ -55,7 +51,6 @@ export default function Login() {
       setIsSubmitting(true);
       await login(username, password);
       
-      // Login is successful if we reach here
       const redirectPath = determineRedirectPath(username.toLowerCase());
       navigate(redirectPath, { replace: true });
       

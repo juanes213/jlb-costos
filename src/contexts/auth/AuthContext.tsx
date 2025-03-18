@@ -1,31 +1,15 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-
-type User = {
-  username: string;
-  role: "admin" | "storage" | "visits" | "projects";
-  id: string;
-} | null;
-
-type AuthContextType = {
-  user: User;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-};
+import { AuthContextType, User } from "./types";
+import { 
+  checkSupabaseSession, 
+  checkStoredSession, 
+  validateMockUser, 
+  getOrCreateProfile 
+} from "./utils";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users with different roles for fallback authentication
-const MOCK_USERS: Record<string, { password: string; role: "admin" | "storage" | "visits" | "projects" }> = {
-  "admin": { password: "admin123", role: "admin" },
-  "gerenteadm@jorgebedoya.com": { password: "juan02isa08", role: "admin" },
-  "gerenciacomercial@jorgebedoya.com": { password: "Valentino280606", role: "admin" },
-  "adminjlb2002": { password: "adminjlb2002", role: "admin" },
-  "doperaciones@jorgebedoya.com": {password: "Dojlb2025", role: "admin"},
-  "cfinanciero@jorgebedoya.com": {password: "cfinanciero453", role: "admin"}
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
@@ -37,37 +21,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        // Check if user exists in Supabase
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // First check Supabase
+        const supabaseUser = await checkSupabaseSession();
         
-        if (session) {
-          console.log("Found Supabase session:", session.user.id);
-          
-          // Get user profile from profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser({
-              id: profile.id,
-              username: profile.username,
-              role: profile.role
-            });
-            console.log("User profile loaded from Supabase:", profile);
-          }
+        if (supabaseUser) {
+          setUser(supabaseUser);
+          console.log("User profile loaded from Supabase:", supabaseUser);
         } else {
-          // Fall back to localStorage if no Supabase session
-          const storedUser = sessionStorage.getItem("user");
+          // Fall back to sessionStorage if no Supabase session
+          const storedUser = checkStoredSession();
           if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser({
-              ...parsedUser,
-              id: parsedUser.username // Using username as ID for localStorage users
-            });
-            console.log("User loaded from sessionStorage:", parsedUser);
+            setUser(storedUser);
+            console.log("User loaded from sessionStorage:", storedUser);
           }
         }
       } catch (error) {
@@ -142,26 +107,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If Supabase login fails, try mock users (fallback)
         console.log("Supabase login failed, trying mock users:", error.message);
         
-        const mockUser = MOCK_USERS[lowercaseUsername];
+        const mockUser = validateMockUser(lowercaseUsername, password);
         if (!mockUser) {
-          console.log("User not found:", lowercaseUsername);
           throw new Error("Invalid credentials");
         }
 
-        if (mockUser.password !== password) {
-          console.log("Invalid password for user:", lowercaseUsername);
-          throw new Error("Invalid credentials");
-        }
-
-        const user = { 
-          username: lowercaseUsername, 
-          role: mockUser.role,
-          id: lowercaseUsername // Using username as ID for mock users
-        };
-        
-        setUser(user);
+        setUser(mockUser);
         // Store in sessionStorage instead of localStorage
-        sessionStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("user", JSON.stringify(mockUser));
         
         // For mock users, we'll skip creating profiles in Supabase
         // This avoids the type mismatch between string emails and bigint IDs
@@ -170,38 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Supabase login successful
         console.log("Supabase login successful:", data.user.id);
         
-        // Get user profile from profiles table
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-          
-        if (profileError || !profile) {
-          // Create a profile if it doesn't exist
-          // Default to 'projects' role for new Supabase users
-          const newProfile = {
-            id: data.user.id,
-            username: data.user.email || lowercaseUsername,
-            role: 'projects' as const,
-            created_at: new Date().toISOString()
-          };
-          
-          const { error: insertError } = await supabase.from('profiles').insert(newProfile);
-          
-          if (insertError) {
-            console.error("Error creating profile:", insertError);
-          } else {
-            console.log("New profile created:", newProfile);
-            setUser(newProfile);
-          }
-        } else {
-          console.log("Existing profile loaded:", profile);
-          setUser({
-            id: profile.id,
-            username: profile.username,
-            role: profile.role
-          });
+        const userProfile = await getOrCreateProfile(data.user, lowercaseUsername);
+        if (userProfile) {
+          setUser(userProfile);
         }
       }
     } catch (error) {
@@ -251,10 +175,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+export { AuthContext };
