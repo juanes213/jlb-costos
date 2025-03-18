@@ -44,7 +44,6 @@ export type OvertimeRate = {
 
 export type Employee = {
   id: string;
-  code: string;
   name: string;
   isActive: boolean;
   salary: number;

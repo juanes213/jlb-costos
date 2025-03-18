@@ -65,13 +65,11 @@ export function CategoryItemSelector({
           />
         </div>
         <SelectItem value="manual">Entrada manual</SelectItem>
-        {filteredItems
-          .filter(si => si.categoryName === "Insumos")
-          .map((si) => (
-            <SelectItem key={si.id} value={si.id}>
-              {si.name} - {formatCurrency(si.cost)} {si.unit ? `(${si.unit})` : ''}
-            </SelectItem>
-          ))}
+        {filteredItems.map((si) => (
+          <SelectItem key={si.id} value={si.id}>
+            {si.name} - {formatCurrency(si.cost)} {si.unit ? `(${si.unit})` : ''}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

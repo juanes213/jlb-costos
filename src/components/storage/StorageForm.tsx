@@ -25,7 +25,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   const [categoryName, setCategoryName] = useState("Insumos");
   const { toast } = useToast();
 
-  const categories = ["Insumos", "Transporte", "Viáticos", "Imprevistos", "Personal"];
+  const categories = ["Insumos", "Transporte", "Viáticos", "Imprevistos"];
 
   useEffect(() => {
     if (editingItem) {

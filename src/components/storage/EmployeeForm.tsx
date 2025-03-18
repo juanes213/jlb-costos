@@ -19,7 +19,6 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormProps) {
-  const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [isActive, setIsActive] = useState<boolean>(true);
   const [salary, setSalary] = useState("");
@@ -33,7 +32,6 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
 
   useEffect(() => {
     if (editingEmployee) {
-      setCode(editingEmployee.code);
       setName(editingEmployee.name);
       setIsActive(editingEmployee.isActive);
       setSalary(editingEmployee.salary.toString());
@@ -81,7 +79,7 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
   };
 
   const handleSubmit = () => {
-    if (!code || !name || !salary || !position || !group) {
+    if (!name || !salary || !position || !group) {
       toast({
         title: "Error",
         description: "Por favor complete todos los campos obligatorios",
@@ -105,7 +103,6 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
 
     const employee: Employee = {
       id: editingEmployee ? editingEmployee.id : crypto.randomUUID(),
-      code,
       name,
       isActive,
       salary: parsedSalary,
@@ -118,7 +115,6 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
     onAddEmployee(employee);
 
     // Reset form
-    setCode("");
     setName("");
     setIsActive(true);
     setSalary("");
@@ -131,15 +127,6 @@ export function EmployeeForm({ onAddEmployee, editingEmployee }: EmployeeFormPro
   return (
     <Card className="p-6 space-y-6 bg-white shadow-md">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm font-medium mb-2">Código</p>
-          <Input
-            placeholder="Código del empleado"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="border-blue-200 focus:border-blue-400"
-          />
-        </div>
         <div>
           <p className="text-sm font-medium mb-2">Nombre</p>
           <Input

@@ -34,8 +34,7 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
 
   const filteredEmployees = employees.filter(employee => 
     employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.code.toLowerCase().includes(searchQuery.toLowerCase())
+    employee.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -54,7 +53,6 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Código</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Salario</TableHead>
@@ -68,14 +66,13 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
         <TableBody>
           {filteredEmployees.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-4">
+              <TableCell colSpan={8} className="text-center py-4">
                 No se encontraron empleados
               </TableCell>
             </TableRow>
           ) : (
             filteredEmployees.map((employee) => (
               <TableRow key={employee.id}>
-                <TableCell>{employee.code}</TableCell>
                 <TableCell>{employee.name}</TableCell>
                 <TableCell>{employee.isActive ? "Activo" : "Inactivo"}</TableCell>
                 <TableCell>{formatCurrency(employee.salary)}</TableCell>
