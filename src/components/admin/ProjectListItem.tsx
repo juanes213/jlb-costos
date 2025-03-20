@@ -9,6 +9,7 @@ import { ProjectHeader } from "./project-item/ProjectHeader";
 import { ProjectEditForm } from "./project-item/ProjectEditForm";
 import { ProjectObservations } from "./project-item/ProjectObservations";
 import { format } from "date-fns";
+import { ProjectPersonnel } from "./project-item/ProjectPersonnel";
 
 interface ProjectListItemProps {
   project: Project;
@@ -118,15 +119,28 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
 
       {isExpanded && (
         <div className="pt-4 border-t border-gray-100 animate-accordion-down">
-          <ProjectCategories 
-            project={parsedProject}
-            onUpdateProject={onUpdateProject}
-          />
+          {/* Personnel section - separated from categories */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-2">Personal</h3>
+            <ProjectPersonnel 
+              project={parsedProject}
+              onUpdateProject={onUpdateProject}
+            />
+          </div>
 
-          <Button onClick={handleAddCategory} variant="outline" size="sm" className="mt-4">
-            <Plus className="w-4 h-4 mr-2" />
-            Añadir categoría
-          </Button>
+          {/* Categories section */}
+          <div>
+            <h3 className="text-lg font-medium mb-2">Categorías</h3>
+            <ProjectCategories 
+              project={parsedProject}
+              onUpdateProject={onUpdateProject}
+            />
+
+            <Button onClick={handleAddCategory} variant="outline" size="sm" className="mt-4">
+              <Plus className="w-4 h-4 mr-2" />
+              Añadir categoría
+            </Button>
+          </div>
         </div>
       )}
     </div>

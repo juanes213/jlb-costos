@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "@/contexts/auth";
@@ -358,7 +357,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const calculateProjectCost = (project: Project) => {
     let totalCost = 0;
 
-    // Calculate cost for each category except "Personal"
+    // Calculate cost for each regular category (excluding Personal)
     project.categories.forEach(category => {
       if (category.name !== "Personal") {
         // Add category base cost if it exists
@@ -378,6 +377,21 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         });
       }
     });
+    
+    // Calculate personnel costs separately
+    const personalCategory = project.categories.find(cat => cat.name === "Personal");
+    if (personalCategory) {
+      personalCategory.items.forEach(item => {
+        if (item.name === "Horas extras" && item.overtimeRecords) {
+          item.overtimeRecords.forEach(record => {
+            totalCost += record.cost;
+          });
+        } else {
+          const itemCost = item.cost * (item.quantity || 1);
+          totalCost += itemCost;
+        }
+      });
+    }
 
     const margin = project.income - totalCost;
     const marginPercentage = totalCost > 0 ? (margin / totalCost) * 100 : 0;

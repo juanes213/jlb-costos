@@ -9,7 +9,6 @@ import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
 import { CategoryBaseCost } from "./category/CategoryBaseCost";
 import { CategoryItemCosts } from "./category/CategoryItemCosts";
 import { CategoryItemActions } from "./category/CategoryItemActions";
-import { EmployeeOvertimeSelector } from "./category/EmployeeOvertimeSelector";
 
 interface CategoryItemsProps {
   project: Project;
@@ -119,35 +118,6 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
-  const handleOvertimeRecordsSelect = (records: any[]) => {
-    if (records.length === 0) return;
-    
-    const totalCost = records.reduce((sum, record) => sum + record.cost, 0);
-    
-    const newProject = { ...project };
-    
-    // Find or create the overtime item
-    const overtimeItemIndex = newProject.categories[categoryIndex].items.findIndex(
-      item => item.name === "Horas extras"
-    );
-    
-    if (overtimeItemIndex >= 0) {
-      // Update the existing overtime item
-      newProject.categories[categoryIndex].items[overtimeItemIndex].cost = totalCost;
-      newProject.categories[categoryIndex].items[overtimeItemIndex].overtimeRecords = records;
-    } else {
-      // Create a new overtime item
-      newProject.categories[categoryIndex].items.push({
-        name: "Horas extras",
-        cost: totalCost,
-        quantity: 1,
-        overtimeRecords: records
-      });
-    }
-    
-    onUpdateProject(newProject);
-  };
-
   const formatCurrency = (value: number) => {
     if (!value) return "";
     return new Intl.NumberFormat("es-CO", {
@@ -158,8 +128,12 @@ export function CategoryItems({
     }).format(value);
   };
 
+  // Skip rendering for Personal category as it's now handled separately
+  if (category.name === "Personal") {
+    return null;
+  }
+
   const isStorageCategory = storageCategories.includes(category.name);
-  const isPersonnelCategory = category.name === "Personal";
 
   return (
     <div className="space-y-4">
@@ -169,18 +143,6 @@ export function CategoryItems({
           onBaseCostChange={handleCategoryBaseCostChange}
         />
       </div>
-
-      {isPersonnelCategory && (
-        <div className="ml-4 mb-4">
-          <h3 className="text-md font-medium mb-2">Horas extras</h3>
-          <EmployeeOvertimeSelector 
-            onSelect={handleOvertimeRecordsSelect}
-            selectedRecords={
-              category.items.find(item => item.name === "Horas extras")?.overtimeRecords || []
-            }
-          />
-        </div>
-      )}
 
       {category.items.map((item, itemIndex) => (
         <div
