@@ -22,8 +22,7 @@ export default function AdminDashboard() {
         { name: "Insumos", items: [] },
         { name: "Transporte", items: [] },
         { name: "Viáticos", items: [] },
-        { name: "Imprevistos", items: [] },
-        { name: "Personal", items: [] }
+        { name: "Imprevistos", items: [] }
       ],
       status: "on-hold", // Default status is "on-hold" (waiting)
       initialDate,
