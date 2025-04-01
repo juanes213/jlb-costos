@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,7 +31,6 @@ export function PersonnelTab() {
         
         if (supabaseEmployees && supabaseEmployees.length > 0) {
           console.log("Employees loaded from Supabase:", supabaseEmployees);
-          // Map database column names to our TypeScript model
           const mappedEmployees = supabaseEmployees.map(emp => ({
             id: emp.id,
             name: emp.name,
@@ -71,6 +69,8 @@ export function PersonnelTab() {
       if (editingEmployee) {
         console.log("Updating employee:", newEmployee);
         
+        const { data: sessionData } = await supabase.auth.getSession();
+        
         const { error } = await supabase
           .from('employees')
           .update({
@@ -104,6 +104,8 @@ export function PersonnelTab() {
       } else {
         console.log("Adding new employee:", newEmployee);
         
+        const { data: sessionData } = await supabase.auth.getSession();
+        
         const { error } = await supabase
           .from('employees')
           .insert({
@@ -119,31 +121,35 @@ export function PersonnelTab() {
         
         if (error) {
           console.error("Error adding employee to Supabase:", error);
-          // Fallback to local storage
           const newEmployees = [...employees, newEmployee];
           setEmployees(newEmployees);
           localStorage.setItem("employees", JSON.stringify(newEmployees));
-        } else {
-          const { data: updatedEmployees } = await supabase
-            .from('employees')
-            .select('*')
-            .order('created_at', { ascending: false });
-            
-          if (updatedEmployees) {
-            // Map database column names to our TypeScript model
-            const mappedEmployees = updatedEmployees.map(emp => ({
-              id: emp.id,
-              name: emp.name,
-              isActive: emp.isactive,
-              salary: emp.salary,
-              position: emp.position,
-              group: emp.group,
-              hourlyRate: emp.hourlyrate,
-              dailyRate: emp.dailyrate
-            }));
-            setEmployees(mappedEmployees);
-            localStorage.setItem("employees", JSON.stringify(mappedEmployees));
-          }
+          
+          toast({
+            title: "Éxito",
+            description: "Empleado agregado correctamente (modo local)",
+          });
+          return;
+        }
+        
+        const { data: updatedEmployees } = await supabase
+          .from('employees')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (updatedEmployees) {
+          const mappedEmployees = updatedEmployees.map(emp => ({
+            id: emp.id,
+            name: emp.name,
+            isActive: emp.isactive,
+            salary: emp.salary,
+            position: emp.position,
+            group: emp.group,
+            hourlyRate: emp.hourlyrate,
+            dailyRate: emp.dailyrate
+          }));
+          setEmployees(mappedEmployees);
+          localStorage.setItem("employees", JSON.stringify(mappedEmployees));
         }
         
         toast({

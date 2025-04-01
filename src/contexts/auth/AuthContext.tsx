@@ -97,6 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const lowercaseUsername = username.toLowerCase();
       
+      // Debug the input credentials
+      console.log("Attempting login with:", lowercaseUsername);
+      
       // Try to sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: lowercaseUsername,
@@ -117,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.setItem("user", JSON.stringify(mockUser));
         
         // For mock users, we'll skip creating profiles in Supabase
-        // This avoids the type mismatch between string emails and bigint IDs
         console.log("Using mock user without creating Supabase profile:", lowercaseUsername);
       } else if (data.user) {
         // Supabase login successful

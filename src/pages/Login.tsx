@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -49,9 +50,13 @@ export default function Login() {
     
     try {
       setIsSubmitting(true);
-      await login(username, password);
       
-      const redirectPath = determineRedirectPath(username.toLowerCase());
+      // Use lowercase username for consistency
+      const lowercaseUsername = username.toLowerCase();
+      
+      await login(lowercaseUsername, password);
+      
+      const redirectPath = determineRedirectPath(lowercaseUsername);
       navigate(redirectPath, { replace: true });
       
       toast({
