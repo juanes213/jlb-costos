@@ -32,8 +32,19 @@ export function PersonnelTab() {
         
         if (supabaseEmployees && supabaseEmployees.length > 0) {
           console.log("Employees loaded from Supabase:", supabaseEmployees);
-          setEmployees(supabaseEmployees as Employee[]);
-          localStorage.setItem("employees", JSON.stringify(supabaseEmployees));
+          // Map database column names to our TypeScript model
+          const mappedEmployees = supabaseEmployees.map(emp => ({
+            id: emp.id,
+            name: emp.name,
+            isActive: emp.isactive,
+            salary: emp.salary,
+            position: emp.position,
+            group: emp.group,
+            hourlyRate: emp.hourlyrate,
+            dailyRate: emp.dailyrate
+          }));
+          setEmployees(mappedEmployees);
+          localStorage.setItem("employees", JSON.stringify(mappedEmployees));
         } else {
           console.log("No employees found in Supabase, checking localStorage");
           fallbackToLocalStorage();
@@ -64,12 +75,12 @@ export function PersonnelTab() {
           .from('employees')
           .update({
             name: newEmployee.name,
-            isActive: newEmployee.isActive,
+            isactive: newEmployee.isActive,
             salary: newEmployee.salary,
             position: newEmployee.position,
             group: newEmployee.group,
-            hourlyRate: newEmployee.hourlyRate,
-            dailyRate: newEmployee.dailyRate
+            hourlyrate: newEmployee.hourlyRate,
+            dailyrate: newEmployee.dailyRate
           })
           .eq('id', newEmployee.id);
           
@@ -98,12 +109,12 @@ export function PersonnelTab() {
           .insert({
             id: newEmployee.id,
             name: newEmployee.name,
-            isActive: newEmployee.isActive,
+            isactive: newEmployee.isActive,
             salary: newEmployee.salary,
             position: newEmployee.position,
             group: newEmployee.group,
-            hourlyRate: newEmployee.hourlyRate,
-            dailyRate: newEmployee.dailyRate
+            hourlyrate: newEmployee.hourlyRate,
+            dailyrate: newEmployee.dailyRate
           });
         
         if (error) {
@@ -119,8 +130,19 @@ export function PersonnelTab() {
             .order('created_at', { ascending: false });
             
           if (updatedEmployees) {
-            setEmployees(updatedEmployees as Employee[]);
-            localStorage.setItem("employees", JSON.stringify(updatedEmployees));
+            // Map database column names to our TypeScript model
+            const mappedEmployees = updatedEmployees.map(emp => ({
+              id: emp.id,
+              name: emp.name,
+              isActive: emp.isactive,
+              salary: emp.salary,
+              position: emp.position,
+              group: emp.group,
+              hourlyRate: emp.hourlyrate,
+              dailyRate: emp.dailyrate
+            }));
+            setEmployees(mappedEmployees);
+            localStorage.setItem("employees", JSON.stringify(mappedEmployees));
           }
         }
         

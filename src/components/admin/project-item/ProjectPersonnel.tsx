@@ -37,7 +37,18 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
         }
         
         if (data && data.length > 0) {
-          setEmployees(data as Employee[]);
+          // Map database column names to our TypeScript model
+          const mappedEmployees = data.map(emp => ({
+            id: emp.id,
+            name: emp.name,
+            isActive: emp.isactive,
+            salary: emp.salary,
+            position: emp.position,
+            group: emp.group,
+            hourlyRate: emp.hourlyrate,
+            dailyRate: emp.dailyrate
+          }));
+          setEmployees(mappedEmployees);
         } else {
           fallbackToLocalStorage();
         }
