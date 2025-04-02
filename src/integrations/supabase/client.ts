@@ -29,10 +29,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     params: {
       eventsPerSecond: 2
     }
-  },
-  // Add request throttling
-  maxRetryCount: 2,
-  retryInterval: 1000
+  }
 });
 
 // Helper function to throttle API requests

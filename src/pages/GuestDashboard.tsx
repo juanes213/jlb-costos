@@ -39,8 +39,16 @@ export default function GuestDashboard() {
         
         if (supabaseItems && supabaseItems.length > 0) {
           console.log("Storage items loaded from Supabase:", supabaseItems);
-          setItems(supabaseItems as StorageItem[]);
-          localStorage.setItem("storageItems", JSON.stringify(supabaseItems));
+          const mappedItems = supabaseItems.map(item => ({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || "",
+            ivaAmount: item.ivaAmount || undefined
+          }));
+          setItems(mappedItems as StorageItem[]);
+          localStorage.setItem("storageItems", JSON.stringify(mappedItems));
         } else {
           console.log("No storage items found in Supabase, checking localStorage");
           fallbackToLocalStorage();
@@ -89,8 +97,16 @@ export default function GuestDashboard() {
           .order('created_at', { ascending: false });
           
         if (updatedItems) {
-          setItems(updatedItems as StorageItem[]);
-          localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+          const mappedItems = updatedItems.map(item => ({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || "",
+            ivaAmount: item.ivaAmount || undefined
+          }));
+          setItems(mappedItems as StorageItem[]);
+          localStorage.setItem("storageItems", JSON.stringify(mappedItems));
         }
         
         setEditingItem(null);
@@ -101,10 +117,10 @@ export default function GuestDashboard() {
       } else {
         console.log("Adding new item:", newItem);
         
+        // For inserts, we must omit the id field
         const { error } = await supabase
           .from('storage_items')
           .insert({
-            id: newItem.id,
             categoryName: newItem.categoryName,
             name: newItem.name,
             cost: newItem.cost,
@@ -123,8 +139,16 @@ export default function GuestDashboard() {
           .order('created_at', { ascending: false });
           
         if (updatedItems) {
-          setItems(updatedItems as StorageItem[]);
-          localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+          const mappedItems = updatedItems.map(item => ({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || "",
+            ivaAmount: item.ivaAmount || undefined
+          }));
+          setItems(mappedItems as StorageItem[]);
+          localStorage.setItem("storageItems", JSON.stringify(mappedItems));
         }
         
         toast({
@@ -160,8 +184,16 @@ export default function GuestDashboard() {
         .order('created_at', { ascending: false });
         
       if (updatedItems) {
-        setItems(updatedItems as StorageItem[]);
-        localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+        const mappedItems = updatedItems.map(item => ({
+          id: item.id,
+          categoryName: item.categoryName,
+          name: item.name,
+          cost: item.cost,
+          unit: item.unit || "",
+          ivaAmount: item.ivaAmount || undefined
+        }));
+        setItems(mappedItems as StorageItem[]);
+        localStorage.setItem("storageItems", JSON.stringify(mappedItems));
       }
       
       toast({

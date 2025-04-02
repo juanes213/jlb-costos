@@ -61,7 +61,6 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
         const { error } = await supabase
           .from('storage_items')
           .insert({
-            id: item.id,
             categoryName: item.categoryName,
             name: item.name,
             cost: item.cost,
@@ -85,8 +84,17 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
           .order('created_at', { ascending: false });
           
         if (updatedItems) {
-          setItems(updatedItems as StorageItem[]);
-          localStorage.setItem("storageItems", JSON.stringify(updatedItems));
+          const mappedStorageItems = updatedItems.map(item => ({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || "",
+            ivaAmount: item.ivaAmount || undefined
+          })) as StorageItem[];
+          
+          setItems(mappedStorageItems);
+          localStorage.setItem("storageItems", JSON.stringify(mappedStorageItems));
         }
       }
 
