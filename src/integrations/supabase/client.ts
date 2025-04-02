@@ -21,5 +21,59 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       'Content-Type': 'application/json',
       'apikey': SUPABASE_PUBLISHABLE_KEY
     }
-  }
+  },
+  db: {
+    schema: 'public'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2
+    }
+  },
+  // Add request throttling
+  maxRetryCount: 2,
+  retryInterval: 1000
 });
+
+// Helper function to throttle API requests
+export const throttledRequest = (() => {
+  const queue: (() => Promise<any>)[] = [];
+  let isProcessing = false;
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const processQueue = async () => {
+    if (isProcessing || queue.length === 0) return;
+    
+    isProcessing = true;
+    try {
+      const request = queue.shift();
+      if (request) {
+        await request();
+        // Add a small delay between requests
+        await delay(300);
+      }
+    } catch (error) {
+      console.error("Error processing request:", error);
+    } finally {
+      isProcessing = false;
+      if (queue.length > 0) {
+        processQueue();
+      }
+    }
+  };
+
+  return (request: () => Promise<any>) => {
+    return new Promise((resolve, reject) => {
+      queue.push(async () => {
+        try {
+          const result = await request();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      
+      processQueue();
+    });
+  };
+})();
