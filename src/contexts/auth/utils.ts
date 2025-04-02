@@ -27,8 +27,7 @@ export async function checkSupabaseSession(): Promise<User | null> {
   
   return {
     id: profile.id,
-    username: profile.username,
-    role: profile.role
+    username: profile.username
   };
 }
 
@@ -65,8 +64,7 @@ export function validateMockUser(username: string, password: string): User | nul
   }
 
   return { 
-    username: lowercaseUsername, 
-    role: mockUser.role,
+    username: lowercaseUsername,
     id: lowercaseUsername // Using username as ID for mock users
   };
 }
@@ -82,11 +80,9 @@ export async function getOrCreateProfile(user: SupabaseUser, lowercaseUsername: 
     
   if (profileError || !profile) {
     // Create a profile if it doesn't exist
-    // Default to 'projects' role for new Supabase users
     const newProfile = {
       id: user.id,
       username: user.email || lowercaseUsername,
-      role: 'projects' as const,
       created_at: new Date().toISOString()
     };
     
@@ -99,16 +95,14 @@ export async function getOrCreateProfile(user: SupabaseUser, lowercaseUsername: 
       console.log("New profile created:", newProfile);
       return {
         id: newProfile.id,
-        username: newProfile.username,
-        role: newProfile.role
+        username: newProfile.username
       };
     }
   } else {
     console.log("Existing profile loaded:", profile);
     return {
       id: profile.id,
-      username: profile.username,
-      role: profile.role
+      username: profile.username
     };
   }
 }

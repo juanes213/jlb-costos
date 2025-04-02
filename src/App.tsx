@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,15 +14,14 @@ import CustomerVisits from "./pages/CustomerVisits";
 import ProjectsDashboard from "./pages/ProjectsDashboard";
 import AdminNav from "./components/admin/AdminNav";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({
   children,
-  allowedRoles,
 }: {
   children: React.ReactNode;
-  allowedRoles: ("admin" | "storage" | "visits" | "projects")[];
 }) {
   const { user, isLoading } = useAuth();
 
@@ -37,39 +37,7 @@ function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  // Special case for cfinanciero user
-  if (user.username === "cfinanciero@jorgebedoya.com") {
-    // Allow access to all admin routes
-    return <>{children}</>;
-  }
-
-  if (!allowedRoles.includes(user.role)) {
-    // Redirect to appropriate dashboard based on role
-    switch (user.role) {
-      case "storage":
-        return <Navigate to="/storage" replace />;
-      case "visits":
-        return <Navigate to="/visits" replace />;
-      case "projects":
-        return <Navigate to="/admin" replace />;
-      default:
-        return <Navigate to="/login" replace />;
-    }
-  }
-
   return <>{children}</>;
-}
-
-function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (user?.role !== "admin" && user?.username !== "cfinanciero@jorgebedoya.com") return <>{children}</>;
-  
-  return (
-    <div>
-      <AdminNav />
-      {children}
-    </div>
-  );
 }
 
 function App() {
@@ -86,7 +54,7 @@ function App() {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "projects"]}>
+                    <ProtectedRoute>
                       <AdminLayout>
                         <AdminDashboard />
                       </AdminLayout>
@@ -96,7 +64,7 @@ function App() {
                 <Route
                   path="/storage"
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "storage"]}>
+                    <ProtectedRoute>
                       <AdminLayout>
                         <GuestDashboard />
                       </AdminLayout>
@@ -106,7 +74,7 @@ function App() {
                 <Route
                   path="/visits"
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "visits"]}>
+                    <ProtectedRoute>
                       <AdminLayout>
                         <CustomerVisits />
                       </AdminLayout>
@@ -116,20 +84,29 @@ function App() {
                 <Route
                   path="/dashboard"
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "projects", "storage", "visits"]}>
+                    <ProtectedRoute>
                       <AdminLayout>
                         <ProjectsDashboard />
                       </AdminLayout>
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/" element={<Index />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
         </ProjectProvider>
       </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div>
+      <AdminNav />
+      {children}
+    </div>
   );
 }
 

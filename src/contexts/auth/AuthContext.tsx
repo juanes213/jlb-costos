@@ -63,8 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (profile) {
               setUser({
                 id: profile.id,
-                username: profile.username,
-                role: profile.role
+                username: profile.username
               });
               console.log("User signed in, profile loaded:", profile);
             }
