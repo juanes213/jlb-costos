@@ -55,18 +55,15 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
           <TableRow>
             <TableHead>Nombre</TableHead>
             <TableHead>Estado</TableHead>
-            {/* Removed salary column */}
             <TableHead>Cargo</TableHead>
             <TableHead>Grupo</TableHead>
-            <TableHead>Valor Hora</TableHead>
-            <TableHead>Valor Día</TableHead>
             <TableHead>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredEmployees.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
+              <TableCell colSpan={5} className="text-center py-4">
                 No se encontraron empleados
               </TableCell>
             </TableRow>
@@ -75,11 +72,8 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
               <TableRow key={employee.id}>
                 <TableCell>{employee.name}</TableCell>
                 <TableCell>{employee.isActive ? "Activo" : "Inactivo"}</TableCell>
-                {/* Removed salary cell */}
                 <TableCell>{employee.position}</TableCell>
                 <TableCell>{employee.group}</TableCell>
-                <TableCell>{formatCurrency(employee.hourlyRate)}</TableCell>
-                <TableCell>{formatCurrency(employee.dailyRate)}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
