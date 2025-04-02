@@ -55,7 +55,7 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
           <TableRow>
             <TableHead>Nombre</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Salario</TableHead>
+            {/* Removed salary column */}
             <TableHead>Cargo</TableHead>
             <TableHead>Grupo</TableHead>
             <TableHead>Valor Hora</TableHead>
@@ -66,7 +66,7 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
         <TableBody>
           {filteredEmployees.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 No se encontraron empleados
               </TableCell>
             </TableRow>
@@ -75,7 +75,7 @@ export function EmployeeTable({ employees, onDeleteEmployee, onEditEmployee }: E
               <TableRow key={employee.id}>
                 <TableCell>{employee.name}</TableCell>
                 <TableCell>{employee.isActive ? "Activo" : "Inactivo"}</TableCell>
-                <TableCell>{formatCurrency(employee.salary)}</TableCell>
+                {/* Removed salary cell */}
                 <TableCell>{employee.position}</TableCell>
                 <TableCell>{employee.group}</TableCell>
                 <TableCell>{formatCurrency(employee.hourlyRate)}</TableCell>
