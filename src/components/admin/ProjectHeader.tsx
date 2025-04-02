@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useProjects } from "@/contexts/ProjectContext";
-import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 import { format } from "date-fns";
 
 export function ProjectHeader() {
-  const navigate = useNavigate();
   const { projects } = useProjects();
 
   const getStatusLabel = (status: string) => {
@@ -78,10 +75,6 @@ export function ProjectHeader() {
             Cree y gestione sus proyectos
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate("/login")}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Cierre de sesión
-        </Button>
       </div>
       <div className="flex justify-end">
         <Button onClick={exportToExcel} variant="outline">

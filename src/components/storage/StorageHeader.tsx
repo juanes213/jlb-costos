@@ -1,7 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { LogOut, Upload } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Upload } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { read, utils } from "xlsx";
 import { StorageItem } from "@/types/project";
@@ -13,15 +11,8 @@ interface StorageHeaderProps {
 }
 
 export function StorageHeader({ setItems }: StorageHeaderProps) {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  const { toast } = useToast();
   const { user } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -143,12 +134,6 @@ export function StorageHeader({ setItems }: StorageHeaderProps) {
             Importar Excel
           </Button>
         </label>
-        {!user?.role?.includes("admin") && (
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Cerrar sesión
-          </Button>
-        )}
       </div>
     </div>
   );
