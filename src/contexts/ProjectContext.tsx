@@ -28,6 +28,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const pendingSaves = useRef<Set<string>>(new Set());
+  const lastSavedProjects = useRef<string>("");
 
   useEffect(() => {
     if (!user) {
@@ -67,7 +68,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           setProjects(formattedProjects);
           console.log("Projects loaded from Supabase:", formattedProjects);
           
-          localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(formattedProjects));
+          // Store the stringified state to compare for changes later
+          lastSavedProjects.current = JSON.stringify(formattedProjects, (key, value) => {
+            if (key === 'initialDate' || key === 'finalDate') {
+              return value instanceof Date ? value.toISOString() : value;
+            }
+            return value;
+          });
+          
+          localStorage.setItem(PROJECTS_STORAGE_KEY, lastSavedProjects.current);
         } else {
           const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
           
@@ -101,6 +110,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             }
             
             setProjects(projectsWithDates);
+            // Store the stringified state to compare for changes later
+            lastSavedProjects.current = JSON.stringify(projectsWithDates, (key, value) => {
+              if (key === 'initialDate' || key === 'finalDate') {
+                return value instanceof Date ? value.toISOString() : value;
+              }
+              return value;
+            });
             console.log("Projects loaded from localStorage:", projectsWithDates);
           } else {
             setProjects([]);
@@ -169,14 +185,37 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       return project;
     });
 
-    if (JSON.stringify(updatedProjects) !== JSON.stringify(projects)) {
+    // Only save if there's an actual status change, avoiding unnecessary updates
+    const currentProjectsStr = JSON.stringify(updatedProjects, (key, value) => {
+      if (key === 'initialDate' || key === 'finalDate') {
+        return value instanceof Date ? value.toISOString() : value;
+      }
+      return value;
+    });
+    
+    if (currentProjectsStr !== lastSavedProjects.current) {
+      console.log("Status check triggered an update");
       saveProjects(updatedProjects);
     }
   }, [projects, isLoading]);
 
   const saveProjects = async (newProjects: Project[]) => {
     try {
+      // Prevent redundant updates by comparing with last saved state
+      const newProjectsStr = JSON.stringify(newProjects, (key, value) => {
+        if (key === 'initialDate' || key === 'finalDate') {
+          return value instanceof Date ? value.toISOString() : value;
+        }
+        return value;
+      });
+      
+      if (newProjectsStr === lastSavedProjects.current) {
+        console.log("No changes detected, skipping save");
+        return;
+      }
+      
       setProjects(newProjects);
+      lastSavedProjects.current = newProjectsStr;
       
       saveToLocalStorage(newProjects);
       
