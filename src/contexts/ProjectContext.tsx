@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "@/contexts/auth";
@@ -78,25 +79,24 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
             }));
             
-            if (user.role === 'admin' || user.role === 'projects') {
-              console.log("Migrating projects from localStorage to Supabase");
-              for (const project of projectsWithDates) {
-                const { error: insertError } = await supabase.from('projects').insert({
-                  id: project.id,
-                  name: project.name,
-                  numberId: project.numberId || '',
-                  status: project.status,
-                  initialDate: project.initialDate ? project.initialDate.toISOString() : null,
-                  finalDate: project.finalDate ? project.finalDate.toISOString() : null,
-                  income: project.income || 0,
-                  categories: project.categories,
-                  observations: project.observations || null,
-                  created_at: new Date().toISOString()
-                });
-                
-                if (insertError) {
-                  console.error("Error migrating project to Supabase:", insertError);
-                }
+            // Removed role-based condition, all users can migrate projects
+            console.log("Migrating projects from localStorage to Supabase");
+            for (const project of projectsWithDates) {
+              const { error: insertError } = await supabase.from('projects').insert({
+                id: project.id,
+                name: project.name,
+                numberId: project.numberId || '',
+                status: project.status,
+                initialDate: project.initialDate ? project.initialDate.toISOString() : null,
+                finalDate: project.finalDate ? project.finalDate.toISOString() : null,
+                income: project.income || 0,
+                categories: project.categories,
+                observations: project.observations || null,
+                created_at: new Date().toISOString()
+              });
+              
+              if (insertError) {
+                console.error("Error migrating project to Supabase:", insertError);
               }
             }
             

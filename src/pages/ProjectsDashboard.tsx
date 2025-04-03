@@ -49,7 +49,7 @@ export default function ProjectsDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {user?.role === "admin" && <AdminNav />}
+      <AdminNav /> {/* Always show AdminNav regardless of user role */}
       
       <div className="container py-8 space-y-6 animate-fadeIn">
         <div className="flex justify-between items-center">
