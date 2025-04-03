@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,6 +31,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   );
   const [editedObservations, setEditedObservations] = useState(project.observations || "");
   const { toast } = useToast();
+  const lastUpdateRef = useRef<number>(0);
 
   // Ensure project.categories is an array
   const parsedProject = {
@@ -40,7 +41,24 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
   };
 
-  const handleAddCategory = () => {
+  // Use a stable reference for the parsedProject to prevent unnecessary renders
+  const projectRef = useRef(parsedProject);
+  
+  useEffect(() => {
+    projectRef.current = {
+      ...project,
+      categories: Array.isArray(project.categories) 
+        ? project.categories 
+        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
+    };
+  }, [project]);
+
+  const handleAddCategory = useCallback(() => {
+    // Use a timestamp to prevent multiple updates within a short time
+    const now = Date.now();
+    if (now - lastUpdateRef.current < 200) return;
+    lastUpdateRef.current = now;
+    
     const newProject = { ...project };
     
     // Ensure categories is an array before adding a new one
@@ -52,9 +70,13 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     
     newProject.categories = [...newProject.categories, { name: "", items: [] }];
     onUpdateProject(newProject);
-  };
+  }, [project, onUpdateProject]);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
+    const now = Date.now();
+    if (now - lastUpdateRef.current < 200) return;
+    lastUpdateRef.current = now;
+    
     onUpdateProject({
       ...project,
       name: editedName,
@@ -71,19 +93,31 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
       title: "Éxito",
       description: "Proyecto actualizado correctamente",
     });
-  };
+  }, [
+    project, editedName, editedNumberId, editedIncome, 
+    editedInitialDate, editedFinalDate, editedObservations, 
+    onUpdateProject, toast
+  ]);
 
-  const handleIncomeChange = (value: string) => {
+  const handleIncomeChange = useCallback((value: string) => {
     const numericValue = value.replace(/\D/g, "");
     setEditedIncome(numericValue);
-  };
+  }, []);
 
-  const handleStatusChange = (status: ProjectStatus) => {
+  const handleStatusChange = useCallback((status: ProjectStatus) => {
+    const now = Date.now();
+    if (now - lastUpdateRef.current < 200) return;
+    lastUpdateRef.current = now;
+    
     onUpdateProject({
       ...project,
       status
     });
-  };
+  }, [project, onUpdateProject]);
+
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg border-blue-100 animate-fadeIn">
@@ -111,7 +145,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             onStatusChange={handleStatusChange}
             onEdit={() => setIsEditing(true)}
             onDelete={() => onDeleteProject(project.id)}
-            onToggleExpand={() => setIsExpanded(!isExpanded)}
+            onToggleExpand={handleToggleExpand}
           />
           <ProjectObservations observations={project.observations} />
         </>
@@ -123,7 +157,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2">Personal</h3>
             <ProjectPersonnel 
-              project={parsedProject}
+              project={projectRef.current}
               onUpdateProject={onUpdateProject}
             />
           </div>
@@ -132,7 +166,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
           <div>
             <h3 className="text-lg font-medium mb-2">Categorías</h3>
             <ProjectCategories 
-              project={parsedProject}
+              project={projectRef.current}
               onUpdateProject={onUpdateProject}
             />
 

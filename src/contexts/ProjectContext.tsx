@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "@/contexts/auth";
 import { supabase, throttledRequest } from "@/lib/supabase";
@@ -29,6 +28,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const pendingSaves = useRef<Set<string>>(new Set());
   const lastSavedProjects = useRef<string>("");
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusCheckEnabledRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!user) {
@@ -127,6 +128,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         fallbackToLocalStorage();
       } finally {
         setIsLoading(false);
+        // Enable status checks after initial load is complete
+        setTimeout(() => {
+          statusCheckEnabledRef.current = true;
+        }, 1000);
       }
     };
     
@@ -152,8 +157,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     loadProjects();
   }, [user]);
 
+  // Separate effect for status checks to avoid conflicts with updates
   useEffect(() => {
-    if (isLoading || projects.length === 0) return;
+    // Skip status check if not enabled yet or if loading
+    if (!statusCheckEnabledRef.current || isLoading || projects.length === 0) return;
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -199,7 +206,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   }, [projects, isLoading]);
 
-  const saveProjects = async (newProjects: Project[]) => {
+  const saveProjects = useCallback(async (newProjects: Project[]) => {
     try {
       // Prevent redundant updates by comparing with last saved state
       const newProjectsStr = JSON.stringify(newProjects, (key, value) => {
@@ -214,70 +221,81 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      setProjects(newProjects);
-      lastSavedProjects.current = newProjectsStr;
-      
-      saveToLocalStorage(newProjects);
-      
-      if (user) {
-        console.log("Saving projects to Supabase:", newProjects);
-        for (const project of newProjects) {
-          if (pendingSaves.current.has(project.id)) {
-            console.log(`Skipping duplicate save for project ${project.id}`);
-            continue;
-          }
-          
-          pendingSaves.current.add(project.id);
-          
-          const supabaseProject = {
-            id: project.id,
-            name: project.name,
-            numberId: project.numberId || '',
-            status: project.status,
-            initialDate: project.initialDate ? project.initialDate.toISOString() : null,
-            finalDate: project.finalDate ? project.finalDate.toISOString() : null,
-            income: project.income || 0,
-            categories: project.categories,
-            observations: project.observations || null
-          };
-          
-          throttledRequest(async () => {
-            try {
-              const { error } = await supabase
-                .from('projects')
-                .upsert(supabaseProject, { 
-                  onConflict: 'id',
-                  ignoreDuplicates: false 
-                });
-                
-              if (error) {
-                console.error("Error saving project to Supabase:", error, supabaseProject);
-                toast({
-                  title: "Error",
-                  description: "No se pudo guardar el proyecto en la base de datos.",
-                  variant: "destructive"
-                });
-              } else {
-                console.log("Project saved to Supabase successfully:", supabaseProject.id);
-              }
-            } catch (error) {
-              console.error("Error in throttled request:", error);
-            } finally {
-              pendingSaves.current.delete(project.id);
-            }
-          }).catch(error => {
-            console.error("Failed to queue project save request:", error);
-            pendingSaves.current.delete(project.id);
-          });
-        }
+      // Clear any existing timeout to debounce rapid updates
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
+      
+      // Debounce the update to prevent multiple rapid saves
+      updateTimeoutRef.current = setTimeout(() => {
+        setProjects(newProjects);
+        lastSavedProjects.current = newProjectsStr;
+        
+        saveToLocalStorage(newProjects);
+        
+        if (user) {
+          console.log("Saving projects to Supabase:", newProjects);
+          for (const project of newProjects) {
+            if (pendingSaves.current.has(project.id)) {
+              console.log(`Skipping duplicate save for project ${project.id}`);
+              continue;
+            }
+            
+            pendingSaves.current.add(project.id);
+            
+            const supabaseProject = {
+              id: project.id,
+              name: project.name,
+              numberId: project.numberId || '',
+              status: project.status,
+              initialDate: project.initialDate ? project.initialDate.toISOString() : null,
+              finalDate: project.finalDate ? project.finalDate.toISOString() : null,
+              income: project.income || 0,
+              categories: project.categories,
+              observations: project.observations || null
+            };
+            
+            throttledRequest(async () => {
+              try {
+                const { error } = await supabase
+                  .from('projects')
+                  .upsert(supabaseProject, { 
+                    onConflict: 'id',
+                    ignoreDuplicates: false 
+                  });
+                  
+                if (error) {
+                  console.error("Error saving project to Supabase:", error, supabaseProject);
+                  toast({
+                    title: "Error",
+                    description: "No se pudo guardar el proyecto en la base de datos.",
+                    variant: "destructive"
+                  });
+                } else {
+                  console.log("Project saved to Supabase successfully:", supabaseProject.id);
+                }
+              } catch (error) {
+                console.error("Error in throttled request:", error);
+              } finally {
+                pendingSaves.current.delete(project.id);
+              }
+            }).catch(error => {
+              console.error("Failed to queue project save request:", error);
+              pendingSaves.current.delete(project.id);
+            });
+          }
+        }
+        
+        updateTimeoutRef.current = null;
+      }, 300); // Debounce for 300ms
+      
     } catch (error) {
       console.error("Error saving projects:", error);
       saveToLocalStorage(newProjects);
     }
-  };
+  }, [user, toast]);
   
-  const saveToLocalStorage = (newProjects: Project[]) => {
+  const saveToLocalStorage = useCallback((newProjects: Project[]) => {
     try {
       const projectsToSave = JSON.stringify(newProjects, (key, value) => {
         if (key === 'initialDate' || key === 'finalDate') {
@@ -291,7 +309,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error saving projects to localStorage:", error);
     }
-  };
+  }, []);
 
   const addProject = async (project: Omit<Project, "id">) => {
     try {

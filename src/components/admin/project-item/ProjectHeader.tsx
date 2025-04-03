@@ -5,6 +5,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
 import { ProjectStatus } from "../ProjectStatus";
 import type { Project, ProjectStatus as ProjectStatusType } from "@/types/project";
+import { memo } from "react";
 
 interface ProjectHeaderProps {
   project: Project;
@@ -15,7 +16,8 @@ interface ProjectHeaderProps {
   onToggleExpand: () => void;
 }
 
-export function ProjectHeader({
+// Use React.memo to prevent unnecessary re-renders
+export const ProjectHeader = memo(function ProjectHeader({
   project,
   isExpanded,
   onStatusChange,
@@ -78,4 +80,4 @@ export function ProjectHeader({
       </div>
     </div>
   );
-}
+});
