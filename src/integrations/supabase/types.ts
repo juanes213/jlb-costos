@@ -113,6 +113,7 @@ export type Database = {
           categoryName: string
           cost: number
           created_at: string | null
+          description: string | null
           id: string
           ivaAmount: number | null
           name: string
@@ -122,6 +123,7 @@ export type Database = {
           categoryName: string
           cost: number
           created_at?: string | null
+          description?: string | null
           id?: string
           ivaAmount?: number | null
           name: string
@@ -131,6 +133,7 @@ export type Database = {
           categoryName?: string
           cost?: number
           created_at?: string | null
+          description?: string | null
           id?: string
           ivaAmount?: number | null
           name?: string

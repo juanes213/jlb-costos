@@ -74,8 +74,7 @@ export default function GuestDashboard() {
   const handleAddItem = async (newItem: StorageItem) => {
     try {
       if (editingItem) {
-        console.log("Updating item:", newItem);
-        
+        // Update existing item
         const { error } = await supabase
           .from('storage_items')
           .update({
@@ -83,8 +82,8 @@ export default function GuestDashboard() {
             name: newItem.name,
             cost: newItem.cost,
             unit: newItem.unit || null,
-            ivaAmount: newItem.ivaAmount || null,
-            description: newItem.description || null
+            description: newItem.description || null,
+            ivaAmount: newItem.ivaAmount || null
           })
           .eq('id', newItem.id);
           
@@ -93,6 +92,7 @@ export default function GuestDashboard() {
           throw error;
         }
         
+        // Reload items
         const { data: updatedItems } = await supabase
           .from('storage_items')
           .select('*')
@@ -108,7 +108,7 @@ export default function GuestDashboard() {
             ivaAmount: item.ivaAmount || undefined,
             description: item.description || undefined
           }));
-          setItems(mappedItems as StorageItem[]);
+          setItems(mappedItems);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
         }
         
@@ -118,8 +118,7 @@ export default function GuestDashboard() {
           description: "Item actualizado correctamente",
         });
       } else {
-        console.log("Adding new item:", newItem);
-        
+        // Add new item
         const { error } = await supabase
           .from('storage_items')
           .insert({
@@ -127,8 +126,8 @@ export default function GuestDashboard() {
             name: newItem.name,
             cost: newItem.cost,
             unit: newItem.unit || null,
-            ivaAmount: newItem.ivaAmount || null,
-            description: newItem.description || null
+            description: newItem.description || null,
+            ivaAmount: newItem.ivaAmount || null
           });
         
         if (error) {
@@ -136,6 +135,7 @@ export default function GuestDashboard() {
           throw error;
         }
         
+        // Reload items
         const { data: updatedItems } = await supabase
           .from('storage_items')
           .select('*')
@@ -151,7 +151,7 @@ export default function GuestDashboard() {
             ivaAmount: item.ivaAmount || undefined,
             description: item.description || undefined
           }));
-          setItems(mappedItems as StorageItem[]);
+          setItems(mappedItems);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
         }
         
