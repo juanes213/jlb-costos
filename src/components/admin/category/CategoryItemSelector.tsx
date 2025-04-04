@@ -9,12 +9,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import type { StorageItem } from "@/types/project";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CategoryItemSelectorProps {
   storageItems: StorageItem[];
   selectedItemName: string;
   onItemSelect: (itemId: string) => void;
   onManualSelect: () => void;
+  categoryName: string;
 }
 
 export function CategoryItemSelector({
@@ -22,8 +25,10 @@ export function CategoryItemSelector({
   selectedItemName,
   onItemSelect,
   onManualSelect,
+  categoryName,
 }: CategoryItemSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-CO", {

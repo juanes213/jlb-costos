@@ -9,6 +9,8 @@ import { CategoryItemQuantity } from "./category/CategoryItemQuantity";
 import { CategoryBaseCost } from "./category/CategoryBaseCost";
 import { CategoryItemCosts } from "./category/CategoryItemCosts";
 import { CategoryItemActions } from "./category/CategoryItemActions";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CategoryItemsProps {
   project: Project;
@@ -25,6 +27,7 @@ export function CategoryItems({
 }: CategoryItemsProps) {
   const [categoryBaseCost, setCategoryBaseCost] = useState<string>(category.cost?.toString() || "");
   const [manualEntryMode, setManualEntryMode] = useState<Record<number, boolean>>({});
+  const { toast } = useToast();
   
   const storageItems: StorageItem[] = JSON.parse(
     localStorage.getItem("storageItems") || "[]"
@@ -90,7 +93,7 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
-  const handleItemNameChange = (itemIndex: number, value: string) => {
+  const handleItemNameChange = async (itemIndex: number, value: string) => {
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].name = value;
     onUpdateProject(newProject);
@@ -106,6 +109,76 @@ export function CategoryItems({
     const newProject = { ...project };
     newProject.categories[categoryIndex].items[itemIndex].ivaAmount = ivaAmount;
     onUpdateProject(newProject);
+  };
+
+  const handleSaveToStorage = async (itemIndex: number) => {
+    const item = project.categories[categoryIndex].items[itemIndex];
+    if (!item.name || !item.cost) {
+      toast({
+        title: "Error",
+        description: "El nombre y el costo son obligatorios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('storage_items')
+        .insert({
+          categoryName: category.name,
+          name: item.name,
+          cost: item.cost,
+          unit: item.unit || null,
+          ivaAmount: item.ivaAmount || null
+        });
+        
+      if (error) {
+        console.error("Error adding item to storage:", error);
+        toast({
+          title: "Error",
+          description: "No se pudo guardar el item en el almacén",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update the item in the project to no longer be in manual entry mode
+      setManualEntryMode(prev => ({
+        ...prev,
+        [itemIndex]: false
+      }));
+      
+      toast({
+        title: "Éxito",
+        description: "Item guardado en el almacén correctamente",
+      });
+      
+      // Refresh storage items
+      const { data: updatedItems } = await supabase
+        .from('storage_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (updatedItems) {
+        const mappedItems = updatedItems.map(item => ({
+          id: item.id,
+          categoryName: item.categoryName,
+          name: item.name,
+          cost: item.cost,
+          unit: item.unit || "",
+          ivaAmount: item.ivaAmount || undefined
+        }));
+        localStorage.setItem("storageItems", JSON.stringify(mappedItems));
+      }
+    } catch (error) {
+      console.error("Error saving to storage:", error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al guardar el item",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddItem = () => {
@@ -165,6 +238,13 @@ export function CategoryItems({
                     placeholder="Unidad"
                     className="w-20 border-blue-200 focus:border-blue-400"
                   />
+                  <Button 
+                    onClick={() => handleSaveToStorage(itemIndex)} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Guardar en almacén
+                  </Button>
                 </div>
               ) : (
                 <CategoryItemSelector
@@ -172,6 +252,7 @@ export function CategoryItems({
                   selectedItemName={item.name}
                   onItemSelect={(value) => handleItemSelect(itemIndex, value)}
                   onManualSelect={() => handleManualSelect(itemIndex)}
+                  categoryName={category.name}
                 />
               )
             ) : (

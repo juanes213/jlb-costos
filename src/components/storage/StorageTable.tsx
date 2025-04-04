@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Trash, Pencil } from "lucide-react";
+import { Trash, Pencil, Info } from "lucide-react";
 import { IvaButton } from "../shared/IvaButton";
 import {
   Table,
@@ -14,6 +14,12 @@ import {
 import type { StorageItem } from "@/types/project";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface StorageTableProps {
   items: StorageItem[];
@@ -81,7 +87,21 @@ export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTablePr
             filteredItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.categoryName}</TableCell>
-                <TableCell>{item.name}</TableCell>
+                <TableCell className="flex items-center gap-1">
+                  {item.name}
+                  {item.description && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-blue-500 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">{item.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </TableCell>
                 <TableCell>{item.unit || "-"}</TableCell>
                 <TableCell>{formatCurrency(item.cost)}</TableCell>
                 <TableCell>

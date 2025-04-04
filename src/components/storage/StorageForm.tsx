@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { StorageItem } from "@/types/project";
+import { Textarea } from "@/components/ui/textarea";
 
 interface StorageFormProps {
   onAddItem: (item: StorageItem) => void;
@@ -22,6 +23,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
   const [newItemName, setNewItemName] = useState("");
   const [newItemCost, setNewItemCost] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
+  const [newItemDescription, setNewItemDescription] = useState("");
   const [categoryName, setCategoryName] = useState("Insumos");
   const { toast } = useToast();
 
@@ -33,6 +35,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
       setNewItemCost(editingItem.cost.toString());
       setNewItemUnit(editingItem.unit || "");
       setCategoryName(editingItem.categoryName);
+      setNewItemDescription(editingItem.description || "");
     }
   }, [editingItem]);
 
@@ -78,6 +81,7 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
       name: newItemName,
       cost: numericCost,
       unit: newItemUnit || "",
+      description: newItemDescription || undefined,
     };
 
     onAddItem(item);
@@ -86,45 +90,63 @@ export function StorageForm({ onAddItem, editingItem }: StorageFormProps) {
     setNewItemName("");
     setNewItemCost("");
     setNewItemUnit("");
+    setNewItemDescription("");
     setCategoryName("Insumos");
   };
 
   return (
     <Card className="p-6 space-y-6 bg-white shadow-md">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Select
-          value={categoryName}
-          onValueChange={setCategoryName}
-        >
-          <SelectTrigger className="w-full border-blue-200 focus:border-blue-400">
-            <SelectValue placeholder="Categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Nombre del item"
-          value={newItemName}
-          onChange={(e) => setNewItemName(e.target.value)}
-          className="border-blue-200 focus:border-blue-400"
-        />
-        <Input
-          placeholder="Costo"
-          value={newItemCost ? formatCurrency(newItemCost) : ""}
-          onChange={(e) => handleCostChange(e.target.value)}
-          className="border-blue-200 focus:border-blue-400"
-        />
-        <Input
-          placeholder="Unidad (opcional)"
-          value={newItemUnit}
-          onChange={(e) => setNewItemUnit(e.target.value)}
-          className="border-blue-200 focus:border-blue-400"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Select
+            value={categoryName}
+            onValueChange={setCategoryName}
+          >
+            <SelectTrigger className="w-full border-blue-200 focus:border-blue-400">
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Input
+            placeholder="Nombre del item"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+        <div>
+          <Input
+            placeholder="Costo"
+            value={newItemCost ? formatCurrency(newItemCost) : ""}
+            onChange={(e) => handleCostChange(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+        <div>
+          <Input
+            placeholder="Unidad (opcional)"
+            value={newItemUnit}
+            onChange={(e) => setNewItemUnit(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <Textarea
+            placeholder="Descripción (opcional)"
+            value={newItemDescription}
+            onChange={(e) => setNewItemDescription(e.target.value)}
+            className="border-blue-200 focus:border-blue-400"
+            rows={3}
+          />
+        </div>
       </div>
       <Button onClick={handleSubmit} className="w-full">
         {editingItem ? "Actualizar Item" : "Agregar Item"}

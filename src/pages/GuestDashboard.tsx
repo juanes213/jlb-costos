@@ -45,7 +45,8 @@ export default function GuestDashboard() {
             name: item.name,
             cost: item.cost,
             unit: item.unit || "",
-            ivaAmount: item.ivaAmount || undefined
+            ivaAmount: item.ivaAmount || undefined,
+            description: item.description || undefined
           }));
           setItems(mappedItems as StorageItem[]);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -82,7 +83,8 @@ export default function GuestDashboard() {
             name: newItem.name,
             cost: newItem.cost,
             unit: newItem.unit || null,
-            ivaAmount: newItem.ivaAmount || null
+            ivaAmount: newItem.ivaAmount || null,
+            description: newItem.description || null
           })
           .eq('id', newItem.id);
           
@@ -103,7 +105,8 @@ export default function GuestDashboard() {
             name: item.name,
             cost: item.cost,
             unit: item.unit || "",
-            ivaAmount: item.ivaAmount || undefined
+            ivaAmount: item.ivaAmount || undefined,
+            description: item.description || undefined
           }));
           setItems(mappedItems as StorageItem[]);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -117,7 +120,6 @@ export default function GuestDashboard() {
       } else {
         console.log("Adding new item:", newItem);
         
-        // For inserts, we must omit the id field
         const { error } = await supabase
           .from('storage_items')
           .insert({
@@ -125,7 +127,8 @@ export default function GuestDashboard() {
             name: newItem.name,
             cost: newItem.cost,
             unit: newItem.unit || null,
-            ivaAmount: newItem.ivaAmount || null
+            ivaAmount: newItem.ivaAmount || null,
+            description: newItem.description || null
           });
         
         if (error) {
@@ -145,7 +148,8 @@ export default function GuestDashboard() {
             name: item.name,
             cost: item.cost,
             unit: item.unit || "",
-            ivaAmount: item.ivaAmount || undefined
+            ivaAmount: item.ivaAmount || undefined,
+            description: item.description || undefined
           }));
           setItems(mappedItems as StorageItem[]);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
