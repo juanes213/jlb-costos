@@ -27,6 +27,11 @@ export function CategoryItems({
 }: CategoryItemsProps) {
   const [categoryBaseCost, setCategoryBaseCost] = useState<string>(category.cost?.toString() || "");
   const [manualEntryMode, setManualEntryMode] = useState<Record<number, boolean>>({});
+  const [editedItems, setEditedItems] = useState<Record<number, {
+    name: string;
+    cost: number;
+    unit: string;
+  }>>({});
   const { toast } = useToast();
   
   const storageItems: StorageItem[] = JSON.parse(
@@ -64,6 +69,17 @@ export function CategoryItems({
       ...prev,
       [itemIndex]: true
     }));
+    
+    // Initialize the edited item with current values
+    const currentItem = project.categories[categoryIndex].items[itemIndex];
+    setEditedItems(prev => ({
+      ...prev,
+      [itemIndex]: {
+        name: currentItem?.name || "",
+        cost: currentItem?.cost || 0,
+        unit: currentItem?.unit || ""
+      }
+    }));
   };
 
   const handleQuantityChange = (itemIndex: number, value: string) => {
@@ -84,24 +100,50 @@ export function CategoryItems({
     onUpdateProject(newProject);
   };
 
+  const handleItemNameChange = (itemIndex: number, value: string) => {
+    setEditedItems(prev => ({
+      ...prev,
+      [itemIndex]: {
+        ...prev[itemIndex],
+        name: value
+      }
+    }));
+  };
+
   const handleItemCostChange = (itemIndex: number, value: string) => {
     const numericValue = value.replace(/\D/g, "");
     const cost = parseFloat(numericValue) || 0;
     
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].items[itemIndex].cost = cost;
-    onUpdateProject(newProject);
-  };
-
-  const handleItemNameChange = async (itemIndex: number, value: string) => {
-    const newProject = { ...project };
-    newProject.categories[categoryIndex].items[itemIndex].name = value;
-    onUpdateProject(newProject);
+    setEditedItems(prev => ({
+      ...prev,
+      [itemIndex]: {
+        ...prev[itemIndex],
+        cost: cost
+      }
+    }));
   };
 
   const handleItemUnitChange = (itemIndex: number, value: string) => {
+    setEditedItems(prev => ({
+      ...prev,
+      [itemIndex]: {
+        ...prev[itemIndex],
+        unit: value
+      }
+    }));
+  };
+
+  const handleApplyManualChanges = (itemIndex: number) => {
+    if (!editedItems[itemIndex]) return;
+    
     const newProject = { ...project };
-    newProject.categories[categoryIndex].items[itemIndex].unit = value;
+    newProject.categories[categoryIndex].items[itemIndex] = {
+      ...newProject.categories[categoryIndex].items[itemIndex],
+      name: editedItems[itemIndex].name,
+      cost: editedItems[itemIndex].cost,
+      unit: editedItems[itemIndex].unit
+    };
+    
     onUpdateProject(newProject);
   };
 
@@ -112,6 +154,9 @@ export function CategoryItems({
   };
 
   const handleSaveToStorage = async (itemIndex: number) => {
+    // First apply any pending changes to the project
+    handleApplyManualChanges(itemIndex);
+    
     const item = project.categories[categoryIndex].items[itemIndex];
     if (!item.name || !item.cost) {
       toast({
@@ -227,23 +272,33 @@ export function CategoryItems({
               manualEntryMode[itemIndex] ? (
                 <div className="flex gap-2">
                   <Input
-                    value={item.name}
+                    value={editedItems[itemIndex]?.name || ""}
                     onChange={(e) => handleItemNameChange(itemIndex, e.target.value)}
                     placeholder="Nombre del item"
                     className="w-48 border-blue-200 focus:border-blue-400"
                   />
                   <Input
-                    value={item.unit || ""}
+                    value={editedItems[itemIndex]?.unit || ""}
                     onChange={(e) => handleItemUnitChange(itemIndex, e.target.value)}
                     placeholder="Unidad"
                     className="w-20 border-blue-200 focus:border-blue-400"
                   />
                   <Button 
-                    onClick={() => handleSaveToStorage(itemIndex)} 
+                    onClick={() => {
+                      handleApplyManualChanges(itemIndex);
+                      handleSaveToStorage(itemIndex);
+                    }} 
                     variant="outline" 
                     size="sm"
                   >
                     Guardar en almacén
+                  </Button>
+                  <Button 
+                    onClick={() => handleApplyManualChanges(itemIndex)} 
+                    variant="default" 
+                    size="sm"
+                  >
+                    Aplicar
                   </Button>
                 </div>
               ) : (
@@ -256,12 +311,21 @@ export function CategoryItems({
                 />
               )
             ) : (
-              <Input
-                value={item.name}
-                onChange={(e) => handleItemNameChange(itemIndex, e.target.value)}
-                placeholder="Nombre del item"
-                className="w-48 border-blue-200 focus:border-blue-400"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={editedItems[itemIndex]?.name || item.name}
+                  onChange={(e) => handleItemNameChange(itemIndex, e.target.value)}
+                  placeholder="Nombre del item"
+                  className="w-48 border-blue-200 focus:border-blue-400"
+                />
+                <Button 
+                  onClick={() => handleApplyManualChanges(itemIndex)} 
+                  variant="default" 
+                  size="sm"
+                >
+                  Aplicar
+                </Button>
+              </div>
             )}
             <CategoryItemQuantity
               quantity={item.quantity || 1}
@@ -274,11 +338,18 @@ export function CategoryItems({
                 <label className="text-sm text-muted-foreground">Costo:</label>
                 <Input
                   type="text"
-                  value={item.cost ? formatCurrency(item.cost) : ""}
+                  value={editedItems[itemIndex]?.cost ? formatCurrency(editedItems[itemIndex].cost) : formatCurrency(item.cost)}
                   onChange={(e) => handleItemCostChange(itemIndex, e.target.value)}
                   placeholder="Costo del item"
                   className="w-40 border-blue-200 focus:border-blue-400"
                 />
+                <Button 
+                  onClick={() => handleApplyManualChanges(itemIndex)} 
+                  variant="default" 
+                  size="sm"
+                >
+                  Aplicar
+                </Button>
               </div>
             )}
             
