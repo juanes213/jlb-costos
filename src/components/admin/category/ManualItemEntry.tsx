@@ -64,6 +64,13 @@ export function ManualItemEntry({
     onUnitChange(value);
     setIsChanged(checkIfChanged({...originalItem, unit: value}));
   };
+  
+  const handleCostChange = (value: string) => {
+    onCostChange(value);
+    const numericValue = value.replace(/\D/g, "");
+    const newCost = parseFloat(numericValue) || 0;
+    setIsChanged(checkIfChanged({...originalItem, cost: newCost}));
+  };
 
   return (
     <div className="flex gap-2">
