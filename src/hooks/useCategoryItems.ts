@@ -132,6 +132,12 @@ export function useCategoryItems(
     };
 
     onUpdateProject(newProject);
+    
+    // Show success notification
+    toast({
+      title: "Cambios aplicados",
+      description: "Los cambios han sido aplicados correctamente",
+    });
   };
 
   const handleIvaCalculated = (itemIndex: number, ivaAmount: number | undefined) => {

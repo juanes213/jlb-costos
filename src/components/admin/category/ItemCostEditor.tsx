@@ -19,7 +19,7 @@ export function ItemCostEditor({ cost, onChange, onApply }: ItemCostEditorProps)
   }, [cost]);
   
   const formatCurrency = (value: number) => {
-    if (!value) return "";
+    if (!value && value !== 0) return "";
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",

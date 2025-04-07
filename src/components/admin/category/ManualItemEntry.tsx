@@ -12,6 +12,7 @@ interface ManualItemEntryProps {
   onCostChange: (value: string) => void;
   onApply: () => void;
   onSaveToStorage?: () => void;
+  shouldShowUnit?: boolean;
 }
 
 export function ManualItemEntry({
@@ -21,7 +22,8 @@ export function ManualItemEntry({
   onUnitChange,
   onCostChange,
   onApply,
-  onSaveToStorage
+  onSaveToStorage,
+  shouldShowUnit = false
 }: ManualItemEntryProps) {
   const [originalItem, setOriginalItem] = useState({
     name: item.name || "",
@@ -38,16 +40,6 @@ export function ManualItemEntry({
     });
     setIsChanged(false);
   }, [item]);
-  
-  const formatCurrency = (value: number) => {
-    if (!value) return "";
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
   
   const checkIfChanged = (newItem: {name?: string, unit?: string, cost?: number}) => {
     return newItem.name !== originalItem.name || 
@@ -80,12 +72,14 @@ export function ManualItemEntry({
         placeholder="Nombre del item"
         className="w-48 border-blue-200 focus:border-blue-400"
       />
-      <Input
-        value={item.unit || ""}
-        onChange={(e) => handleUnitChange(e.target.value)}
-        placeholder="Unidad"
-        className="w-20 border-blue-200 focus:border-blue-400"
-      />
+      {shouldShowUnit && (
+        <Input
+          value={item.unit || ""}
+          onChange={(e) => handleUnitChange(e.target.value)}
+          placeholder="Unidad"
+          className="w-20 border-blue-200 focus:border-blue-400"
+        />
+      )}
       {isChanged && (
         <>
           <Button 

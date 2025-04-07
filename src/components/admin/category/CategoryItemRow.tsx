@@ -70,6 +70,7 @@ export function CategoryItemRow({
                 onApplyChanges(itemIndex);
                 onSaveToStorage(itemIndex);
               }}
+              shouldShowUnit={shouldShowUnit}
             />
           ) : (
             <CategoryItemSelector
@@ -89,6 +90,7 @@ export function CategoryItemRow({
               onUnitChange={(value) => onUnitChange(itemIndex, value)}
               onCostChange={(value) => onCostChange(itemIndex, value)}
               onApply={() => onApplyChanges(itemIndex)}
+              shouldShowUnit={shouldShowUnit}
             />
           </div>
         )}
