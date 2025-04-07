@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Item } from "@/types/project";
@@ -23,6 +23,22 @@ export function ManualItemEntry({
   onApply,
   onSaveToStorage
 }: ManualItemEntryProps) {
+  const [originalItem, setOriginalItem] = useState({
+    name: item.name || "",
+    unit: item.unit || "", 
+    cost: item.cost || 0
+  });
+  const [isChanged, setIsChanged] = useState(false);
+  
+  useEffect(() => {
+    setOriginalItem({
+      name: item.name || "",
+      unit: item.unit || "",
+      cost: item.cost || 0
+    });
+    setIsChanged(false);
+  }, [item]);
+  
   const formatCurrency = (value: number) => {
     if (!value) return "";
     return new Intl.NumberFormat("es-CO", {
@@ -32,37 +48,63 @@ export function ManualItemEntry({
       maximumFractionDigits: 0,
     }).format(value);
   };
+  
+  const checkIfChanged = (newItem: {name?: string, unit?: string, cost?: number}) => {
+    return newItem.name !== originalItem.name || 
+           newItem.unit !== originalItem.unit || 
+           newItem.cost !== originalItem.cost;
+  };
+  
+  const handleNameChange = (value: string) => {
+    onNameChange(value);
+    setIsChanged(checkIfChanged({...originalItem, name: value}));
+  };
+  
+  const handleUnitChange = (value: string) => {
+    onUnitChange(value);
+    setIsChanged(checkIfChanged({...originalItem, unit: value}));
+  };
 
   return (
     <div className="flex gap-2">
       <Input
         value={item.name || ""}
-        onChange={(e) => onNameChange(e.target.value)}
+        onChange={(e) => handleNameChange(e.target.value)}
         placeholder="Nombre del item"
         className="w-48 border-blue-200 focus:border-blue-400"
       />
       <Input
         value={item.unit || ""}
-        onChange={(e) => onUnitChange(e.target.value)}
+        onChange={(e) => handleUnitChange(e.target.value)}
         placeholder="Unidad"
         className="w-20 border-blue-200 focus:border-blue-400"
       />
-      {onSaveToStorage && (
-        <Button 
-          onClick={onSaveToStorage} 
-          variant="outline" 
-          size="sm"
-        >
-          Guardar en almacén
-        </Button>
+      {isChanged && (
+        <>
+          <Button 
+            onClick={() => {
+              onApply();
+              setIsChanged(false);
+            }} 
+            variant="default" 
+            size="sm"
+          >
+            Aplicar
+          </Button>
+          {onSaveToStorage && (
+            <Button 
+              onClick={() => {
+                onSaveToStorage();
+                setIsChanged(false);
+              }} 
+              variant="outline" 
+              size="sm"
+            >
+              Guardar en almacén
+            </Button>
+          )}
+        </>
       )}
-      <Button 
-        onClick={onApply} 
-        variant="default" 
-        size="sm"
-      >
-        Aplicar
-      </Button>
     </div>
   );
 }

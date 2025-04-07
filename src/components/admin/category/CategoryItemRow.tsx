@@ -51,6 +51,9 @@ export function CategoryItemRow({
   onSaveToStorage,
   onDelete
 }: CategoryItemRowProps) {
+  // Only show unit for "Insumos" category
+  const shouldShowUnit = categoryName === "Insumos";
+  
   return (
     <div className="flex items-center justify-between ml-4 flex-wrap gap-2">
       <div className="flex items-center gap-2 flex-1">
@@ -91,7 +94,7 @@ export function CategoryItemRow({
         )}
         <CategoryItemQuantity
           quantity={item.quantity || 1}
-          unit={item.unit || ""}
+          unit={shouldShowUnit ? (item.unit || "") : ""}
           onChange={(value) => onQuantityChange(itemIndex, value)}
         />
         
