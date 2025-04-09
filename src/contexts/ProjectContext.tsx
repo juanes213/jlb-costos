@@ -69,7 +69,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           setProjects(formattedProjects);
           console.log("Projects loaded from Supabase:", formattedProjects);
           
-          // Store the stringified state to compare for changes later
           lastSavedProjects.current = JSON.stringify(formattedProjects, (key, value) => {
             if (key === 'initialDate' || key === 'finalDate') {
               return value instanceof Date ? value.toISOString() : value;
@@ -89,7 +88,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
             }));
             
-            // Removed role-based condition, all users can migrate projects
             console.log("Migrating projects from localStorage to Supabase");
             for (const project of projectsWithDates) {
               const { error: insertError } = await supabase.from('projects').insert({
@@ -111,7 +109,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             }
             
             setProjects(projectsWithDates);
-            // Store the stringified state to compare for changes later
             lastSavedProjects.current = JSON.stringify(projectsWithDates, (key, value) => {
               if (key === 'initialDate' || key === 'finalDate') {
                 return value instanceof Date ? value.toISOString() : value;
@@ -128,7 +125,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         fallbackToLocalStorage();
       } finally {
         setIsLoading(false);
-        // Enable status checks after initial load is complete
         setTimeout(() => {
           statusCheckEnabledRef.current = true;
         }, 1000);
@@ -157,9 +153,46 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     loadProjects();
   }, [user]);
 
-  // Separate effect for status checks to avoid conflicts with updates
+  const sendProjectNotification = useCallback(async (
+    project: Project, 
+    notificationType: "created" | "completed"
+  ) => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError || !profileData) {
+        console.error("Error fetching user profile:", profileError);
+        return;
+      }
+      
+      const recipientEmail = profileData.username;
+      
+      const { error } = await supabase.functions.invoke('project-notification', {
+        body: {
+          recipientEmail,
+          projectName: project.name,
+          projectId: project.numberId || project.id,
+          notificationType
+        }
+      });
+      
+      if (error) {
+        console.error("Error sending project notification:", error);
+      } else {
+        console.log(`Project ${notificationType} notification sent successfully`);
+      }
+    } catch (error) {
+      console.error("Error in sendProjectNotification:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
-    // Skip status check if not enabled yet or if loading
     if (!statusCheckEnabledRef.current || isLoading || projects.length === 0) return;
     
     const today = new Date();
@@ -192,7 +225,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       return project;
     });
 
-    // Only save if there's an actual status change, avoiding unnecessary updates
     const currentProjectsStr = JSON.stringify(updatedProjects, (key, value) => {
       if (key === 'initialDate' || key === 'finalDate') {
         return value instanceof Date ? value.toISOString() : value;
@@ -208,7 +240,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const saveProjects = useCallback(async (newProjects: Project[]) => {
     try {
-      // Prevent redundant updates by comparing with last saved state
       const newProjectsStr = JSON.stringify(newProjects, (key, value) => {
         if (key === 'initialDate' || key === 'finalDate') {
           return value instanceof Date ? value.toISOString() : value;
@@ -221,12 +252,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Clear any existing timeout to debounce rapid updates
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
       
-      // Debounce the update to prevent multiple rapid saves
       updateTimeoutRef.current = setTimeout(() => {
         setProjects(newProjects);
         lastSavedProjects.current = newProjectsStr;
@@ -287,8 +316,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }
         
         updateTimeoutRef.current = null;
-      }, 300); // Debounce for 300ms
-      
+      }, 300);
     } catch (error) {
       console.error("Error saving projects:", error);
       saveToLocalStorage(newProjects);
@@ -325,6 +353,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
       
+      sendProjectNotification(newProject as Project, "created");
+      
       toast({
         title: "Éxito",
         description: "Proyecto creado correctamente"
@@ -343,6 +373,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     try {
       if (isLoading) return;
       
+      const existingProject = projects.find(p => p.id === updatedProject.id);
       const newProjects = projects.map((p) =>
         p.id === updatedProject.id ? {
           ...updatedProject,
@@ -350,6 +381,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           finalDate: updatedProject.finalDate ? new Date(updatedProject.finalDate) : undefined,
         } : p
       );
+      
+      if (existingProject && 
+          existingProject.status !== "completed" && 
+          updatedProject.status === "completed") {
+        sendProjectNotification(updatedProject, "completed");
+      }
       
       console.log("Updating project:", updatedProject);
       saveProjects(newProjects);
