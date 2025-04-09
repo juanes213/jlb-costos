@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Project } from "@/types/project";
 import { UseToastResult } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Hook for project notifications
 export function useProjectNotifications(userId: string | undefined) {
@@ -34,7 +35,7 @@ export function useProjectNotifications(userId: string | undefined) {
 }
 
 // Hook for project persistence operations
-export function useProjectPersistence(toast: UseToastResult["toast"]) {
+export function useProjectPersistence(toast: ReturnType<typeof useToast>["toast"]) {
   const saveToLocalStorage = useCallback((projects: Project[]) => {
     try {
       const projectsStr = JSON.stringify(projects, (key, value) => {
