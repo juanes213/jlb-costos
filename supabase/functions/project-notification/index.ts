@@ -69,22 +69,51 @@ serve(async (req) => {
       `;
     }
 
-    const emailResponse = await resend.emails.send({
-      from: "Notificaciones <onboarding@resend.dev>",
-      to: RECIPIENT_EMAILS,
-      subject: subject,
-      html: htmlContent,
-    });
+    try {
+      // Try to send the email
+      const emailResponse = await resend.emails.send({
+        from: "Notificaciones <onboarding@resend.dev>",
+        to: RECIPIENT_EMAILS,
+        subject: subject,
+        html: htmlContent,
+      });
 
-    console.log("Email notification sent successfully to:", RECIPIENT_EMAILS);
-    console.log("Email response:", emailResponse);
+      console.log("Email notification sent successfully to:", RECIPIENT_EMAILS);
+      console.log("Email response:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+      return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (emailError: any) {
+      console.error("Error sending email via Resend:", emailError);
+      
+      // Check if this is a domain verification error
+      if (emailError.statusCode === 403 && emailError.message?.includes("verify a domain")) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Domain verification required", 
+            message: "You need to verify your domain at resend.com/domains before sending emails to multiple recipients.",
+            details: emailError.message,
+            solution: "Please visit https://resend.com/domains to verify your domain."
+          }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: "Email sending failed", details: emailError.message || "Unknown error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
   } catch (error) {
-    console.error("Error sending project notification email:", error);
+    console.error("Error processing project notification request:", error);
     
     return new Response(
       JSON.stringify({ error: error.message || "Failed to send email notification" }),
