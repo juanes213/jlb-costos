@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { Project } from "@/types/project";
 import { useAuth } from "@/contexts/auth";
@@ -164,7 +165,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         body: {
           projectName: project.name,
           projectId: project.numberId || project.id,
-          notificationType
+          notificationType,
+          createdBy: user.username || "usuario del sistema"
         }
       });
       

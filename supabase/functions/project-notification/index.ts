@@ -17,10 +17,14 @@ const RECIPIENT_EMAILS = [
   "gerenciacomercial@jorgebedoya.com"
 ];
 
+// Define application URL for links
+const APPLICATION_URL = "https://jlb-costos.lovable.app";
+
 interface ProjectNotificationRequest {
   projectName: string;
   projectId: string;
   notificationType: "created" | "completed";
+  createdBy?: string;
 }
 
 serve(async (req) => {
@@ -30,7 +34,7 @@ serve(async (req) => {
   }
 
   try {
-    const { projectName, projectId, notificationType }: ProjectNotificationRequest = await req.json();
+    const { projectName, projectId, notificationType, createdBy }: ProjectNotificationRequest = await req.json();
 
     if (!projectName || !notificationType) {
       return new Response(
@@ -44,20 +48,24 @@ serve(async (req) => {
 
     let subject = "";
     let htmlContent = "";
+    const createdByText = createdBy ? `por ${createdBy}` : "";
+    const projectLink = `${APPLICATION_URL}/admin/projects/${projectId}`;
 
     if (notificationType === "created") {
       subject = `Nuevo proyecto creado: ${projectName}`;
       htmlContent = `
         <h1>Nuevo proyecto creado</h1>
-        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido creado exitosamente.</p>
-        <p>Puede acceder al proyecto en el dashboard de administración.</p>
+        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido creado exitosamente ${createdByText}.</p>
+        <p>Puede acceder al proyecto en el <a href="${projectLink}">dashboard de administración</a>.</p>
+        <p><a href="${APPLICATION_URL}">Ir al sistema</a></p>
       `;
     } else if (notificationType === "completed") {
       subject = `Proyecto completado: ${projectName}`;
       htmlContent = `
         <h1>Proyecto completado</h1>
-        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido marcado como completado.</p>
-        <p>Puede acceder al proyecto en el dashboard de administración.</p>
+        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido marcado como completado ${createdByText}.</p>
+        <p>Puede acceder al proyecto en el <a href="${projectLink}">dashboard de administración</a>.</p>
+        <p><a href="${APPLICATION_URL}">Ir al sistema</a></p>
       `;
     }
 
