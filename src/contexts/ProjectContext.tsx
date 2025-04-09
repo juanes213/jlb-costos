@@ -160,22 +160,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     if (!user?.id) return;
     
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError || !profileData) {
-        console.error("Error fetching user profile:", profileError);
-        return;
-      }
-      
-      const recipientEmail = profileData.username;
-      
       const { error } = await supabase.functions.invoke('project-notification', {
         body: {
-          recipientEmail,
           projectName: project.name,
           projectId: project.numberId || project.id,
           notificationType

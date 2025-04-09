@@ -10,8 +10,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Define recipient emails as a constant array
+const RECIPIENT_EMAILS = [
+  "gerenteadm@jorgebedoya.com",
+  "cfinanciero@jorgebedoya.com",
+  "gerenciacomercial@jorgebedoya.com"
+];
+
 interface ProjectNotificationRequest {
-  recipientEmail: string;
   projectName: string;
   projectId: string;
   notificationType: "created" | "completed";
@@ -24,9 +30,9 @@ serve(async (req) => {
   }
 
   try {
-    const { recipientEmail, projectName, projectId, notificationType }: ProjectNotificationRequest = await req.json();
+    const { projectName, projectId, notificationType }: ProjectNotificationRequest = await req.json();
 
-    if (!recipientEmail || !projectName || !notificationType) {
+    if (!projectName || !notificationType) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -57,12 +63,13 @@ serve(async (req) => {
 
     const emailResponse = await resend.emails.send({
       from: "Notificaciones <onboarding@resend.dev>",
-      to: [recipientEmail],
+      to: RECIPIENT_EMAILS,
       subject: subject,
       html: htmlContent,
     });
 
-    console.log("Email notification sent successfully:", emailResponse);
+    console.log("Email notification sent successfully to:", RECIPIENT_EMAILS);
+    console.log("Email response:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
