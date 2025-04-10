@@ -14,14 +14,14 @@ import {
 } from "lucide-react";
 
 export default function AdminNav() {
-  const { signOut } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await logout();
     } catch (error) {
       console.error("Error signing out:", error);
     }

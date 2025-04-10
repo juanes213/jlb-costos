@@ -14,6 +14,7 @@ import { Project } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { DayContentProps } from "react-day-picker";
 
 export default function CalendarPage() {
   const { projects, calculateProjectCost } = useProjects();
@@ -124,7 +125,7 @@ export default function CalendarPage() {
                     },
                   }}
                   components={{
-                    DayContent: (props) => {
+                    DayContent: (props: DayContentProps) => {
                       const dateKey = format(props.date, "yyyy-MM-dd");
                       const hasProjects = !!projectsByDate[dateKey];
                       
@@ -134,7 +135,7 @@ export default function CalendarPage() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="relative w-full h-full flex items-center justify-center">
-                                {props.children}
+                                {props.day}
                                 <Badge 
                                   className="absolute -bottom-1 -right-1 text-xs h-4 min-w-4 flex items-center justify-center"
                                   variant="secondary"
@@ -156,7 +157,7 @@ export default function CalendarPage() {
                         );
                       }
                       
-                      return props.children;
+                      return <>{props.day}</>;
                     },
                   }}
                 />
@@ -185,7 +186,7 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-4">
                   {selectedDayProjects.map((project) => {
-                    const cost = calculateProjectCost(project);
+                    const totalCost = calculateProjectCost(project);
                     const isStartDate = project.initialDate && 
                       format(new Date(project.initialDate), "yyyy-MM-dd") === format(selectedDate!, "yyyy-MM-dd");
                     const isEndDate = project.finalDate && 
@@ -229,11 +230,11 @@ export default function CalendarPage() {
                             <dd>{formatCurrency(project.income || 0)}</dd>
                             
                             <dt className="font-medium text-muted-foreground">Costo:</dt>
-                            <dd>{formatCurrency(cost)}</dd>
+                            <dd>{formatCurrency(totalCost)}</dd>
                             
                             <dt className="font-medium text-muted-foreground">Margen:</dt>
-                            <dd className={project.income - cost < 0 ? "text-red-500" : "text-green-500"}>
-                              {formatCurrency(project.income - cost)}
+                            <dd className={project.income - totalCost < 0 ? "text-red-500" : "text-green-500"}>
+                              {formatCurrency(project.income - totalCost)}
                             </dd>
                             
                             <dt className="font-medium text-muted-foreground">Fecha inicio:</dt>
@@ -242,7 +243,6 @@ export default function CalendarPage() {
                             <dt className="font-medium text-muted-foreground">Fecha fin:</dt>
                             <dd>{project.finalDate ? format(new Date(project.finalDate), "dd/MM/yyyy") : "N/A"}</dd>
                             
-                            {/* Extract personnel from categories */}
                             {(() => {
                               const personnel: string[] = [];
                               
