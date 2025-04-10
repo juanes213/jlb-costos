@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -10,6 +9,7 @@ import { ProjectEditForm } from "./project-item/ProjectEditForm";
 import { ProjectObservations } from "./project-item/ProjectObservations";
 import { format } from "date-fns";
 import { ProjectPersonnel } from "./project-item/ProjectPersonnel";
+import { useSearchParams } from "react-router-dom";
 
 interface ProjectListItemProps {
   project: Project;
@@ -18,8 +18,14 @@ interface ProjectListItemProps {
 }
 
 export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: ProjectListItemProps) {
+  const [searchParams] = useSearchParams();
+  const projectIdParam = searchParams.get("projectId");
+  const showDetailsParam = searchParams.get("showDetails");
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(
+    projectIdParam === project.id && showDetailsParam === "true"
+  );
   const [editedName, setEditedName] = useState(project.name);
   const [editedNumberId, setEditedNumberId] = useState(project.numberId);
   const [editedIncome, setEditedIncome] = useState(project.income.toString());
@@ -33,17 +39,21 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   const { toast } = useToast();
   const lastUpdateRef = useRef<number>(0);
 
-  // Ensure project.categories is an array
-  const parsedProject = {
+  useEffect(() => {
+    if (projectIdParam === project.id && showDetailsParam === "true") {
+      setIsExpanded(true);
+    }
+  }, [projectIdParam, showDetailsParam, project.id]);
+
+  const [parsedProject, setParsedProject] = useState<Project>({
     ...project,
     categories: Array.isArray(project.categories) 
       ? project.categories 
       : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
-  };
+  });
 
-  // Use a stable reference for the parsedProject to prevent unnecessary renders
   const projectRef = useRef(parsedProject);
-  
+
   useEffect(() => {
     projectRef.current = {
       ...project,
@@ -54,14 +64,12 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   }, [project]);
 
   const handleAddCategory = useCallback(() => {
-    // Use a timestamp to prevent multiple updates within a short time
     const now = Date.now();
     if (now - lastUpdateRef.current < 200) return;
     lastUpdateRef.current = now;
     
     const newProject = { ...project };
     
-    // Ensure categories is an array before adding a new one
     if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
       newProject.categories = JSON.parse(newProject.categories);
     } else if (!Array.isArray(newProject.categories)) {
@@ -153,7 +161,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
 
       {isExpanded && (
         <div className="pt-4 border-t border-gray-100 animate-accordion-down">
-          {/* Personnel section - separated from categories */}
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2">Personal</h3>
             <ProjectPersonnel 
@@ -162,7 +169,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
             />
           </div>
 
-          {/* Categories section */}
           <div>
             <h3 className="text-lg font-medium mb-2">Categorías</h3>
             <ProjectCategories 

@@ -68,7 +68,7 @@ export function ProjectsTable({
                   <TableCell>{project.numberId}</TableCell>
                   <TableCell>
                     <Link 
-                      to={`/admin`} 
+                      to={`/admin?projectId=${project.id}&showDetails=true`}
                       className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
                       {project.name}
