@@ -23,6 +23,40 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
     ? project.categories 
     : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
 
+  // Function to calculate total cost of a category
+  const calculateCategoryCost = (categoryIndex: number): number => {
+    const category = categories[categoryIndex];
+    let totalCost = category.cost || 0;
+    
+    // Add IVA amount if exists
+    if (category.ivaAmount) {
+      totalCost += category.ivaAmount;
+    }
+    
+    // Sum all item costs
+    category.items.forEach(item => {
+      const quantity = item.quantity || 1;
+      totalCost += item.cost * quantity;
+      
+      // Add item IVA if exists
+      if (item.ivaAmount) {
+        totalCost += item.ivaAmount;
+      }
+    });
+    
+    return totalCost;
+  };
+
+  // Format currency for displaying costs
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
   const handleSaveCategoryEdit = () => {
     if (!editingCategory) return;
 
@@ -80,7 +114,12 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h4 className="font-medium">{category.name}</h4>
+                <h4 className="font-medium">
+                  {category.name}
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    {formatCurrency(calculateCategoryCost(categoryIndex))}
+                  </span>
+                </h4>
                 <Button
                   onClick={() => {
                     setEditingCategory({ categoryIndex });
@@ -104,6 +143,11 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
           <CategoryItems
             project={project}
             category={category}
+            categoryIndex={categoryIndex}
+            onUpdateProject={onUpdateProject}
+          />
+          <CategoryCost 
+            project={project} 
             categoryIndex={categoryIndex}
             onUpdateProject={onUpdateProject}
           />

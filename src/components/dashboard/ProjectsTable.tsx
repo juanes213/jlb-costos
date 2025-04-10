@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Project } from "@/types/project";
+import { Link } from "react-router-dom";
 
 interface ProjectsTableProps {
   filteredProjects: Project[];
@@ -65,7 +66,14 @@ export function ProjectsTable({
                     />
                   </TableCell>
                   <TableCell>{project.numberId}</TableCell>
-                  <TableCell>{project.name}</TableCell>
+                  <TableCell>
+                    <Link 
+                      to={`/admin`} 
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {project.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     {project.status === "in-process" ? "En Progreso" :
                      project.status === "on-hold" ? "En Espera" :
