@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es } from "date-fns/locale/es";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -135,7 +135,7 @@ export default function CalendarPage() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="relative w-full h-full flex items-center justify-center">
-                                {props.day}
+                                {props.children}
                                 <Badge 
                                   className="absolute -bottom-1 -right-1 text-xs h-4 min-w-4 flex items-center justify-center"
                                   variant="secondary"
@@ -157,7 +157,7 @@ export default function CalendarPage() {
                         );
                       }
                       
-                      return <>{props.day}</>;
+                      return <>{props.children}</>;
                     },
                   }}
                 />
@@ -186,7 +186,7 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-4">
                   {selectedDayProjects.map((project) => {
-                    const totalCost = calculateProjectCost(project);
+                    const { totalCost } = calculateProjectCost(project);
                     const isStartDate = project.initialDate && 
                       format(new Date(project.initialDate), "yyyy-MM-dd") === format(selectedDate!, "yyyy-MM-dd");
                     const isEndDate = project.finalDate && 
@@ -233,8 +233,8 @@ export default function CalendarPage() {
                             <dd>{formatCurrency(totalCost)}</dd>
                             
                             <dt className="font-medium text-muted-foreground">Margen:</dt>
-                            <dd className={project.income - totalCost < 0 ? "text-red-500" : "text-green-500"}>
-                              {formatCurrency(project.income - totalCost)}
+                            <dd className={(project.income || 0) - totalCost < 0 ? "text-red-500" : "text-green-500"}>
+                              {formatCurrency((project.income || 0) - totalCost)}
                             </dd>
                             
                             <dt className="font-medium text-muted-foreground">Fecha inicio:</dt>
