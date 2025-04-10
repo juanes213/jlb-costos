@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,32 +33,29 @@ interface OvertimeRecord {
 interface EmployeeOvertimeSelectorProps {
   onSelect: (records: OvertimeRecord[]) => void;
   selectedRecords: OvertimeRecord[];
+  employees?: Employee[];
 }
 
 export function EmployeeOvertimeSelector({ 
   onSelect, 
-  selectedRecords 
+  selectedRecords,
+  employees: propEmployees
 }: EmployeeOvertimeSelectorProps) {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>(propEmployees || []);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [overtimeType, setOvertimeType] = useState<OvertimeType>("ordinary_daytime");
   const [hours, setHours] = useState<number>(1);
   const [records, setRecords] = useState<OvertimeRecord[]>(selectedRecords || []);
 
-  useEffect(() => {
-    const loadEmployees = () => {
+  // If employees were not provided as props, load them from localStorage
+  if (!propEmployees) {
+    useState(() => {
       const savedEmployees = localStorage.getItem("employees");
       if (savedEmployees) {
         setEmployees(JSON.parse(savedEmployees));
       }
-    };
-    
-    loadEmployees();
-  }, []);
-
-  useEffect(() => {
-    onSelect(records);
-  }, [records, onSelect]);
+    });
+  }
 
   const handleAddRecord = () => {
     if (!selectedEmployee || !overtimeType || hours <= 0) return;
@@ -76,14 +73,18 @@ export function EmployeeOvertimeSelector({
       cost
     };
     
-    setRecords([...records, newRecord]);
+    const updatedRecords = [...records, newRecord];
+    setRecords(updatedRecords);
+    onSelect(updatedRecords);
     
     // Reset form
     setHours(1);
   };
 
   const handleDeleteRecord = (id: string) => {
-    setRecords(records.filter(r => r.id !== id));
+    const updatedRecords = records.filter(r => r.id !== id);
+    setRecords(updatedRecords);
+    onSelect(updatedRecords);
   };
 
   const formatCurrency = (value: number) => {

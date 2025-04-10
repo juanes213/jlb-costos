@@ -11,6 +11,7 @@ import { useState } from "react";
 import type { StorageItem } from "@/types/project";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface CategoryItemSelectorProps {
   storageItems: StorageItem[];
@@ -18,6 +19,7 @@ interface CategoryItemSelectorProps {
   onItemSelect: (itemId: string) => void;
   onManualSelect: () => void;
   categoryName: string;
+  isLoading?: boolean;
 }
 
 export function CategoryItemSelector({
@@ -26,6 +28,7 @@ export function CategoryItemSelector({
   onItemSelect,
   onManualSelect,
   categoryName,
+  isLoading = false,
 }: CategoryItemSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
@@ -54,10 +57,18 @@ export function CategoryItemSelector({
           onItemSelect(value);
         }
       }}
+      disabled={isLoading}
     >
       <SelectTrigger className="w-[300px]">
-        <SelectValue placeholder="Seleccionar item">
-          {selectedItemName || "Seleccionar item"}
+        <SelectValue placeholder={isLoading ? "Cargando..." : "Seleccionar item"}>
+          {isLoading ? (
+            <div className="flex items-center">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Cargando...
+            </div>
+          ) : (
+            selectedItemName || "Seleccionar item"
+          )}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

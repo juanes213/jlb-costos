@@ -47,7 +47,8 @@ export function useCategoryItems(
   const {
     storageItems,
     storageCategories,
-    handleSaveToStorage
+    handleSaveToStorage,
+    isLoading
   } = useStorageIntegration(
     project,
     categoryIndex, 
@@ -77,5 +78,6 @@ export function useCategoryItems(
     handleIvaCalculated,
     handleSaveToStorage,
     handleAddItem,
+    isLoading,
   };
 }

@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { Project, Employee, OvertimeRecord } from "@/types/project";
 import { EmployeeOvertimeSelector } from "../category/EmployeeOvertimeSelector";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProjectPersonnelProps {
   project: Project;
@@ -14,6 +15,7 @@ interface ProjectPersonnelProps {
 export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelProps) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   // Extract overtime records from project if they exist
   const overtimeRecords = project.categories
@@ -24,6 +26,7 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
     const loadEmployees = async () => {
       try {
         setIsLoading(true);
+        console.log("Loading employees for ProjectPersonnel component...");
         
         const { data, error } = await supabase
           .from('employees')
@@ -49,6 +52,10 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
             dailyRate: emp.dailyrate as number
           }));
           setEmployees(mappedEmployees);
+          
+          // Store in localStorage for future use
+          localStorage.setItem("employees", JSON.stringify(mappedEmployees));
+          console.log("Employees loaded from Supabase:", mappedEmployees.length);
         } else {
           fallbackToLocalStorage();
         }
@@ -61,14 +68,25 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
     };
     
     const fallbackToLocalStorage = () => {
+      console.log("Falling back to localStorage for employees");
       const savedEmployees = localStorage.getItem("employees");
       if (savedEmployees) {
-        setEmployees(JSON.parse(savedEmployees));
+        const parsedEmployees = JSON.parse(savedEmployees);
+        setEmployees(parsedEmployees);
+        console.log("Employees loaded from localStorage:", parsedEmployees.length);
+      } else {
+        setEmployees([]);
+        console.log("No employees found in localStorage");
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los empleados",
+          variant: "destructive",
+        });
       }
     };
     
     loadEmployees();
-  }, []);
+  }, [toast]);
 
   const handleOvertimeRecordsSelect = (records: OvertimeRecord[]) => {
     if (!records) return;
@@ -125,7 +143,12 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
   };
 
   if (isLoading) {
-    return <div className="text-center py-4">Cargando empleados...</div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 mr-2 animate-spin text-primary" />
+        <span>Cargando empleados...</span>
+      </div>
+    );
   }
 
   return (
@@ -135,6 +158,7 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
         <EmployeeOvertimeSelector 
           onSelect={handleOvertimeRecordsSelect}
           selectedRecords={overtimeRecords}
+          employees={employees}
         />
       </div>
       

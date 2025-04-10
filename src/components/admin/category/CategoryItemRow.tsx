@@ -30,6 +30,7 @@ interface CategoryItemRowProps {
   onIvaCalculated: (itemIndex: number, amount: number | undefined) => void;
   onSaveToStorage: (itemIndex: number) => void;
   onDelete: (itemIndex: number) => void;
+  isLoading?: boolean;
 }
 
 export function CategoryItemRow({
@@ -49,7 +50,8 @@ export function CategoryItemRow({
   onApplyChanges,
   onIvaCalculated,
   onSaveToStorage,
-  onDelete
+  onDelete,
+  isLoading = false
 }: CategoryItemRowProps) {
   // Only show unit for "Insumos" category
   const shouldShowUnit = categoryName === "Insumos";
@@ -79,6 +81,7 @@ export function CategoryItemRow({
               onItemSelect={(value) => onItemSelect(itemIndex, value)}
               onManualSelect={() => onManualSelect(itemIndex)}
               categoryName={categoryName}
+              isLoading={isLoading}
             />
           )
         ) : (

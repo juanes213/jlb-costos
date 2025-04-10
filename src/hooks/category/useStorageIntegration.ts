@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project } from "@/types/project";
+import type { Project, StorageItem } from "@/types/project";
 
 export function useStorageIntegration(
   project: Project, 
@@ -10,14 +10,76 @@ export function useStorageIntegration(
   onUpdateProject: (project: Project) => void
 ) {
   const { toast } = useToast();
+  const [storageItems, setStorageItems] = useState<StorageItem[]>([]);
+  const [storageCategories, setStorageCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const storageItems = JSON.parse(
-    localStorage.getItem("storageItems") || "[]"
-  );
-
-  const storageCategories = Array.from(
-    new Set(storageItems.map((item: any) => item.categoryName))
-  );
+  // Load storage items on component mount
+  useEffect(() => {
+    const fetchStorageItems = async () => {
+      try {
+        setIsLoading(true);
+        
+        // First try to get data from Supabase
+        const { data, error } = await supabase
+          .from("storage_items")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching storage items:", error);
+          fallbackToLocalStorage();
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          const mappedItems = data.map((item) => ({
+            id: item.id,
+            categoryName: item.categoryName,
+            name: item.name,
+            cost: item.cost,
+            unit: item.unit || "",
+            ivaAmount: item.ivaAmount || undefined,
+          }));
+          
+          setStorageItems(mappedItems);
+          const categories = Array.from(
+            new Set(mappedItems.map((item) => item.categoryName))
+          );
+          setStorageCategories(categories);
+          
+          // Update local storage with fresh data
+          localStorage.setItem("storageItems", JSON.stringify(mappedItems));
+          console.log("Storage items loaded from Supabase:", mappedItems.length);
+        } else {
+          fallbackToLocalStorage();
+        }
+      } catch (error) {
+        console.error("Error in fetchStorageItems:", error);
+        fallbackToLocalStorage();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    const fallbackToLocalStorage = () => {
+      console.log("Falling back to localStorage for storage items");
+      const storedItems = localStorage.getItem("storageItems");
+      if (storedItems) {
+        const parsedItems = JSON.parse(storedItems);
+        setStorageItems(parsedItems);
+        const categories = Array.from(
+          new Set(parsedItems.map((item: StorageItem) => item.categoryName))
+        );
+        setStorageCategories(categories);
+      } else {
+        setStorageItems([]);
+        setStorageCategories([]);
+      }
+    };
+    
+    fetchStorageItems();
+  }, []);
 
   const handleSaveToStorage = async (itemIndex: number) => {
     const item = project.categories[categoryIndex].items[itemIndex];
@@ -69,6 +131,13 @@ export function useStorageIntegration(
           unit: item.unit || "",
           ivaAmount: item.ivaAmount || undefined,
         }));
+        
+        setStorageItems(mappedItems);
+        const categories = Array.from(
+          new Set(mappedItems.map((item) => item.categoryName))
+        );
+        setStorageCategories(categories);
+        
         localStorage.setItem("storageItems", JSON.stringify(mappedItems));
       }
     } catch (error) {
@@ -85,5 +154,6 @@ export function useStorageIntegration(
     storageItems,
     storageCategories,
     handleSaveToStorage,
+    isLoading
   };
 }

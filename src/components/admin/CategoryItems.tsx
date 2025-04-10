@@ -37,6 +37,7 @@ export function CategoryItems({
     handleIvaCalculated,
     handleSaveToStorage,
     handleAddItem,
+    isLoading,
   } = useCategoryItems(project, category, categoryIndex, onUpdateProject);
 
   // Skip rendering for Personal category as it's now handled separately
@@ -75,6 +76,7 @@ export function CategoryItems({
           onIvaCalculated={handleIvaCalculated}
           onSaveToStorage={handleSaveToStorage}
           onDelete={handleDeleteProjectItem}
+          isLoading={isLoading}
         />
       ))}
       
