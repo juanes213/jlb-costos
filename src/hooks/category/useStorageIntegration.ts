@@ -43,10 +43,14 @@ export function useStorageIntegration(
           }));
           
           setStorageItems(mappedItems);
+          
+          // Fix: Ensure we're using type-safe string array for categories
           const categories = Array.from(
             new Set(mappedItems.map((item) => item.categoryName))
           );
-          setStorageCategories(categories);
+          
+          // Convert to explicit string array to fix the TypeScript error
+          setStorageCategories(categories as string[]);
           
           // Update local storage with fresh data
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -68,10 +72,14 @@ export function useStorageIntegration(
       if (storedItems) {
         const parsedItems = JSON.parse(storedItems);
         setStorageItems(parsedItems);
+        
+        // Fix: Ensure we're using type-safe string array for categories
         const categories = Array.from(
           new Set(parsedItems.map((item: StorageItem) => item.categoryName))
         );
-        setStorageCategories(categories);
+        
+        // Convert to explicit string array
+        setStorageCategories(categories as string[]);
       } else {
         setStorageItems([]);
         setStorageCategories([]);
