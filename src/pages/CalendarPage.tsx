@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale/es";
+import es from "date-fns/locale/es";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -135,7 +135,7 @@ export default function CalendarPage() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="relative w-full h-full flex items-center justify-center">
-                                {props.children}
+                                {props.date.getDate()}
                                 <Badge 
                                   className="absolute -bottom-1 -right-1 text-xs h-4 min-w-4 flex items-center justify-center"
                                   variant="secondary"
@@ -157,7 +157,7 @@ export default function CalendarPage() {
                         );
                       }
                       
-                      return <>{props.children}</>;
+                      return <>{props.date.getDate()}</>;
                     },
                   }}
                 />
