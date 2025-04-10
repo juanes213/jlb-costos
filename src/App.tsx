@@ -12,7 +12,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import GuestDashboard from "./pages/GuestDashboard";
 import CustomerVisits from "./pages/CustomerVisits";
 import ProjectsDashboard from "./pages/ProjectsDashboard";
-import CalendarPage from "./pages/CalendarPage";
 import AdminNav from "./components/admin/AdminNav";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
 import Index from "./pages/Index";
@@ -88,16 +87,6 @@ function App() {
                     <ProtectedRoute>
                       <AdminLayout>
                         <ProjectsDashboard />
-                      </AdminLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/calendar"
-                  element={
-                    <ProtectedRoute>
-                      <AdminLayout>
-                        <CalendarPage />
                       </AdminLayout>
                     </ProtectedRoute>
                   }
