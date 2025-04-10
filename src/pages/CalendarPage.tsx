@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale/es";
+import es from "date-fns/locale/es/index.js";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -134,7 +135,7 @@ export default function CalendarPage() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="relative w-full h-full flex items-center justify-center">
-                                {props.date.getDate()}
+                                {props.children}
                                 <Badge 
                                   className="absolute -bottom-1 -right-1 text-xs h-4 min-w-4 flex items-center justify-center"
                                   variant="secondary"
@@ -156,7 +157,7 @@ export default function CalendarPage() {
                         );
                       }
                       
-                      return <>{props.date.getDate()}</>;
+                      return <>{props.children}</>;
                     },
                   }}
                 />
@@ -185,7 +186,7 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-4">
                   {selectedDayProjects.map((project) => {
-                    const { totalCost } = calculateProjectCost(project);
+                    const totalCost = calculateProjectCost(project).totalCost;
                     const isStartDate = project.initialDate && 
                       format(new Date(project.initialDate), "yyyy-MM-dd") === format(selectedDate!, "yyyy-MM-dd");
                     const isEndDate = project.finalDate && 
