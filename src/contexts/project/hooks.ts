@@ -2,7 +2,6 @@
 import { useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Project } from "@/types/project";
-import { UseToastResult } from "@/hooks/use-toast";
 import { useToast } from "@/hooks/use-toast";
 
 // Hook for project notifications
