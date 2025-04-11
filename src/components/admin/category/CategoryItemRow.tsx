@@ -62,7 +62,7 @@ export function CategoryItemRow({
         {isStorageCategory ? (
           manualEntryMode ? (
             <ManualItemEntry 
-              item={editedItem}
+              item={{...item, ...editedItem}}
               itemIndex={itemIndex}
               onNameChange={(value) => onNameChange(itemIndex, value)}
               onUnitChange={(value) => onUnitChange(itemIndex, value)}
@@ -75,14 +75,21 @@ export function CategoryItemRow({
               shouldShowUnit={shouldShowUnit}
             />
           ) : (
-            <CategoryItemSelector
-              storageItems={storageItems}
-              selectedItemName={item.name}
-              onItemSelect={(value) => onItemSelect(itemIndex, value)}
-              onManualSelect={() => onManualSelect(itemIndex)}
-              categoryName={categoryName}
-              isLoading={isLoading}
-            />
+            <div className="flex gap-2">
+              <CategoryItemSelector
+                storageItems={storageItems}
+                selectedItemName={item.name}
+                onItemSelect={(value) => onItemSelect(itemIndex, value)}
+                onManualSelect={() => onManualSelect(itemIndex)}
+                categoryName={categoryName}
+                isLoading={isLoading}
+              />
+              <CategoryItemQuantity
+                quantity={item.quantity || 1}
+                unit={shouldShowUnit ? (item.unit || "") : ""}
+                onChange={(value) => onQuantityChange(itemIndex, value)}
+              />
+            </div>
           )
         ) : (
           <div className="flex gap-2">
@@ -95,13 +102,13 @@ export function CategoryItemRow({
               onApply={() => onApplyChanges(itemIndex)}
               shouldShowUnit={shouldShowUnit}
             />
+            <CategoryItemQuantity
+              quantity={item.quantity || 1}
+              unit={shouldShowUnit ? (item.unit || "") : ""}
+              onChange={(value) => onQuantityChange(itemIndex, value)}
+            />
           </div>
         )}
-        <CategoryItemQuantity
-          quantity={item.quantity || 1}
-          unit={shouldShowUnit ? (item.unit || "") : ""}
-          onChange={(value) => onQuantityChange(itemIndex, value)}
-        />
         
         {(!isStorageCategory || manualEntryMode) && (
           <ItemCostEditor

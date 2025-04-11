@@ -85,6 +85,13 @@ export function useItemEditing(
     if (!editedItems[itemIndex]) return;
 
     const newProject = { ...project };
+    
+    // Ensure the item exists in the project
+    if (!newProject.categories[categoryIndex].items[itemIndex]) {
+      console.error("Tried to update non-existent item");
+      return;
+    }
+    
     newProject.categories[categoryIndex].items[itemIndex] = {
       ...newProject.categories[categoryIndex].items[itemIndex],
       name: editedItems[itemIndex].name,
