@@ -74,6 +74,27 @@ export default function CalendarPage() {
 
   const currentMonthProjects = getCurrentMonthProjects();
   
+  // Helper function to get status badge
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case "in-process": 
+        return <Badge variant="default">En Progreso</Badge>;
+      case "on-hold": 
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">En Espera</Badge>;
+      case "paused": 
+        return <Badge variant="outline" className="bg-red-100 text-red-800">Pausado</Badge>;
+      case "completed": 
+        return <Badge variant="secondary">Completado</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return "N/A";
+    return format(new Date(date), "dd/MM/yyyy");
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -117,40 +138,40 @@ export default function CalendarPage() {
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
                           const costResult = calculateProjectCost(project);
-                          // Fixed: Check if result is an object with totalCost or just a number
                           const totalCost = typeof costResult === 'object' ? costResult.totalCost : costResult;
                           
                           return (
-                            <div key={project.id} className="flex justify-between items-center">
-                              <div>
+                            <div key={project.id} className="border p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
                                 <Link 
                                   to={`/admin?projectId=${project.id}&showDetails=true`}
-                                  className="font-medium text-blue-600 hover:underline"
+                                  className="font-medium text-blue-600 hover:underline truncate max-w-[60%]"
+                                  title={project.name}
                                 >
                                   {project.name}
                                 </Link>
-                                <div className="text-sm text-muted-foreground">
-                                  ID: {project.numberId}
+                                <div>
+                                  {getStatusBadge(project.status)}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {project.type === 'start' && (
-                                  <Badge variant="outline" className="bg-green-100 text-green-800">
-                                    Inicio
-                                  </Badge>
-                                )}
-                                {project.type === 'end' && (
-                                  <Badge variant="outline" className="bg-orange-100 text-orange-800">
-                                    Fin
-                                  </Badge>
-                                )}
-                                <Badge variant={project.status === 'completed' ? 'secondary' : 'default'}>
-                                  {project.status === "in-process" ? 'En Progreso' : 
-                                   project.status === "on-hold" ? 'En Espera' : 
-                                   project.status === "paused" ? 'Pausado' : 
-                                   project.status === "completed" ? 'Completado' : 
-                                   project.status}
-                                </Badge>
+                              
+                              <div className="text-xs text-muted-foreground mb-1">
+                                ID: {project.numberId}
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Costo:</span> {formatCurrency(totalCost)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Tipo:</span> {project.type === 'start' ? 'Inicio' : 'Fin'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}
+                                </div>
                               </div>
                             </div>
                           );
@@ -187,40 +208,40 @@ export default function CalendarPage() {
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
                           const costResult = calculateProjectCost(project);
-                          // Fixed: Check if result is an object with totalCost or just a number
                           const totalCost = typeof costResult === 'object' ? costResult.totalCost : costResult;
                           
                           return (
-                            <div key={project.id} className="flex justify-between items-center">
-                              <div>
+                            <div key={project.id} className="border p-3 rounded-md">
+                              <div className="flex justify-between items-center mb-2">
                                 <Link 
                                   to={`/admin?projectId=${project.id}&showDetails=true`}
-                                  className="font-medium text-blue-600 hover:underline"
+                                  className="font-medium text-blue-600 hover:underline truncate max-w-[60%]"
+                                  title={project.name}
                                 >
                                   {project.name}
                                 </Link>
-                                <div className="text-sm text-muted-foreground">
-                                  ID: {project.numberId}
+                                <div>
+                                  {getStatusBadge(project.status)}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {project.type === 'start' && (
-                                  <Badge variant="outline" className="bg-green-100 text-green-800">
-                                    Inicio
-                                  </Badge>
-                                )}
-                                {project.type === 'end' && (
-                                  <Badge variant="outline" className="bg-orange-100 text-orange-800">
-                                    Fin
-                                  </Badge>
-                                )}
-                                <Badge variant={project.status === 'completed' ? 'secondary' : 'default'}>
-                                  {project.status === "in-process" ? 'En Progreso' : 
-                                   project.status === "on-hold" ? 'En Espera' : 
-                                   project.status === "paused" ? 'Pausado' : 
-                                   project.status === "completed" ? 'Completado' : 
-                                   project.status}
-                                </Badge>
+                              
+                              <div className="text-xs text-muted-foreground mb-1">
+                                ID: {project.numberId}
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Costo:</span> {formatCurrency(totalCost)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Tipo:</span> {project.type === 'start' ? 'Inicio' : 'Fin'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}
+                                </div>
                               </div>
                             </div>
                           );
