@@ -9,7 +9,8 @@ import {
   Package, 
   Users, 
   BarChart3, 
-  LogOut
+  LogOut,
+  Calendar
 } from "lucide-react";
 
 export default function AdminNav() {
@@ -73,6 +74,17 @@ export default function AdminNav() {
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             <span>Dashboard</span>
+          </Link>
+          <Link
+            to="/calendar"
+            className={`flex items-center text-sm font-medium transition-colors ${
+              isActive("/calendar")
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            <span>Calendario</span>
           </Link>
         </nav>
         <div className="flex items-center">

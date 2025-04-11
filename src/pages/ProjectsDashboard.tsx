@@ -3,7 +3,6 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Header } from "@/components/shared/Header";
-import AdminNav from "@/components/admin/AdminNav";
 import { useAuth } from "@/contexts/auth";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AnalyticsSection } from "@/components/dashboard/AnalyticsSection";
@@ -49,7 +48,6 @@ export default function ProjectsDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <AdminNav /> {/* Always show AdminNav regardless of user role */}
       
       <div className="container py-8 space-y-6 animate-fadeIn">
         <div className="flex justify-between items-center">
