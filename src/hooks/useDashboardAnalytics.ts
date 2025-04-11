@@ -5,7 +5,7 @@ import type { Project } from "@/types/project";
 export function useDashboardAnalytics(
   filteredProjects: Project[],
   selectedProjects: string[],
-  calculateProjectCost: (project: Project) => number
+  calculateProjectCost: (project: Project) => { totalCost: number; margin: number; marginPercentage: number; }
 ) {
   const analytics = useMemo(() => {
     const projectsToAnalyze = selectedProjects.length > 0
@@ -13,7 +13,7 @@ export function useDashboardAnalytics(
       : filteredProjects;
     
     const totalCost = projectsToAnalyze.reduce(
-      (sum, project) => sum + calculateProjectCost(project),
+      (sum, project) => sum + calculateProjectCost(project).totalCost,
       0
     );
     

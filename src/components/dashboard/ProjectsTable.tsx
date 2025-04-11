@@ -10,7 +10,7 @@ interface ProjectsTableProps {
   selectedProjects: string[];
   toggleProjectSelection: (projectId: string) => void;
   formatCurrency: (value: number) => string;
-  calculateProjectCost: (project: Project) => number;
+  calculateProjectCost: (project: Project) => { totalCost: number; margin: number; marginPercentage: number; };
 }
 
 export function ProjectsTable({
@@ -50,10 +50,8 @@ export function ProjectsTable({
             </TableRow>
           ) : (
             filteredProjects.slice(0, visibleRows).map((project) => {
-              const cost = calculateProjectCost(project);
+              const { totalCost: cost, margin, marginPercentage } = calculateProjectCost(project);
               const income = project.income || 0;
-              const margin = income - cost;
-              const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
               
               return (
                 <TableRow key={project.id} className="cursor-pointer">

@@ -6,7 +6,7 @@ import { format } from "date-fns";
 export function useChartData(
   filteredProjects: Project[],
   selectedProjects: string[],
-  calculateProjectCost: (project: Project) => number
+  calculateProjectCost: (project: Project) => { totalCost: number; margin: number; marginPercentage: number; }
 ) {
   const barChartData = useMemo(() => {
     const projectsToShow = selectedProjects.length > 0
@@ -14,7 +14,7 @@ export function useChartData(
       : filteredProjects.slice(0, 8);
     
     return projectsToShow.map(project => {
-      const cost = calculateProjectCost(project);
+      const { totalCost: cost } = calculateProjectCost(project);
       return {
         name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
         cost,
@@ -89,9 +89,10 @@ export function useChartData(
         const project = filteredProjects.find(p => p.id === projectId);
         if (!project) return { name: "", value: 0 };
         
+        const { totalCost } = calculateProjectCost(project);
         return {
           name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
-          value: calculateProjectCost(project),
+          value: totalCost,
         };
       });
     }
@@ -99,7 +100,7 @@ export function useChartData(
 
   const scatterData = useMemo(() => {
     return filteredProjects.map(project => {
-      const cost = calculateProjectCost(project);
+      const { totalCost: cost } = calculateProjectCost(project);
       const income = project.income || 0;
       return {
         name: project.name.length > 10 ? project.name.substring(0, 10) + '...' : project.name,
@@ -112,7 +113,7 @@ export function useChartData(
 
   const profitabilityDistribution = useMemo(() => {
     const margins = filteredProjects.map(project => {
-      const cost = calculateProjectCost(project);
+      const { totalCost: cost } = calculateProjectCost(project);
       const income = project.income || 0;
       const margin = income - cost;
       const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
@@ -159,7 +160,7 @@ export function useChartData(
       });
 
     return projectsWithDates.map(project => {
-      const cost = calculateProjectCost(project);
+      const { totalCost: cost } = calculateProjectCost(project);
       const income = project.income || 0;
       const initialDate = project.initialDate instanceof Date 
         ? project.initialDate 
