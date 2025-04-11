@@ -94,6 +94,22 @@ export default function CalendarPage() {
     if (!date) return "N/A";
     return format(new Date(date), "dd/MM/yyyy");
   };
+
+  // Safely calculate project cost with error handling
+  const safeCalculateProjectCost = (project: any) => {
+    try {
+      const costResult = calculateProjectCost(project);
+      if (typeof costResult === 'number') {
+        return costResult;
+      } else if (costResult && typeof costResult === 'object') {
+        return costResult.totalCost;
+      }
+      return 0;
+    } catch (error) {
+      console.error("Error calculating project cost:", error, project);
+      return 0;
+    }
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -137,8 +153,8 @@ export default function CalendarPage() {
                     <CardContent className="p-3">
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
-                          const costResult = calculateProjectCost(project);
-                          const totalCost = typeof costResult === 'object' ? costResult.totalCost : costResult;
+                          // Safely calculate project cost
+                          const totalCost = safeCalculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="border p-3 rounded-md">
@@ -165,9 +181,6 @@ export default function CalendarPage() {
                                 </div>
                                 <div>
                                   <span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Tipo:</span> {project.type === 'start' ? 'Inicio' : 'Fin'}
                                 </div>
                                 <div>
                                   <span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}
@@ -207,8 +220,8 @@ export default function CalendarPage() {
                     <CardContent className="p-3">
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
-                          const costResult = calculateProjectCost(project);
-                          const totalCost = typeof costResult === 'object' ? costResult.totalCost : costResult;
+                          // Safely calculate project cost
+                          const totalCost = safeCalculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="border p-3 rounded-md">
@@ -235,9 +248,6 @@ export default function CalendarPage() {
                                 </div>
                                 <div>
                                   <span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Tipo:</span> {project.type === 'start' ? 'Inicio' : 'Fin'}
                                 </div>
                                 <div>
                                   <span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}

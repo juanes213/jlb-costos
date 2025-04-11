@@ -38,29 +38,50 @@ export function stringifyProjects(projects: Project[]): string {
   });
 }
 
+// Safely parse categories if needed
+function ensureCategoriesArray(categories: any) {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  if (typeof categories === 'string') {
+    try {
+      const parsed = JSON.parse(categories);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error parsing categories:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
 // Calculate project cost
 export function calculateProjectCost(project: Project) {
   let totalCost = 0;
+  
+  // Ensure categories is an array before iterating
+  const categories = ensureCategoriesArray(project.categories);
 
-  project.categories.forEach(category => {
+  categories.forEach(category => {
     if (category.name !== "Personal") {
       if (category.cost) {
         totalCost += category.cost;
       }
       
-      category.items.forEach(item => {
-        const itemCost = item.cost * (item.quantity || 1);
-        totalCost += itemCost;
-        
-        if (item.ivaAmount) {
-          totalCost += item.ivaAmount;
-        }
-      });
+      if (Array.isArray(category.items)) {
+        category.items.forEach(item => {
+          const itemCost = item.cost * (item.quantity || 1);
+          totalCost += itemCost;
+          
+          if (item.ivaAmount) {
+            totalCost += item.ivaAmount;
+          }
+        });
+      }
     }
   });
   
-  const personalCategory = project.categories.find(cat => cat.name === "Personal");
-  if (personalCategory) {
+  const personalCategory = categories.find(cat => cat.name === "Personal");
+  if (personalCategory && Array.isArray(personalCategory.items)) {
     personalCategory.items.forEach(item => {
       if (item.name === "Horas extras" && item.overtimeRecords) {
         item.overtimeRecords.forEach(record => {
