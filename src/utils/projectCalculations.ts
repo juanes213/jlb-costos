@@ -17,37 +17,56 @@ function ensureCategoriesArray(categories: any) {
   return [];
 }
 
-export const calculateProjectCost = (project: Project): number => {
-  let totalCost = 0;
-  
-  // Ensure categories is always an array before using forEach
-  const categories = ensureCategoriesArray(project.categories);
+export const calculateProjectCost = (project: Project): {
+  totalCost: number;
+  margin: number;
+  marginPercentage: number;
+} => {
+  try {
+    if (!project) {
+      return { totalCost: 0, margin: 0, marginPercentage: 0 };
+    }
+    
+    let totalCost = 0;
+    
+    // Ensure categories is always an array before using forEach
+    const categories = ensureCategoriesArray(project.categories);
 
-  categories.forEach(category => {
-    // Add category base cost if exists
-    if (category.cost) {
-      totalCost += category.cost;
-    }
+    categories.forEach(category => {
+      // Add category base cost if exists
+      if (category && typeof category.cost === 'number') {
+        totalCost += category.cost;
+      }
+      
+      // Add category IVA amount if exists
+      if (category && typeof category.ivaAmount === 'number') {
+        totalCost += category.ivaAmount;
+      }
+      
+      // Ensure items is an array before iterating
+      if (category && Array.isArray(category.items)) {
+        // Calculate cost from each item in the category
+        category.items.forEach(item => {
+          if (item && typeof item.cost === 'number') {
+            const quantity = item.quantity || 1;
+            totalCost += item.cost * quantity;
+            
+            // Add item IVA amount if exists
+            if (typeof item.ivaAmount === 'number') {
+              totalCost += item.ivaAmount;
+            }
+          }
+        });
+      }
+    });
     
-    // Add category IVA amount if exists
-    if (category.ivaAmount) {
-      totalCost += category.ivaAmount;
-    }
+    const income = project.income || 0;
+    const margin = income - totalCost;
+    const marginPercentage = totalCost > 0 ? (margin / totalCost) * 100 : 0;
     
-    // Ensure items is an array before iterating
-    if (Array.isArray(category.items)) {
-      // Calculate cost from each item in the category
-      category.items.forEach(item => {
-        const quantity = item.quantity || 1;
-        totalCost += item.cost * quantity;
-        
-        // Add item IVA amount if exists
-        if (item.ivaAmount) {
-          totalCost += item.ivaAmount;
-        }
-      });
-    }
-  });
-  
-  return totalCost;
+    return { totalCost, margin, marginPercentage };
+  } catch (error) {
+    console.error("Error calculating project cost:", error);
+    return { totalCost: 0, margin: 0, marginPercentage: 0 };
+  }
 };

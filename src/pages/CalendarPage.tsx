@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { formatCurrency } from "@/utils/formatters";
 
 export default function CalendarPage() {
   const { projects, calculateProjectCost } = useProjects();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
   
   // Filter projects that have dates
   const projectsWithDates = projects.filter(project => project.initialDate || project.finalDate);
@@ -48,32 +48,39 @@ export default function CalendarPage() {
 
   // Navigation between months
   const previousMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() - 1);
-    setCurrentMonth(newMonth);
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+    setCurrentDate(newDate);
   };
 
   const nextMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() + 1);
-    setCurrentMonth(newMonth);
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + 1);
+    setCurrentDate(newDate);
   };
   
-  // Filter projects for the current month
-  const getCurrentMonthProjects = () => {
-    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-    
-    return Object.entries(projectsByDate)
-      .filter(([date]) => {
-        const projectDate = new Date(date);
-        return projectDate >= firstDay && projectDate <= lastDay;
-      })
-      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime());
-  };
+  // Get days for current month view
+  const firstDayOfMonth = startOfMonth(currentDate);
+  const lastDayOfMonth = endOfMonth(currentDate);
+  const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
+  
+  // Calculate days needed before the first day of month to start from Sunday (0)
+  const startingDayOfWeek = getDay(firstDayOfMonth);
+  
+  // Generate calendar days including the padding days from previous month
+  const calendarDays = [];
+  
+  // Add empty cells for days before the start of the month
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    calendarDays.push(null);
+  }
+  
+  // Add all days of the current month
+  calendarDays.push(...daysInMonth);
+  
+  // Generate days of the week header
+  const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-  const currentMonthProjects = getCurrentMonthProjects();
-  
   // Helper function to get status badge
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -98,10 +105,17 @@ export default function CalendarPage() {
   // Safely calculate project cost with error handling
   const safeCalculateProjectCost = (project: any) => {
     try {
+      if (!project) return 0;
+      
+      // Ensure project.categories is array
+      if (!project.categories || !Array.isArray(project.categories)) {
+        return 0;
+      }
+      
       const costResult = calculateProjectCost(project);
       if (typeof costResult === 'number') {
         return costResult;
-      } else if (costResult && typeof costResult === 'object') {
+      } else if (costResult && typeof costResult === 'object' && 'totalCost' in costResult) {
         return costResult.totalCost;
       }
       return 0;
@@ -122,7 +136,7 @@ export default function CalendarPage() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-lg font-medium">
-              {format(currentMonth, 'MMMM yyyy')}
+              {format(currentDate, 'MMMM yyyy')}
             </span>
             <Button variant="outline" size="icon" onClick={nextMonth}>
               <ChevronRight className="h-4 w-4" />
@@ -130,75 +144,91 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Vista Mensual</CardTitle>
+            <CardTitle>Calendario Mensual</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {currentMonthProjects.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  No hay eventos programados para este mes
+            {/* Days of week header */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {daysOfWeek.map(day => (
+                <div 
+                  key={day} 
+                  className="text-center font-medium text-sm py-2 bg-muted"
+                >
+                  {day}
                 </div>
-              ) : (
-                currentMonthProjects.map(([date, dayProjects]) => (
-                  <Card key={date} className="overflow-hidden">
-                    <CardHeader className="bg-muted py-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">
-                          {format(new Date(date), 'dd/MM/yyyy')} - {dayProjects.length} proyecto(s)
-                        </CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-3">
-                      <div className="space-y-3">
-                        {dayProjects.map((project) => {
-                          // Safely calculate project cost
+              ))}
+            </div>
+            
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, index) => {
+                if (day === null) {
+                  // Empty cell for padding
+                  return <div key={`empty-${index}`} className="h-32 bg-gray-50 rounded"></div>;
+                }
+                
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const dayProjects = projectsByDate[dateKey] || [];
+                const isCurrentMonth = isSameMonth(day, currentDate);
+                const isTodayDate = isToday(day);
+                
+                return (
+                  <div 
+                    key={dateKey} 
+                    className={`h-auto min-h-32 border rounded p-1 relative overflow-hidden ${
+                      !isCurrentMonth ? 'bg-gray-50 opacity-60' : 
+                      isTodayDate ? 'bg-blue-50 border-blue-300' : ''
+                    }`}
+                  >
+                    <div className="text-right mb-1">
+                      <span className={`inline-block rounded-full w-6 h-6 text-center text-sm ${
+                        isTodayDate ? 'bg-blue-500 text-white' : ''
+                      }`}>
+                        {format(day, 'd')}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-1 overflow-y-auto max-h-28">
+                      {dayProjects.length > 0 ? (
+                        dayProjects.map((project) => {
                           const totalCost = safeCalculateProjectCost(project);
                           
                           return (
-                            <div key={project.id} className="border p-3 rounded-md">
-                              <div className="flex justify-between items-center mb-2">
-                                <Link 
-                                  to={`/admin?projectId=${project.id}&showDetails=true`}
-                                  className="font-medium text-blue-600 hover:underline truncate max-w-[60%]"
-                                  title={project.name}
-                                >
-                                  {project.name}
-                                </Link>
-                                <div>
+                            <div key={project.id} className="bg-white shadow-sm p-1 rounded border text-xs">
+                              <Link 
+                                to={`/admin?projectId=${project.id}&showDetails=true`}
+                                className="font-medium text-blue-600 hover:underline block truncate"
+                                title={project.name}
+                              >
+                                {project.name}
+                              </Link>
+                              <div className="flex justify-between items-center">
+                                <div className="mt-1 flex-shrink-0">
                                   {getStatusBadge(project.status)}
                                 </div>
                               </div>
-                              
-                              <div className="text-xs text-muted-foreground mb-1">
-                                ID: {project.numberId}
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                  <span className="font-medium">Costo:</span> {formatCurrency(totalCost)}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}
-                                </div>
+                              <div className="mt-1">
+                                <div><span className="font-medium">Costo:</span> {formatCurrency(totalCost)}</div>
+                                <div><span className="font-medium">Ingreso:</span> {formatCurrency(project.income || 0)}</div>
+                                <div><span className="font-medium">Fecha Final:</span> {formatDate(project.finalDate)}</div>
                               </div>
                             </div>
                           );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+                        })
+                      ) : (
+                        <div className="text-center text-xs text-gray-400">Sin eventos</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="mt-6">
           <CardHeader>
             <CardTitle>Próximos Eventos</CardTitle>
           </CardHeader>
