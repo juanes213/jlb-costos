@@ -5,9 +5,8 @@ import { SmtpClient } from "https://deno.land/x/smtp@v0.13.0/mod.ts";
 // Define proper CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "*",
-  "Access-Control-Allow-Methods": "*",
-  "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 // Define recipient emails
@@ -31,7 +30,7 @@ interface ProjectNotificationRequest {
 serve(async (req) => {
   console.log("Edge function received request:", req.method);
   
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - This is crucial!
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
@@ -178,7 +177,7 @@ serve(async (req) => {
       // Close connection
       await client.close();
 
-      // Return success or partial success response
+      // Return success or partial success response with CORS headers
       if (successfulEmails.length > 0) {
         return new Response(
           JSON.stringify({ 

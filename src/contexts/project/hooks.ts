@@ -34,11 +34,14 @@ export function useProjectNotifications() {
         duration: 3000,
       });
       
+      const currentUser = await supabase.auth.getUser();
+      const userEmail = currentUser?.data?.user?.email;
+      
       const payload = {
         projectName: project.name,
         projectId: project.numberId || project.id,
         notificationType,
-        createdBy: supabase.auth.getUser() ? (await supabase.auth.getUser()).data.user?.email : undefined
+        createdBy: userEmail
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
@@ -47,20 +50,13 @@ export function useProjectNotifications() {
       const supabaseUrl = 'https://xkiqeoxngnrmqfbdagcv.supabase.co';
       const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraXFlb3huZ25ybXFmYmRhZ2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODgxNTIsImV4cCI6MjA1NzM2NDE1Mn0.vOaOGnNsrMFWPmjixDA_8G5zP_S50Lcy4U7XXLK7L4M';
       
-      const response = await fetch(`${supabaseUrl}/functions/v1/project-notification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify(payload)
+      // Use the Supabase client functions API instead of direct fetch
+      const { data, error } = await supabase.functions.invoke('project-notification', {
+        body: payload
       });
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}: ${JSON.stringify(data)}`);
+      if (error) {
+        throw new Error(`Error: ${error.message || 'Unknown error'}`);
       }
       
       console.log(`Project ${notificationType} notification emails sent:`, data);
