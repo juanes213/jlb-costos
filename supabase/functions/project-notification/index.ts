@@ -75,6 +75,14 @@ serve(async (req) => {
       const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
       const smtpTLS = Deno.env.get("SMTP_TLS") === "true";
 
+      // Log SMTP configuration details for debugging
+      console.log("SMTP Configuration:", {
+        host: smtpHost,
+        port: smtpPort,
+        tls: smtpTLS,
+        user: smtpUser ? "***" : "Not set",
+      });
+
       // Validate SMTP configuration
       if (!smtpUser || !smtpPass || !smtpHost) {
         throw new Error("Missing SMTP configuration");
@@ -98,14 +106,18 @@ serve(async (req) => {
       
       // Send to each recipient individually
       for (const recipientEmail of RECIPIENT_EMAILS) {
-        await client.send({
-          from: smtpUser,
-          to: recipientEmail,
-          subject: subject,
-          content: htmlContent,
-          html: htmlContent,
-        });
-        console.log(`Email sent to ${recipientEmail}`);
+        try {
+          await client.send({
+            from: smtpUser,
+            to: recipientEmail,
+            subject: subject,
+            content: htmlContent,
+            html: htmlContent,
+          });
+          console.log(`Email sent successfully to ${recipientEmail}`);
+        } catch (recipientError) {
+          console.error(`Error sending email to ${recipientEmail}:`, recipientError);
+        }
       }
 
       // Close the connection
