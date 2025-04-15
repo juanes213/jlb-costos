@@ -35,7 +35,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
-      status: 204,
+      status: 200,
       headers: corsHeaders
     });
   }
