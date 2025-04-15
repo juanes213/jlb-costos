@@ -109,26 +109,28 @@ serve(async (req) => {
     }
 
     try {
-      // Send emails using fetch to a reliable email API
+      // Send emails using EmailJS
       const successfulEmails = [];
       const failedEmails = [];
 
       console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
       
-      // Use native fetch to send emails through an email API service
+      // Get EmailJS configuration
+      const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
+      const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
+      const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
+      
+      if (!apiKey || !serviceId || !templateId) {
+        throw new Error("Missing EmailJS configuration");
+      }
+      
+      // EmailJS API endpoint
+      const apiUrl = "https://api.emailjs.com/api/v1.0/email/send";
+      
+      // Send emails to all recipients
       for (const email of RECIPIENT_EMAILS) {
         try {
-          // Example: Using a simple REST API to send email
-          // This is a placeholder - you'd replace with your actual email service API call
-          const apiUrl = "https://api.emailjs.com/api/v1.0/email/send";
-          const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
-          const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
-          const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
-          const userId = Deno.env.get("EMAILJS_USER_ID") || "";
-          
-          if (!apiKey || !serviceId || !templateId || !userId) {
-            throw new Error("Missing EmailJS configuration");
-          }
+          console.log(`Sending email to ${email} using EmailJS...`);
           
           const emailResponse = await fetch(apiUrl, {
             method: "POST",
@@ -138,7 +140,6 @@ serve(async (req) => {
             body: JSON.stringify({
               service_id: serviceId,
               template_id: templateId,
-              user_id: userId,
               accessToken: apiKey,
               template_params: {
                 to_email: email,
