@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -24,77 +23,62 @@ export function useProjectNotifications() {
     toast({
       title,
       description,
-      duration: 5000, // Show for 5 seconds
+      duration: 5000,
     });
     
     // Send email notifications via edge function
     try {
+      toast({
+        title: "Notificación por correo",
+        description: "Enviando notificaciones por correo...",
+        duration: 3000,
+      });
+      
       const payload = {
         projectName: project.name,
         projectId: project.numberId || project.id,
-        notificationType
+        notificationType,
+        createdBy: supabase.auth.getUser() ? (await supabase.auth.getUser()).data.user?.email : undefined
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
       console.log("Request payload:", payload);
 
-      // Use fetch directly for more control over the request
-      try {
-        // Show a notification that we're sending emails
-        toast({
-          title: "Notificación por correo",
-          description: "Enviando notificaciones por correo...",
-          duration: 3000,
-        });
-        
-        // Get the API key from the correct constant in the supabase.ts file
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraXFlb3huZ25ybXFmYmRhZ2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODgxNTIsImV4cCI6MjA1NzM2NDE1Mn0.vOaOGnNsrMFWPmjixDA_8G5zP_S50Lcy4U7XXLK7L4M';
-        
-        const response = await fetch('https://xkiqeoxngnrmqfbdagcv.supabase.co/functions/v1/project-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Origin': window.location.origin,
-            'apikey': supabaseAnonKey
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`HTTP error ${response.status}: ${JSON.stringify(errorData)}`);
-        }
-        
-        const data = await response.json();
-        console.log(`Project ${notificationType} notification emails sent successfully:`, data);
-        
-        toast({
-          title: "Correos enviados",
-          description: "Las notificaciones por correo se han enviado correctamente.",
-          duration: 3000,
-        });
-      } catch (fetchError) {
-        console.error("Error sending email notification via fetch:", fetchError);
-        toast({
-          title: "Error",
-          description: "No se pudieron enviar las notificaciones por correo electrónico.",
-          variant: "destructive",
-          duration: 5000,
-        });
+      const supabaseUrl = 'https://xkiqeoxngnrmqfbdagcv.supabase.co';
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraXFlb3huZ25ybXFmYmRhZ2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODgxNTIsImV4cCI6MjA1NzM2NDE1Mn0.vOaOGnNsrMFWPmjixDA_8G5zP_S50Lcy4U7XXLK7L4M';
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/project-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}: ${JSON.stringify(data)}`);
       }
+      
+      console.log(`Project ${notificationType} notification emails sent:`, data);
+      
+      toast({
+        title: "Correos enviados",
+        description: `Notificaciones enviadas a ${data.successfulEmails?.length || 0} destinatarios.`,
+        duration: 3000,
+      });
     } catch (error) {
-      console.error("Error in sendProjectNotification:", error);
-      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-      // Show error to user
+      console.error("Error sending email notification:", error);
       toast({
         title: "Error",
-        description: "Ocurrió un error al enviar las notificaciones.",
+        description: "No se pudieron enviar las notificaciones por correo electrónico.",
         variant: "destructive",
         duration: 5000,
       });
     }
-    
-    console.log(`Project ${notificationType} notification displayed: ${project.name}`);
   }, [toast]);
 }
 

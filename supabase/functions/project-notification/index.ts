@@ -1,8 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.13.0/mod.ts";
 
-// Define proper CORS headers - make them as permissive as possible for testing
+// Define proper CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "*",
@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
-// Define recipient emails as a constant array
+// Define recipient emails
 const RECIPIENT_EMAILS = [
   "gerenteadm@jorgebedoya.com",
   "cfinanciero@jorgebedoya.com",
@@ -27,11 +27,11 @@ interface ProjectNotificationRequest {
   createdBy?: string;
 }
 
-// This is the main handler
+// Main handler function
 serve(async (req) => {
   console.log("Edge function received request:", req.method);
   
-  // Handle CORS preflight requests FIRST, before anything else
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
@@ -40,11 +40,9 @@ serve(async (req) => {
     });
   }
 
-  // For non-OPTIONS requests, proceed with normal handling
   try {
     console.log("Request URL:", req.url);
-    console.log("Request headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
-
+    
     if (req.method !== "POST") {
       console.log(`Rejecting ${req.method} request - only POST is allowed`);
       return new Response(
@@ -67,7 +65,7 @@ serve(async (req) => {
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body", details: String(parseError) }),
+        JSON.stringify({ error: "Invalid JSON in request body" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -76,8 +74,6 @@ serve(async (req) => {
     }
 
     const { projectName, projectId, notificationType, createdBy } = parsedBody as ProjectNotificationRequest;
-
-    console.log("Parsed request data:", { projectName, projectId, notificationType, createdBy });
 
     if (!projectName || !notificationType) {
       console.error("Missing required fields");
@@ -90,6 +86,7 @@ serve(async (req) => {
       );
     }
 
+    // Prepare email content
     let subject = "";
     let htmlContent = "";
     const createdByText = createdBy ? `por ${createdBy}` : "";
@@ -115,16 +112,16 @@ serve(async (req) => {
 
     try {
       // Get SMTP configuration from environment variables
+      const smtpHost = Deno.env.get("SMTP_HOST");
+      const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587", 10);
       const smtpUser = Deno.env.get("SMTP_USER");
       const smtpPass = Deno.env.get("SMTP_PASS");
-      const smtpHost = Deno.env.get("SMTP_HOST");
-      const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
-      const smtpTLS = Deno.env.get("SMTP_TLS") === "true";
+      const secure = Deno.env.get("SMTP_TLS") === "true";
 
       console.log("SMTP Configuration:", {
         host: smtpHost,
         port: smtpPort,
-        tls: smtpTLS,
+        secure,
         user: smtpUser ? "***" : "Not set",
       });
 
@@ -134,20 +131,23 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client using the smtp@v0.7.0 library
-      const client = new SMTPClient({
-        connection: {
-          hostname: smtpHost,
-          port: smtpPort,
-          tls: smtpTLS,
-          auth: {
-            username: smtpUser,
-            password: smtpPass,
-          },
+      // Create SMTP client
+      const client = new SmtpClient({
+        debug: {
+          log: true,
         },
       });
+
+      // Connect to SMTP server
+      await client.connect({
+        hostname: smtpHost,
+        port: smtpPort,
+        username: smtpUser,
+        password: smtpPass,
+        secure: secure,
+      });
       
-      console.log("Successfully created SMTP client");
+      console.log("Successfully connected to SMTP server");
 
       // Send emails to all recipients
       console.log(`Sending ${notificationType} notification emails to:`, RECIPIENT_EMAILS);
@@ -155,14 +155,13 @@ serve(async (req) => {
       const successfulEmails = [];
       const failedEmails = [];
       
-      // Send to each recipient individually with proper error handling
       for (const recipientEmail of RECIPIENT_EMAILS) {
         try {
           await client.send({
             from: smtpUser,
             to: recipientEmail,
             subject: subject,
-            content: "text/html",
+            content: htmlContent,
             html: htmlContent,
           });
           console.log(`Email sent successfully to ${recipientEmail}`);
@@ -176,10 +175,10 @@ serve(async (req) => {
         }
       }
 
-      // Close connection when done
+      // Close connection
       await client.close();
 
-      // Return appropriate response based on success/failure
+      // Return success or partial success response
       if (successfulEmails.length > 0) {
         return new Response(
           JSON.stringify({ 
