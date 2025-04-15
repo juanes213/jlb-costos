@@ -37,6 +37,7 @@ export function CategoryItems({
     handleIvaCalculated,
     handleSaveToStorage,
     handleAddItem,
+    handleCompleteManualEntry,
     isLoading,
   } = useCategoryItems(project, category, categoryIndex, onUpdateProject);
 
@@ -76,6 +77,7 @@ export function CategoryItems({
           onIvaCalculated={handleIvaCalculated}
           onSaveToStorage={handleSaveToStorage}
           onDelete={handleDeleteProjectItem}
+          onCompleteManualEntry={handleCompleteManualEntry}
           isLoading={isLoading}
         />
       ))}

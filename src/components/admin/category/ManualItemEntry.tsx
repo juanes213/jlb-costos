@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 import type { Item } from "@/types/project";
 
 interface ManualItemEntryProps {
@@ -13,6 +14,7 @@ interface ManualItemEntryProps {
   onApply: () => void;
   onSaveToStorage?: () => void;
   shouldShowUnit?: boolean;
+  onComplete?: () => void;
 }
 
 export function ManualItemEntry({
@@ -23,7 +25,8 @@ export function ManualItemEntry({
   onCostChange,
   onApply,
   onSaveToStorage,
-  shouldShowUnit = false
+  shouldShowUnit = false,
+  onComplete
 }: ManualItemEntryProps) {
   const [originalItem, setOriginalItem] = useState({
     name: item.name || "",
@@ -64,11 +67,22 @@ export function ManualItemEntry({
     setIsChanged(checkIfChanged({...originalItem, cost: newCost}));
   };
 
+  // Handle form submission and save to both project and storage
+  const handleSave = () => {
+    onApply();
+    if (onSaveToStorage) {
+      onSaveToStorage();
+    }
+    setIsChanged(false);
+    if (onComplete) {
+      onComplete();
+    }
+  };
+
   // Added form submission on enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && isChanged) {
-      onApply();
-      setIsChanged(false);
+      handleSave();
     }
   };
 
@@ -91,27 +105,14 @@ export function ManualItemEntry({
         />
       )}
       <Button 
-        onClick={() => {
-          onApply();
-          setIsChanged(false);
-        }} 
+        onClick={handleSave} 
         variant="default" 
         size="sm"
+        className="flex gap-2 items-center"
       >
-        {isChanged ? "Aplicar" : "Guardar"}
+        <Save className="w-4 h-4" />
+        Guardar
       </Button>
-      {onSaveToStorage && (
-        <Button 
-          onClick={() => {
-            onSaveToStorage();
-            setIsChanged(false);
-          }} 
-          variant="outline" 
-          size="sm"
-        >
-          Guardar en almacén
-        </Button>
-      )}
     </div>
   );
 }

@@ -108,6 +108,19 @@ export function useItemEditing(
     });
   };
 
+  // New function to exit manual entry mode
+  const handleCompleteManualEntry = (itemIndex: number) => {
+    setManualEntryMode((prev) => ({
+      ...prev,
+      [itemIndex]: false,
+    }));
+    
+    toast({
+      title: "Item guardado",
+      description: "El item ha sido guardado correctamente",
+    });
+  };
+
   return {
     manualEntryMode,
     editedItems,
@@ -117,5 +130,6 @@ export function useItemEditing(
     handleItemCostChange,
     handleItemUnitChange,
     handleApplyManualChanges,
+    handleCompleteManualEntry,
   };
 }

@@ -30,6 +30,7 @@ interface CategoryItemRowProps {
   onIvaCalculated: (itemIndex: number, amount: number | undefined) => void;
   onSaveToStorage: (itemIndex: number) => void;
   onDelete: (itemIndex: number) => void;
+  onCompleteManualEntry?: (itemIndex: number) => void;
   isLoading?: boolean;
 }
 
@@ -51,6 +52,7 @@ export function CategoryItemRow({
   onIvaCalculated,
   onSaveToStorage,
   onDelete,
+  onCompleteManualEntry,
   isLoading = false
 }: CategoryItemRowProps) {
   // Only show unit for "Insumos" category
@@ -68,11 +70,9 @@ export function CategoryItemRow({
               onUnitChange={(value) => onUnitChange(itemIndex, value)}
               onCostChange={(value) => onCostChange(itemIndex, value)}
               onApply={() => onApplyChanges(itemIndex)}
-              onSaveToStorage={() => {
-                onApplyChanges(itemIndex);
-                onSaveToStorage(itemIndex);
-              }}
+              onSaveToStorage={() => onSaveToStorage(itemIndex)}
               shouldShowUnit={shouldShowUnit}
+              onComplete={() => onCompleteManualEntry && onCompleteManualEntry(itemIndex)}
             />
           ) : (
             <div className="flex gap-2">
@@ -101,6 +101,7 @@ export function CategoryItemRow({
               onCostChange={(value) => onCostChange(itemIndex, value)}
               onApply={() => onApplyChanges(itemIndex)}
               shouldShowUnit={shouldShowUnit}
+              onComplete={() => onCompleteManualEntry && onCompleteManualEntry(itemIndex)}
             />
             <CategoryItemQuantity
               quantity={item.quantity || 1}

@@ -37,7 +37,8 @@ export function useCategoryItems(
     handleItemNameChange,
     handleItemCostChange,
     handleItemUnitChange,
-    handleApplyManualChanges
+    handleApplyManualChanges,
+    handleCompleteManualEntry
   } = useItemEditing(
     project,
     categoryIndex,
@@ -78,6 +79,7 @@ export function useCategoryItems(
     handleIvaCalculated,
     handleSaveToStorage,
     handleAddItem,
+    handleCompleteManualEntry,
     isLoading,
   };
 }
