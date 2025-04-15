@@ -39,19 +39,14 @@ export function useProjectNotifications() {
       console.log("Request payload:", payload);
 
       // Use fetch directly for more control over the request
-      // This is a temporary workaround for the CORS issues with supabase.functions.invoke
       try {
-        // Show a fallback message if email notifications fail
+        // Show a notification that we're sending emails
         toast({
           title: "Notificación por correo",
-          description: "Intentando enviar notificaciones por correo...",
+          description: "Enviando notificaciones por correo...",
           duration: 3000,
         });
         
-        // Due to ongoing CORS issues, we'll disable the email functionality temporarily
-        console.log("Email notifications temporarily disabled due to CORS issues");
-        
-        /* Uncomment when CORS issues are resolved
         const response = await fetch('https://xkiqeoxngnrmqfbdagcv.supabase.co/functions/v1/project-notification', {
           method: 'POST',
           headers: {
@@ -69,15 +64,31 @@ export function useProjectNotifications() {
         
         const data = await response.json();
         console.log(`Project ${notificationType} notification emails sent successfully:`, data);
-        */
+        
+        toast({
+          title: "Correos enviados",
+          description: "Las notificaciones por correo se han enviado correctamente.",
+          duration: 3000,
+        });
       } catch (fetchError) {
         console.error("Error sending email notification via fetch:", fetchError);
-        // Silent failure for email notifications - they're not critical for app function
+        toast({
+          title: "Error",
+          description: "No se pudieron enviar las notificaciones por correo electrónico.",
+          variant: "destructive",
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error("Error in sendProjectNotification:", error);
       console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-      // Silent failure for email notifications - don't show error to user
+      // Show error to user
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al enviar las notificaciones.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
     
     console.log(`Project ${notificationType} notification displayed: ${project.name}`);
