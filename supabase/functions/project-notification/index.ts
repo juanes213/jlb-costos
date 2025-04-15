@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@0.12.0/mod.ts";
+// Fix the SMTPClient import - use the correct import path for the latest version
+import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 // Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
@@ -134,7 +135,7 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client
+      // Create SMTP client with the updated SMTPClient import
       const client = new SMTPClient({
         connection: {
           hostname: smtpHost,
@@ -206,4 +207,3 @@ serve(async (req) => {
     );
   }
 });
-
