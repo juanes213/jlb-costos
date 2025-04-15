@@ -1,8 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { Resend } from "npm:resend@1.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { SMTPClient } from "https://deno.land/x/denomailer@0.12.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,49 +68,75 @@ serve(async (req) => {
     }
 
     try {
-      // Try to send the email
-      const emailResponse = await resend.emails.send({
-        from: "Notificaciones <onboarding@resend.dev>",
-        to: RECIPIENT_EMAILS,
-        subject: subject,
-        html: htmlContent,
-      });
+      // Get SMTP configuration from environment variables
+      const smtpUser = Deno.env.get("SMTP_USER");
+      const smtpPass = Deno.env.get("SMTP_PASS");
+      const smtpHost = Deno.env.get("SMTP_HOST");
+      const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
+      const smtpTLS = Deno.env.get("SMTP_TLS") === "true";
 
-      console.log("Email notification sent successfully to:", RECIPIENT_EMAILS);
-      console.log("Email response:", emailResponse);
-
-      return new Response(JSON.stringify({ success: true, data: emailResponse }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    } catch (emailError: any) {
-      console.error("Error sending email via Resend:", emailError);
-      
-      // Check if this is a domain verification error
-      if (emailError.statusCode === 403 && emailError.message?.includes("verify a domain")) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Domain verification required", 
-            message: "You need to verify your domain at resend.com/domains before sending emails to multiple recipients.",
-            details: emailError.message,
-            solution: "Please visit https://resend.com/domains to verify your domain."
-          }),
-          {
-            status: 403,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
+      // Validate SMTP configuration
+      if (!smtpUser || !smtpPass || !smtpHost) {
+        throw new Error("Missing SMTP configuration");
       }
+
+      // Create SMTP client
+      const client = new SMTPClient({
+        connection: {
+          hostname: smtpHost,
+          port: smtpPort,
+          tls: smtpTLS,
+          auth: {
+            username: smtpUser,
+            password: smtpPass,
+          },
+        },
+      });
+
+      // Send emails to all recipients
+      console.log(`Sending ${notificationType} notification emails to:`, RECIPIENT_EMAILS);
+      
+      // Send to each recipient individually
+      for (const recipientEmail of RECIPIENT_EMAILS) {
+        await client.send({
+          from: smtpUser,
+          to: recipientEmail,
+          subject: subject,
+          content: htmlContent,
+          html: htmlContent,
+        });
+        console.log(`Email sent to ${recipientEmail}`);
+      }
+
+      // Close the connection
+      await client.close();
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Emails sent successfully to ${RECIPIENT_EMAILS.length} recipients` 
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    } catch (emailError: any) {
+      console.error("Error sending email:", emailError);
       
       return new Response(
-        JSON.stringify({ error: "Email sending failed", details: emailError.message || "Unknown error" }),
+        JSON.stringify({ 
+          error: "Email sending failed", 
+          details: emailError.message || "Unknown error",
+          solution: "Please check your SMTP configuration in Supabase secrets."
+        }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error processing project notification request:", error);
     
     return new Response(
