@@ -3,6 +3,7 @@ import { useBaseCost } from "./category/useBaseCost";
 import { useItemManagement } from "./category/useItemManagement";
 import { useItemEditing } from "./category/useItemEditing";
 import { useStorageIntegration } from "./category/useStorageIntegration";
+import { useToast } from "@/hooks/use-toast";
 import type { Project, Category, StorageItem } from "@/types/project";
 
 export function useCategoryItems(
@@ -11,6 +12,8 @@ export function useCategoryItems(
   categoryIndex: number,
   onUpdateProject: (project: Project) => void
 ) {
+  const { toast } = useToast();
+  
   // Import functionality from smaller, focused hooks
   const { categoryBaseCost, handleCategoryBaseCostChange } = useBaseCost(
     project,
@@ -56,6 +59,15 @@ export function useCategoryItems(
     onUpdateProject
   );
 
+  // Enhanced save function with toast notifications
+  const handleSaveWithNotification = (itemIndex: number) => {
+    handleSaveToStorage(itemIndex);
+    toast({
+      title: "Elemento guardado",
+      description: `El elemento ha sido guardado en almacén y en el proyecto.`,
+    });
+  };
+
   // Adapter for the old interface that requires storageItems param
   const itemSelectAdapter = (itemIndex: number, storageItemId: string) => {
     handleItemSelect(itemIndex, storageItemId, storageItems);
@@ -77,7 +89,7 @@ export function useCategoryItems(
     handleItemUnitChange,
     handleApplyManualChanges,
     handleIvaCalculated,
-    handleSaveToStorage,
+    handleSaveToStorage: handleSaveWithNotification,
     handleAddItem,
     handleCompleteManualEntry,
     isLoading,

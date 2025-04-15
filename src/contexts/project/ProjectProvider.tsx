@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, throttledRequest } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -28,7 +27,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const statusCheckEnabledRef = useRef<boolean>(false);
   
-  const sendProjectNotification = useProjectNotifications(user?.id);
+  const sendProjectNotification = useProjectNotifications();
   const { saveToLocalStorage } = useProjectPersistence(toast);
 
   useEffect(() => {

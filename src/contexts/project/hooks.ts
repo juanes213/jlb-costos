@@ -1,36 +1,32 @@
 
 import { useCallback } from "react";
-import { supabase } from "@/lib/supabase";
-import { Project } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
+import { Project } from "@/types/project";
 
 // Hook for project notifications
-export function useProjectNotifications(userId: string | undefined) {
-  return useCallback(async (
+export function useProjectNotifications() {
+  const { toast } = useToast();
+  
+  return useCallback((
     project: Project, 
     notificationType: "created" | "completed"
   ) => {
-    if (!userId) return;
+    const title = notificationType === "created" 
+      ? "Proyecto creado" 
+      : "Proyecto completado";
     
-    try {
-      const { error } = await supabase.functions.invoke('project-notification', {
-        body: {
-          projectName: project.name,
-          projectId: project.numberId || project.id,
-          notificationType,
-          createdBy: userId
-        }
-      });
-      
-      if (error) {
-        console.error("Error sending project notification:", error);
-      } else {
-        console.log(`Project ${notificationType} notification sent successfully`);
-      }
-    } catch (error) {
-      console.error("Error in sendProjectNotification:", error);
-    }
-  }, [userId]);
+    const description = notificationType === "created"
+      ? `El proyecto "${project.name}" (ID: ${project.numberId || project.id}) ha sido creado exitosamente.`
+      : `El proyecto "${project.name}" (ID: ${project.numberId || project.id}) ha sido marcado como completado.`;
+    
+    toast({
+      title,
+      description,
+      duration: 5000, // Show for 5 seconds
+    });
+    
+    console.log(`Project ${notificationType} notification displayed: ${project.name}`);
+  }, [toast]);
 }
 
 // Hook for project persistence operations
