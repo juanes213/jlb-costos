@@ -109,34 +109,68 @@ serve(async (req) => {
     }
 
     try {
-      // We'll use a simple approach to send emails to all recipients
+      // Send emails using fetch to a reliable email API
       const successfulEmails = [];
       const failedEmails = [];
-      
-      // Check if we have SMTP configuration
-      const smtpHost = Deno.env.get("SMTP_HOST");
-      const smtpUser = Deno.env.get("SMTP_USER");
-      
-      if (!smtpHost || !smtpUser) {
-        throw new Error("Missing SMTP configuration");
-      }
 
-      // For demo/testing purposes, just log the emails we would send
-      console.log("Would send emails to:", RECIPIENT_EMAILS);
-      console.log("Subject:", subject);
-      console.log("HTML Content:", htmlContent);
+      console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
       
-      // Simulate successful email sending for all recipients
+      // Use native fetch to send emails through an email API service
       for (const email of RECIPIENT_EMAILS) {
-        console.log(`Simulating sending email to: ${email}`);
-        successfulEmails.push(email);
+        try {
+          // Example: Using a simple REST API to send email
+          // This is a placeholder - you'd replace with your actual email service API call
+          const apiUrl = "https://api.emailjs.com/api/v1.0/email/send";
+          const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
+          const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
+          const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
+          const userId = Deno.env.get("EMAILJS_USER_ID") || "";
+          
+          if (!apiKey || !serviceId || !templateId || !userId) {
+            throw new Error("Missing EmailJS configuration");
+          }
+          
+          const emailResponse = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              service_id: serviceId,
+              template_id: templateId,
+              user_id: userId,
+              accessToken: apiKey,
+              template_params: {
+                to_email: email,
+                subject: subject,
+                message: htmlContent,
+                project_name: projectName,
+                project_id: projectId,
+                created_by: createdByText,
+                project_link: projectLink
+              }
+            })
+          });
+          
+          if (emailResponse.ok) {
+            console.log(`Email sent successfully to ${email}`);
+            successfulEmails.push(email);
+          } else {
+            const errorText = await emailResponse.text();
+            console.error(`Failed to send email to ${email}:`, errorText);
+            failedEmails.push(email);
+          }
+        } catch (err) {
+          console.error(`Error sending email to ${email}:`, err);
+          failedEmails.push(email);
+        }
       }
 
-      // Return a successful response (for testing purposes)
+      // Return success response
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          message: `Emails would be sent to ${successfulEmails.length} recipients`,
+          success: successfulEmails.length > 0,
+          message: `Emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
           successfulEmails,
           failedEmails
         }),
@@ -153,7 +187,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Email sending failed", 
           details: String(emailError),
-          solution: "Please check your SMTP configuration in Supabase secrets."
+          solution: "Please check your email service configuration in Supabase secrets."
         }),
         {
           status: 500,
