@@ -1,16 +1,18 @@
 
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import { Project } from "@/types/project";
 
 // Hook for project notifications
 export function useProjectNotifications() {
   const { toast } = useToast();
   
-  return useCallback((
+  return useCallback(async (
     project: Project, 
     notificationType: "created" | "completed"
   ) => {
+    // Show in-app toast notification
     const title = notificationType === "created" 
       ? "Proyecto creado" 
       : "Proyecto completado";
@@ -24,6 +26,31 @@ export function useProjectNotifications() {
       description,
       duration: 5000, // Show for 5 seconds
     });
+    
+    // Send email notifications via edge function
+    try {
+      const { error } = await supabase.functions.invoke('project-notification', {
+        body: {
+          projectName: project.name,
+          projectId: project.numberId || project.id,
+          notificationType
+        }
+      });
+      
+      if (error) {
+        console.error("Error sending project notification:", error);
+        toast({
+          title: "Error de notificación",
+          description: "No se pudieron enviar las notificaciones por correo.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      } else {
+        console.log(`Project ${notificationType} notification emails sent successfully`);
+      }
+    } catch (error) {
+      console.error("Error in sendProjectNotification:", error);
+    }
     
     console.log(`Project ${notificationType} notification displayed: ${project.name}`);
   }, [toast]);

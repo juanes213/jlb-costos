@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, throttledRequest } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -265,7 +266,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
       
-      sendProjectNotification(newProject as Project, "created");
+      await sendProjectNotification(newProject as Project, "created");
       
       toast({
         title: "Éxito",
@@ -297,7 +298,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       if (existingProject && 
           existingProject.status !== "completed" && 
           updatedProject.status === "completed") {
-        sendProjectNotification(updatedProject, "completed");
+        await sendProjectNotification(updatedProject, "completed");
       }
       
       console.log("Updating project:", updatedProject);
