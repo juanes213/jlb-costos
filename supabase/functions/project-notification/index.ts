@@ -26,6 +26,9 @@ interface ProjectNotificationRequest {
 }
 
 serve(async (req) => {
+  // Log incoming request details
+  console.log("Incoming project notification request:", req.method);
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -34,7 +37,10 @@ serve(async (req) => {
   try {
     const { projectName, projectId, notificationType, createdBy }: ProjectNotificationRequest = await req.json();
 
+    console.log("Parsed request body:", { projectName, projectId, notificationType, createdBy });
+
     if (!projectName || !notificationType) {
+      console.error("Missing required fields");
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -85,6 +91,7 @@ serve(async (req) => {
 
       // Validate SMTP configuration
       if (!smtpUser || !smtpPass || !smtpHost) {
+        console.error("Missing SMTP configuration");
         throw new Error("Missing SMTP configuration");
       }
 
