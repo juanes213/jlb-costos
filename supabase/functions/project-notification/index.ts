@@ -121,7 +121,6 @@ serve(async (req) => {
       const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
       const smtpTLS = Deno.env.get("SMTP_TLS") === "true";
 
-      // Log SMTP configuration details for debugging
       console.log("SMTP Configuration:", {
         host: smtpHost,
         port: smtpPort,
@@ -129,21 +128,6 @@ serve(async (req) => {
         user: smtpUser ? "***" : "Not set",
       });
 
-      // For testing purposes, return success even without sending email
-      // This helps us test if the function is reachable at all
-      console.log("Skipping actual email sending for testing");
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Would have sent emails to ${RECIPIENT_EMAILS.length} recipients` 
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-
-      /* Uncomment this when ready for actual email sending
       // Validate SMTP configuration
       if (!smtpUser || !smtpPass || !smtpHost) {
         console.error("Missing SMTP configuration");
@@ -195,7 +179,6 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
-      */
     } catch (emailError) {
       console.error("Error sending email:", emailError);
       
@@ -223,3 +206,4 @@ serve(async (req) => {
     );
   }
 });
+
