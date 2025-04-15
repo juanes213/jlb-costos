@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-// Fix the SMTPClient import - use the correct import path for the latest version
-import { SMTPClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+// Using the more reliable smtp client from smtp2go
+import { SmtpClient } from "https://deno.land/x/smtp@v0.13.0/mod.ts";
 
 // Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
@@ -135,16 +135,16 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client with the updated SMTPClient import
-      const client = new SMTPClient({
+      // Create SMTP client with the updated SmtpClient class
+      const client = new SmtpClient({
         connection: {
           hostname: smtpHost,
           port: smtpPort,
           tls: smtpTLS,
-          auth: {
-            username: smtpUser,
-            password: smtpPass,
-          },
+        },
+        auth: {
+          username: smtpUser,
+          password: smtpPass,
         },
       });
 
@@ -158,7 +158,7 @@ serve(async (req) => {
             from: smtpUser,
             to: recipientEmail,
             subject: subject,
-            content: htmlContent,
+            content: "text/html",
             html: htmlContent,
           });
           console.log(`Email sent successfully to ${recipientEmail}`);
@@ -166,9 +166,6 @@ serve(async (req) => {
           console.error(`Error sending email to ${recipientEmail}:`, recipientError);
         }
       }
-
-      // Close the connection
-      await client.close();
 
       return new Response(
         JSON.stringify({ 
