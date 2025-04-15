@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-// Using a reliable and maintained SMTP client
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/smtp.ts";
+// Using a more modern and reliable mail client
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 // Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
@@ -135,8 +135,8 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client with the correct format for this version
-      const client = new SmtpClient({
+      // Create SMTP client with denomailer
+      const client = new SMTPClient({
         connection: {
           hostname: smtpHost,
           port: smtpPort,
@@ -148,35 +148,57 @@ serve(async (req) => {
         },
       });
 
+      // Initialize connection to SMTP server
+      await client.connect();
+      console.log("Successfully connected to SMTP server");
+
       // Send emails to all recipients
       console.log(`Sending ${notificationType} notification emails to:`, RECIPIENT_EMAILS);
       
-      // Send to each recipient individually
+      const successfulEmails = [];
+      const failedEmails = [];
+      
+      // Send to each recipient individually with proper error handling
       for (const recipientEmail of RECIPIENT_EMAILS) {
         try {
           await client.send({
             from: smtpUser,
             to: recipientEmail,
             subject: subject,
-            content: "text/html",
+            content: htmlContent,
             html: htmlContent,
           });
           console.log(`Email sent successfully to ${recipientEmail}`);
+          successfulEmails.push(recipientEmail);
         } catch (recipientError) {
           console.error(`Error sending email to ${recipientEmail}:`, recipientError);
+          failedEmails.push({
+            email: recipientEmail,
+            error: String(recipientError)
+          });
         }
       }
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Emails sent successfully to ${RECIPIENT_EMAILS.length} recipients` 
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      // Always close the connection when done
+      await client.close();
+
+      // Return appropriate response based on success/failure
+      if (successfulEmails.length > 0) {
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Emails sent successfully to ${successfulEmails.length} recipients`,
+            successfulEmails,
+            failedEmails
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      } else {
+        throw new Error("Failed to send any emails");
+      }
     } catch (emailError) {
       console.error("Error sending email:", emailError);
       
