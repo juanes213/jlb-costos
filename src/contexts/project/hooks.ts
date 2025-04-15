@@ -29,7 +29,9 @@ export function useProjectNotifications() {
     
     // Send email notifications via edge function
     try {
-      const { error } = await supabase.functions.invoke('project-notification', {
+      console.log(`Sending ${notificationType} notification for project:`, project.name);
+      
+      const { data, error } = await supabase.functions.invoke('project-notification', {
         body: {
           projectName: project.name,
           projectId: project.numberId || project.id,
@@ -46,10 +48,16 @@ export function useProjectNotifications() {
           duration: 5000,
         });
       } else {
-        console.log(`Project ${notificationType} notification emails sent successfully`);
+        console.log(`Project ${notificationType} notification emails sent successfully:`, data);
       }
     } catch (error) {
       console.error("Error in sendProjectNotification:", error);
+      toast({
+        title: "Error de notificación",
+        description: "Ocurrió un error al enviar las notificaciones por correo.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
     
     console.log(`Project ${notificationType} notification displayed: ${project.name}`);
