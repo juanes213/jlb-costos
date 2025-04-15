@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-// Using a more modern and reliable mail client
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 // Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
@@ -135,21 +134,17 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client with denomailer
-      const client = new SMTPClient({
-        connection: {
-          hostname: smtpHost,
-          port: smtpPort,
-          tls: smtpTLS,
-        },
-        auth: {
-          username: smtpUser,
-          password: smtpPass,
-        },
+      // Create SMTP client - Fixed usage according to denomailer documentation
+      const client = new SmtpClient();
+      
+      // Configure the client
+      await client.connectTLS({
+        hostname: smtpHost,
+        port: smtpPort,
+        username: smtpUser,
+        password: smtpPass,
       });
-
-      // Initialize connection to SMTP server
-      await client.connect();
+      
       console.log("Successfully connected to SMTP server");
 
       // Send emails to all recipients
@@ -166,7 +161,6 @@ serve(async (req) => {
             to: recipientEmail,
             subject: subject,
             content: htmlContent,
-            html: htmlContent,
           });
           console.log(`Email sent successfully to ${recipientEmail}`);
           successfulEmails.push(recipientEmail);
