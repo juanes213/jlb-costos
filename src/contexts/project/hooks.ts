@@ -47,12 +47,15 @@ export function useProjectNotifications() {
           duration: 3000,
         });
         
+        // Get the API key from the correct constant in the supabase.ts file
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraXFlb3huZ25ybXFmYmRhZ2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODgxNTIsImV4cCI6MjA1NzM2NDE1Mn0.vOaOGnNsrMFWPmjixDA_8G5zP_S50Lcy4U7XXLK7L4M';
+        
         const response = await fetch('https://xkiqeoxngnrmqfbdagcv.supabase.co/functions/v1/project-notification', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Origin': window.location.origin,
-            'apikey': supabase.supabaseKey
+            'apikey': supabaseAnonKey
           },
           body: JSON.stringify(payload)
         });
