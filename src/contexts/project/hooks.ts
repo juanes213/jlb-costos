@@ -47,9 +47,6 @@ export function useProjectNotifications() {
       console.log(`Sending ${notificationType} notification for project:`, project.name);
       console.log("Request payload:", payload);
 
-      const supabaseUrl = 'https://xkiqeoxngnrmqfbdagcv.supabase.co';
-      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraXFlb3huZ25ybXFmYmRhZ2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3ODgxNTIsImV4cCI6MjA1NzM2NDE1Mn0.vOaOGnNsrMFWPmjixDA_8G5zP_S50Lcy4U7XXLK7L4M';
-      
       // Use the Supabase client functions API instead of direct fetch
       const { data, error } = await supabase.functions.invoke('project-notification', {
         body: payload
