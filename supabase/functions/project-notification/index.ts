@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-// Using the more reliable smtp client from smtp2go
-import { SmtpClient } from "https://deno.land/x/smtp@v0.13.0/mod.ts";
+// Using a reliable and maintained SMTP client
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/smtp.ts";
 
 // Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
@@ -135,7 +135,7 @@ serve(async (req) => {
         throw new Error("Missing SMTP configuration");
       }
 
-      // Create SMTP client with the updated SmtpClient class
+      // Create SMTP client with the correct format for this version
       const client = new SmtpClient({
         connection: {
           hostname: smtpHost,
