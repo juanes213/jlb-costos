@@ -28,33 +28,46 @@ interface ProjectNotificationRequest {
 }
 
 serve(async (req) => {
-  // Log incoming request details
-  console.log(`Incoming project notification request: ${req.method}`);
-  console.log(`Request URL: ${req.url}`);
-  console.log(`Request headers:`, Object.fromEntries(req.headers.entries()));
-
-  // Handle CORS preflight requests - this is critical
+  // First, immediately handle CORS preflight
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request with CORS headers");
+    console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
-      status: 204,  // No Content is the correct response for OPTIONS
-      headers: corsHeaders 
+      status: 204,
+      headers: corsHeaders
     });
   }
 
+  // Log incoming request details
+  console.log(`Incoming ${req.method} request to project-notification function`);
+  console.log(`Request URL: ${req.url}`);
+  
   try {
-    console.log("Processing POST request");
+    // For debugging, log all headers
+    const headersObj = Object.fromEntries(req.headers.entries());
+    console.log("Request headers:", JSON.stringify(headersObj));
+    
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed" }),
+        {
+          status: 405,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Parse request body
     const requestBody = await req.text();
-    console.log("Request body received:", requestBody);
+    console.log("Raw request body:", requestBody);
     
     let parsedBody;
     try {
       parsedBody = JSON.parse(requestBody);
-      console.log("Request body parsed:", parsedBody);
+      console.log("Request body parsed successfully:", parsedBody);
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
+        JSON.stringify({ error: "Invalid JSON in request body", details: parseError.message }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -167,7 +180,7 @@ serve(async (req) => {
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
-    } catch (emailError: any) {
+    } catch (emailError) {
       console.error("Error sending email:", emailError);
       
       return new Response(
@@ -182,7 +195,7 @@ serve(async (req) => {
         }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error processing project notification request:", error);
     
     return new Response(

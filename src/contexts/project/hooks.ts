@@ -29,23 +29,27 @@ export function useProjectNotifications() {
     
     // Send email notifications via edge function
     try {
-      console.log(`Sending ${notificationType} notification for project:`, project.name);
-      console.log("Request payload:", {
+      const payload = {
         projectName: project.name,
         projectId: project.numberId || project.id,
         notificationType
-      });
+      };
       
+      console.log(`Sending ${notificationType} notification for project:`, project.name);
+      console.log("Request payload:", payload);
+      
+      // Call the edge function with proper error handling
       const { data, error } = await supabase.functions.invoke('project-notification', {
-        body: {
-          projectName: project.name,
-          projectId: project.numberId || project.id,
-          notificationType
+        body: payload,
+        // Explicitly set headers to ensure proper CORS handling
+        headers: {
+          'Content-Type': 'application/json',
         }
       });
       
       if (error) {
         console.error("Error sending project notification:", error);
+        console.error("Error details:", JSON.stringify(error));
         toast({
           title: "Error de notificación",
           description: "No se pudieron enviar las notificaciones por correo.",
@@ -57,6 +61,7 @@ export function useProjectNotifications() {
       }
     } catch (error) {
       console.error("Error in sendProjectNotification:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
       toast({
         title: "Error de notificación",
         description: "Ocurrió un error al enviar las notificaciones por correo.",
