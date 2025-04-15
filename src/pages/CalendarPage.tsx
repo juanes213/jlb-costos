@@ -107,16 +107,12 @@ export default function CalendarPage() {
     try {
       if (!project) return 0;
       
-      // Ensure project.categories is array
-      if (!project.categories || !Array.isArray(project.categories)) {
-        return 0;
-      }
+      // Fix: Get the totalCost from the calculateProjectCost result
+      const result = calculateProjectCost(project);
       
-      const costResult = calculateProjectCost(project);
-      if (typeof costResult === 'number') {
-        return costResult;
-      } else if (costResult && typeof costResult === 'object' && 'totalCost' in costResult) {
-        return costResult.totalCost;
+      // Check if the result is an object with totalCost
+      if (result && typeof result === 'object' && 'totalCost' in result) {
+        return result.totalCost;
       }
       return 0;
     } catch (error) {
@@ -193,7 +189,8 @@ export default function CalendarPage() {
                     <div className="space-y-1 overflow-y-auto max-h-28">
                       {dayProjects.length > 0 ? (
                         dayProjects.map((project) => {
-                          const totalCost = safeCalculateProjectCost(project);
+                          // Fix: Get the totalCost from the calculateProjectCost result
+                          const { totalCost } = calculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="bg-white shadow-sm p-1 rounded border text-xs">
@@ -250,8 +247,8 @@ export default function CalendarPage() {
                     <CardContent className="p-3">
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
-                          // Safely calculate project cost
-                          const totalCost = safeCalculateProjectCost(project);
+                          // Fix: Get the totalCost directly from the result object
+                          const { totalCost } = calculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="border p-3 rounded-md">
