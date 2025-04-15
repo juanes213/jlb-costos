@@ -2,11 +2,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { SMTPClient } from "https://deno.land/x/denomailer@0.12.0/mod.ts";
 
-// Define proper CORS headers
+// Define proper CORS headers - make them as permissive as possible for testing
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+  "Access-Control-Allow-Methods": "*",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -27,8 +27,11 @@ interface ProjectNotificationRequest {
   createdBy?: string;
 }
 
+// This is the main handler
 serve(async (req) => {
-  // First, immediately handle CORS preflight
+  console.log("Edge function received request:", req.method);
+  
+  // Handle CORS preflight requests FIRST, before anything else
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
@@ -37,21 +40,18 @@ serve(async (req) => {
     });
   }
 
-  // Log incoming request details
-  console.log(`Incoming ${req.method} request to project-notification function`);
-  console.log(`Request URL: ${req.url}`);
-  
+  // For non-OPTIONS requests, proceed with normal handling
   try {
-    // For debugging, log all headers
-    const headersObj = Object.fromEntries(req.headers.entries());
-    console.log("Request headers:", JSON.stringify(headersObj));
-    
+    console.log("Request URL:", req.url);
+    console.log("Request headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
+
     if (req.method !== "POST") {
+      console.log(`Rejecting ${req.method} request - only POST is allowed`);
       return new Response(
         JSON.stringify({ error: "Method not allowed" }),
         {
           status: 405,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -67,10 +67,10 @@ serve(async (req) => {
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body", details: parseError.message }),
+        JSON.stringify({ error: "Invalid JSON in request body", details: String(parseError) }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -85,7 +85,7 @@ serve(async (req) => {
         JSON.stringify({ error: "Missing required fields" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -129,6 +129,21 @@ serve(async (req) => {
         user: smtpUser ? "***" : "Not set",
       });
 
+      // For testing purposes, return success even without sending email
+      // This helps us test if the function is reachable at all
+      console.log("Skipping actual email sending for testing");
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Would have sent emails to ${RECIPIENT_EMAILS.length} recipients` 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+
+      /* Uncomment this when ready for actual email sending
       // Validate SMTP configuration
       if (!smtpUser || !smtpPass || !smtpHost) {
         console.error("Missing SMTP configuration");
@@ -177,21 +192,22 @@ serve(async (req) => {
         }),
         {
           status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+      */
     } catch (emailError) {
       console.error("Error sending email:", emailError);
       
       return new Response(
         JSON.stringify({ 
           error: "Email sending failed", 
-          details: emailError.message || "Unknown error",
+          details: String(emailError),
           solution: "Please check your SMTP configuration in Supabase secrets."
         }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
@@ -199,10 +215,10 @@ serve(async (req) => {
     console.error("Error processing project notification request:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to send email notification" }),
+      JSON.stringify({ error: String(error) }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
