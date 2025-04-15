@@ -2,10 +2,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { SMTPClient } from "https://deno.land/x/denomailer@0.12.0/mod.ts";
 
+// Define proper CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
@@ -29,21 +29,42 @@ interface ProjectNotificationRequest {
 
 serve(async (req) => {
   // Log incoming request details
-  console.log("Incoming project notification request:", req.method);
+  console.log(`Incoming project notification request: ${req.method}`);
+  console.log(`Request URL: ${req.url}`);
+  console.log(`Request headers:`, Object.fromEntries(req.headers.entries()));
 
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - this is critical
   if (req.method === "OPTIONS") {
-    console.log("Responding to OPTIONS request with CORS headers");
+    console.log("Handling OPTIONS request with CORS headers");
     return new Response(null, { 
-      status: 204, 
+      status: 204,  // No Content is the correct response for OPTIONS
       headers: corsHeaders 
     });
   }
 
   try {
-    const { projectName, projectId, notificationType, createdBy }: ProjectNotificationRequest = await req.json();
+    console.log("Processing POST request");
+    const requestBody = await req.text();
+    console.log("Request body received:", requestBody);
+    
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(requestBody);
+      console.log("Request body parsed:", parsedBody);
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
-    console.log("Parsed request body:", { projectName, projectId, notificationType, createdBy });
+    const { projectName, projectId, notificationType, createdBy } = parsedBody as ProjectNotificationRequest;
+
+    console.log("Parsed request data:", { projectName, projectId, notificationType, createdBy });
 
     if (!projectName || !notificationType) {
       console.error("Missing required fields");
@@ -173,4 +194,3 @@ serve(async (req) => {
     );
   }
 });
-

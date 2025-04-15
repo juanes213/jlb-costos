@@ -30,6 +30,11 @@ export function useProjectNotifications() {
     // Send email notifications via edge function
     try {
       console.log(`Sending ${notificationType} notification for project:`, project.name);
+      console.log("Request payload:", {
+        projectName: project.name,
+        projectId: project.numberId || project.id,
+        notificationType
+      });
       
       const { data, error } = await supabase.functions.invoke('project-notification', {
         body: {
