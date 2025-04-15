@@ -116,6 +116,7 @@ export function useChartData(
       const { totalCost: cost } = calculateProjectCost(project);
       const income = project.income || 0;
       const margin = income - cost;
+      // Fix: Calculate margin percentage based on income
       const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
       
       return {

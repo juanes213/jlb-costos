@@ -50,7 +50,8 @@ export function ProjectsTable({
             </TableRow>
           ) : (
             filteredProjects.slice(0, visibleRows).map((project) => {
-              const { totalCost: cost, margin, marginPercentage } = calculateProjectCost(project);
+              // Fix: Explicitly extract and use the totalCost, margin and marginPercentage values
+              const { totalCost, margin, marginPercentage } = calculateProjectCost(project);
               const income = project.income || 0;
               
               return (
@@ -79,7 +80,7 @@ export function ProjectsTable({
                      project.status === "completed" ? "Completado" :
                      project.status}
                   </TableCell>
-                  <TableCell>{formatCurrency(cost)}</TableCell>
+                  <TableCell>{formatCurrency(totalCost)}</TableCell>
                   <TableCell>{formatCurrency(income)}</TableCell>
                   <TableCell className={margin < 0 ? "text-red-500" : "text-green-500"}>
                     {formatCurrency(margin)}
