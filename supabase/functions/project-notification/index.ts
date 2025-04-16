@@ -119,8 +119,10 @@ serve(async (req) => {
       const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
       const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
       const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
-      // The public key from EmailJS (same as your User ID)
       const publicKey = Deno.env.get("EMAILJS_PUBLIC_KEY") || "";
+      
+      // Log available environment variables for debugging
+      console.log("Available env variables:", Object.keys(Deno.env.toObject()));
       
       // Enhanced logging for configuration check
       console.log("EmailJS Configuration:", {
@@ -142,29 +144,31 @@ serve(async (req) => {
         try {
           console.log(`Sending email to ${email} using EmailJS...`);
           
-          // For server-side operations with EmailJS, we need both:
-          // - private API key in the accessToken field
-          // - public key (user ID) in the publicKey field
+          // For server-side operations with EmailJS, we need to structure the payload correctly
+          const emailPayload = {
+            service_id: serviceId,
+            template_id: templateId,
+            user_id: publicKey,  // Required - this is the public key / user ID
+            accessToken: apiKey,  // Private API key for authentication
+            template_params: {
+              to_email: email,
+              subject: subject,
+              message: htmlContent,
+              project_name: projectName,
+              project_id: projectId,
+              created_by: createdByText,
+              project_link: projectLink
+            }
+          };
+          
+          console.log(`Email payload for ${email}:`, JSON.stringify(emailPayload, null, 2));
+          
           const emailResponse = await fetch(apiUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              service_id: serviceId,
-              template_id: templateId,
-              accessToken: apiKey,  // Private API key
-              publicKey: publicKey, // Public key (User ID)
-              template_params: {
-                to_email: email,
-                subject: subject,
-                message: htmlContent,
-                project_name: projectName,
-                project_id: projectId,
-                created_by: createdByText,
-                project_link: projectLink
-              }
-            })
+            body: JSON.stringify(emailPayload)
           });
           
           // Log the raw response for debugging
@@ -225,4 +229,3 @@ serve(async (req) => {
     );
   }
 });
-
