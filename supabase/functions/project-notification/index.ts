@@ -8,16 +8,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Define recipient emails
-const RECIPIENT_EMAILS = [
-  "gerenteadm@jorgebedoya.com",
-  "cfinanciero@jorgebedoya.com",
-  "gerenciacomercial@jorgebedoya.com"
-];
-
-// Define application URL for links
-const APPLICATION_URL = "https://jlb-costos.lovable.app";
-
 interface ProjectNotificationRequest {
   projectName: string;
   projectId: string;
@@ -83,108 +73,28 @@ serve(async (req) => {
         }
       );
     }
+    
+    // Log project notification info
+    console.log("Project notification received:");
+    console.log(`Project: ${projectName} (ID: ${projectId})`);
+    console.log(`Type: ${notificationType}`);
+    console.log(`Created By: ${createdBy || "unknown user"}`);
+    
+    // Here we would normally send emails, but we're just logging the event instead
 
-    // Prepare email content
-    let subject = "";
-    let htmlContent = "";
-    const createdByText = createdBy ? `por ${createdBy}` : "";
-    const projectLink = `${APPLICATION_URL}/admin/projects/${projectId}`;
-
-    if (notificationType === "created") {
-      subject = `Nuevo proyecto creado: ${projectName}`;
-      htmlContent = `
-        <h1>Nuevo proyecto creado</h1>
-        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido creado exitosamente ${createdByText}.</p>
-        <p>Puede acceder al proyecto en el <a href="${projectLink}">dashboard de administración</a>.</p>
-        <p><a href="${APPLICATION_URL}">Ir al sistema</a></p>
-      `;
-    } else if (notificationType === "completed") {
-      subject = `Proyecto completado: ${projectName}`;
-      htmlContent = `
-        <h1>Proyecto completado</h1>
-        <p>El proyecto <strong>${projectName}</strong> (ID: ${projectId}) ha sido marcado como completado ${createdByText}.</p>
-        <p>Puede acceder al proyecto en el <a href="${projectLink}">dashboard de administración</a>.</p>
-        <p><a href="${APPLICATION_URL}">Ir al sistema</a></p>
-      `;
-    }
-
-    // Get EmailJS credentials from environment
-    const emailjsServiceId = Deno.env.get("EMAILJS_SERVICE_ID");
-    const emailjsTemplateId = Deno.env.get("EMAILJS_TEMPLATE_ID");
-    const emailjsPublicKey = Deno.env.get("EMAILJS_PUBLIC_KEY");
-    const emailjsApiKey = Deno.env.get("EMAILJS_API_KEY");
-    
-    console.log("Available env variables:", Object.keys(Deno.env.toObject()));
-    console.log("EmailJS Configuration:", {
-      serviceId: emailjsServiceId ? "configured" : "not set",
-      templateId: emailjsTemplateId ? "configured" : "not set",
-      publicKey: emailjsPublicKey ? "configured" : "not set",
-      apiKey: emailjsApiKey ? "configured" : "not set"
-    });
-    
-    if (!emailjsServiceId || !emailjsTemplateId || !emailjsApiKey) {
-      throw new Error("Missing EmailJS configuration");
-    }
-
-    const successfulEmails = [];
-    const failedEmails = [];
-    
-    // Send an email to each recipient using EmailJS
-    for (const email of RECIPIENT_EMAILS) {
-      try {
-        console.log(`Sending ${notificationType} notification email to ${email} via EmailJS...`);
-        
-        const emailjsEndpoint = "https://api.emailjs.com/api/v1.0/email/send";
-        const emailjsPayload = {
-          service_id: emailjsServiceId,
-          template_id: emailjsTemplateId,
-          user_id: emailjsPublicKey,
-          accessToken: emailjsApiKey,
-          template_params: {
-            to_email: email,
-            subject: subject,
-            message_html: htmlContent,
-            project_name: projectName,
-            project_id: projectId,
-            project_link: projectLink,
-            created_by: createdByText || "el sistema"
-          }
-        };
-        
-        const emailResponse = await fetch(emailjsEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(emailjsPayload),
-        });
-        
-        if (emailResponse.status === 200) {
-          console.log(`Email successfully sent to ${email}`);
-          successfulEmails.push(email);
-        } else {
-          const errorText = await emailResponse.text();
-          console.error(`Failed to send email to ${email}. Status: ${emailResponse.status}, Response:`, errorText);
-          failedEmails.push({ email, error: `Status ${emailResponse.status}: ${errorText}` });
-        }
-      } catch (err) {
-        console.error(`Error sending email to ${email}:`, err);
-        failedEmails.push({ email, error: String(err) });
-      }
-    }
-    
-    // Return response with results
-    const allEmailsSuccessful = failedEmails.length === 0;
-    
+    // Return success response
     return new Response(
       JSON.stringify({
-        success: successfulEmails.length > 0,
-        message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
-        successfulEmails,
-        failedEmails
+        success: true,
+        message: `Project ${notificationType} notification processed successfully`,
+        project: {
+          name: projectName,
+          id: projectId,
+        },
+        notification_type: notificationType
       }),
       {
-        status: allEmailsSuccessful ? 200 : 207,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
@@ -193,9 +103,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: "Email sending failed", 
-        details: String(error),
-        suggestion: "Please check the EmailJS configuration and network connectivity."
+        error: "Internal server error", 
+        details: String(error)
       }),
       {
         status: 500,
