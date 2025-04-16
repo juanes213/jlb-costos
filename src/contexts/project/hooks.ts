@@ -1,8 +1,27 @@
-
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Project } from "@/types/project";
+
+export function useProjectPersistence(toast: ReturnType<typeof useToast>["toast"]) {
+  const saveToLocalStorage = useCallback((projects: Project[]) => {
+    try {
+      const projectsStr = JSON.stringify(projects, (key, value) => {
+        if (key === 'initialDate' || key === 'finalDate') {
+          return value instanceof Date ? value.toISOString() : value;
+        }
+        return value;
+      });
+      
+      localStorage.setItem("jlb_projects_v1", projectsStr);
+      console.log("Projects saved to localStorage with key: jlb_projects_v1");
+    } catch (error) {
+      console.error("Error saving projects to localStorage:", error);
+    }
+  }, []);
+
+  return { saveToLocalStorage };
+}
 
 export function useProjectNotifications() {
   const { toast } = useToast();
@@ -10,7 +29,7 @@ export function useProjectNotifications() {
   return useCallback(async (
     project: Project, 
     notificationType: "created" | "completed",
-    clientEmail?: string
+    clientEmails?: string[]
   ) => {
     // Show in-app toast notification
     const title = notificationType === "created" 
@@ -37,7 +56,7 @@ export function useProjectNotifications() {
         projectId: project.numberId || project.id,
         notificationType,
         createdBy: userEmail,
-        clientEmail // Include client email in the payload
+        clientEmails // Include multiple client emails in the payload
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
@@ -59,16 +78,21 @@ export function useProjectNotifications() {
         console.log(`Project ${notificationType} notification processed:`, data);
         
         // Show email status in toast if relevant
-        if (data?.email) {
-          if (data.email.success) {
+        if (data?.emails) {
+          const successfulEmails = data.emails.filter((email: any) => email.success);
+          const failedEmails = data.emails.filter((email: any) => !email.success);
+          
+          if (successfulEmails.length > 0) {
             toast({
               title: "Notificación enviada",
-              description: `Se ha enviado un correo al cliente sobre el proyecto.`,
+              description: `Se ha enviado un correo a ${successfulEmails.map((e: any) => e.email).join(', ')}.`,
             });
-          } else if (clientEmail) {
+          }
+          
+          if (failedEmails.length > 0) {
             toast({
               title: "Error de correo",
-              description: "No se pudo enviar el correo de notificación al cliente.",
+              description: `No se pudo enviar correo a ${failedEmails.map((e: any) => e.email).join(', ')}.`,
               variant: "destructive",
             });
           }
@@ -83,25 +107,4 @@ export function useProjectNotifications() {
       });
     }
   }, [toast]);
-}
-
-// Hook for project persistence operations
-export function useProjectPersistence(toast: ReturnType<typeof useToast>["toast"]) {
-  const saveToLocalStorage = useCallback((projects: Project[]) => {
-    try {
-      const projectsStr = JSON.stringify(projects, (key, value) => {
-        if (key === 'initialDate' || key === 'finalDate') {
-          return value instanceof Date ? value.toISOString() : value;
-        }
-        return value;
-      });
-      
-      localStorage.setItem("jlb_projects_v1", projectsStr);
-      console.log("Projects saved to localStorage with key: jlb_projects_v1");
-    } catch (error) {
-      console.error("Error saving projects to localStorage:", error);
-    }
-  }, []);
-
-  return { saveToLocalStorage };
 }

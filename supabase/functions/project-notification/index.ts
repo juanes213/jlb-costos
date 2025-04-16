@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Define proper CORS headers
@@ -12,7 +13,7 @@ interface ProjectNotificationRequest {
   projectId: string;
   notificationType: "created" | "completed";
   createdBy?: string;
-  clientEmail?: string;
+  clientEmails?: string[];
 }
 
 // Main handler function
@@ -61,13 +62,19 @@ serve(async (req) => {
       );
     }
 
-    const { projectName, projectId, notificationType, createdBy, clientEmail } = parsedBody as ProjectNotificationRequest;
+    const { 
+      projectName, 
+      projectId, 
+      notificationType, 
+      createdBy, 
+      clientEmails 
+    } = parsedBody as ProjectNotificationRequest;
 
-    // Add logging for the provided client email
-    console.log(`Client email for notification: ${clientEmail}`);
+    // Log the client emails for notification
+    console.log(`Client emails for notification: ${clientEmails?.join(', ')}`);
 
-    // Modify the email sending logic to use the provided client email
-    if (clientEmail) {
+    // Modify the email sending logic to support multiple client emails
+    if (clientEmails && clientEmails.length > 0) {
       try {
         const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
         
@@ -83,53 +90,54 @@ serve(async (req) => {
           ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
           : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
         
-        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "api-key": BREVO_API_KEY
-          },
-          body: JSON.stringify({
-            sender: {
-              name: "JLB Proyectos Notificaciones",
-              email: "notificaciones@empresa.com"
+        const emailPromises = clientEmails.map(clientEmail => 
+          fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "api-key": BREVO_API_KEY
             },
-            to: [
-              {
-                email: clientEmail,
-                name: "Cliente"
-              }
-            ],
-            subject: emailSubject,
-            htmlContent: `
-              <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
-                <h1 style="color: #333;">${emailSubject}</h1>
-                <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
-                <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
-              </div>
-            `,
-            textContent: emailContent
-          })
-        });
+            body: JSON.stringify({
+              sender: {
+                name: "JLB Proyectos Notificaciones",
+                email: "notificaciones@empresa.com"
+              },
+              to: [
+                {
+                  email: clientEmail,
+                  name: "Cliente"
+                }
+              ],
+              subject: emailSubject,
+              htmlContent: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
+                  <h1 style="color: #333;">${emailSubject}</h1>
+                  <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
+                  <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
+                </div>
+              `,
+              textContent: emailContent
+            })
+          }).then(response => response.json())
+        );
+
+        const emailResponses = await Promise.all(emailPromises);
         
-        const responseData = await response.json();
+        const emailStatuses = emailResponses.map((response, index) => ({
+          email: clientEmails[index],
+          success: response.messageId ? true : false,
+          details: response
+        }));
         
-        if (!response.ok) {
-          throw new Error(`Brevo API error: ${response.status} - ${JSON.stringify(responseData)}`);
-        }
+        console.log(`Email notifications sent:`, emailStatuses);
         
-        console.log(`Email notification sent successfully to ${clientEmail}:`, responseData);
-        
-        // Update the return response to include email status
+        // Update the return response to include email statuses
         return new Response(
           JSON.stringify({
             success: true,
             message: `Project ${notificationType} notification processed successfully`,
-            email: { 
-              success: true, 
-              message: `Email sent to ${clientEmail}` 
-            }
+            emails: emailStatuses
           }),
           {
             status: 200,
@@ -137,15 +145,15 @@ serve(async (req) => {
           }
         );
       } catch (emailError) {
-        console.error("Error sending email:", emailError);
+        console.error("Error sending emails:", emailError);
         
         return new Response(
           JSON.stringify({
             success: true,
             message: `Project ${notificationType} notification processed`,
-            email: { 
+            emails: { 
               success: false, 
-              message: `Failed to send email: ${emailError.message}` 
+              message: `Failed to send emails: ${emailError.message}` 
             }
           }),
           {
@@ -156,12 +164,12 @@ serve(async (req) => {
       }
     }
 
-    // If no client email, return success without email
+    // If no client emails, return success without email
     return new Response(
       JSON.stringify({
         success: true,
         message: `Project ${notificationType} notification processed`,
-        email: null
+        emails: null
       }),
       {
         status: 200,
