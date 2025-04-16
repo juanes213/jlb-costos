@@ -13,7 +13,7 @@ interface ProjectNotificationRequest {
   projectId: string;
   notificationType: "created" | "completed";
   createdBy?: string;
-  clientEmail?: string; // Add client email to the request
+  clientEmail?: string;
 }
 
 // Main handler function
@@ -82,7 +82,7 @@ serve(async (req) => {
     console.log(`Created By: ${createdBy || "unknown user"}`);
     console.log(`Client Email: ${clientEmail || "no client email provided"}`);
     
-    // Try to send email using SendGrid if client email is provided
+    // Try to send email using MailerSend if client email is provided
     let emailResult = { success: false, message: "No client email provided" };
     
     if (clientEmail) {
@@ -96,54 +96,53 @@ serve(async (req) => {
           ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
           : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
           
-        // Use SendGrid API to send the email
-        const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+        // Use MailerSend API to send the email
+        const MAILERSEND_API_KEY = Deno.env.get("MAILERSEND_API_KEY");
         
-        if (!SENDGRID_API_KEY) {
-          throw new Error("SENDGRID_API_KEY not found in environment variables");
+        if (!MAILERSEND_API_KEY) {
+          throw new Error("MAILERSEND_API_KEY not found in environment variables");
         }
         
-        const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        const response = await fetch("https://api.mailersend.com/v1/email", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${SENDGRID_API_KEY}`,
+            "Authorization": `Bearer ${MAILERSEND_API_KEY}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            personalizations: [{
-              to: [{ email: clientEmail }]
-            }],
-            from: { 
-              email: "notificaciones@jlbproyectos.com", // Update this with your verified sender
-              name: "JLB Proyectos Notificaciones"
+            "from": {
+              "email": "notificaciones@empresa.com",
+              "name": "JLB Proyectos Notificaciones"
             },
-            subject: subject,
-            content: [{
-              type: "text/plain",
-              value: content
-            }, {
-              type: "text/html",
-              value: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
-                  <h1 style="color: #333;">${subject}</h1>
-                  <p style="font-size: 16px; color: #666; line-height: 24px;">${content}</p>
-                  <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
-                </div>
-              `
-            }]
+            "to": [
+              {
+                "email": clientEmail,
+                "name": "Cliente"
+              }
+            ],
+            "subject": subject,
+            "html": `
+              <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
+                <h1 style="color: #333;">${subject}</h1>
+                <p style="font-size: 16px; color: #666; line-height: 24px;">${content}</p>
+                <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
+              </div>
+            `,
+            "text": content
           })
         });
         
+        const responseData = await response.json();
+        
         if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`SendGrid API error: ${response.status} - ${errorData}`);
+          throw new Error(`MailerSend API error: ${response.status} - ${JSON.stringify(responseData)}`);
         }
         
         emailResult = { 
           success: true, 
           message: `Email sent successfully to ${clientEmail}` 
         };
-        console.log(`Email notification sent successfully to ${clientEmail}`);
+        console.log(`Email notification sent successfully to ${clientEmail}:`, responseData);
       } catch (emailError) {
         console.error("Error sending email:", emailError);
         emailResult = { 
