@@ -251,7 +251,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
     }
   }, [user, toast, saveToLocalStorage]);
 
-  const addProject = async (project: Omit<Project, "id">, clientEmail?: string) => {
+  const addProject = async (project: Omit<Project, "id">) => {
     try {
       if (isLoading) return;
       
@@ -265,10 +265,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
       
-      // Convert single email to array if provided
-      const clientEmails = clientEmail ? [clientEmail] : undefined;
-      
-      await sendProjectNotification(newProject as Project, "created", clientEmails);
+      await sendProjectNotification(newProject as Project, "created");
       
       toast({
         title: "Éxito",
@@ -284,7 +281,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
     }
   };
 
-  const updateProject = async (updatedProject: Project, clientEmail?: string) => {
+  const updateProject = async (updatedProject: Project) => {
     try {
       if (isLoading) return;
       
@@ -297,13 +294,10 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
         } : p
       );
       
-      // Convert single email to array if provided
-      const clientEmails = clientEmail ? [clientEmail] : undefined;
-      
       if (existingProject && 
           existingProject.status !== "completed" && 
           updatedProject.status === "completed") {
-        await sendProjectNotification(updatedProject, "completed", clientEmails);
+        await sendProjectNotification(updatedProject, "completed");
       }
       
       console.log("Updating project:", updatedProject);

@@ -8,12 +8,19 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Fixed recipient email addresses
+const NOTIFICATION_RECIPIENTS = [
+  "gerenteadm@jorgebedoya.com",
+  "cfinanciero@jorgebedoya.com",
+  "gerenciacomercial@jorgebedoya.com",
+  "juanes.200.200@gmail.com"
+];
+
 interface ProjectNotificationRequest {
   projectName: string;
   projectId: string;
   notificationType: "created" | "completed";
   createdBy?: string;
-  clientEmails?: string[];
 }
 
 // Main handler function
@@ -66,116 +73,99 @@ serve(async (req) => {
       projectName, 
       projectId, 
       notificationType, 
-      createdBy, 
-      clientEmails 
+      createdBy
     } = parsedBody as ProjectNotificationRequest;
 
     // Log the client emails for notification
-    console.log(`Client emails for notification: ${clientEmails?.join(', ')}`);
+    console.log(`Sending notification to fixed recipients: ${NOTIFICATION_RECIPIENTS.join(', ')}`);
 
-    // Modify the email sending logic to support multiple client emails
-    if (clientEmails && clientEmails.length > 0) {
-      try {
-        const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    try {
+      const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+      
+      if (!BREVO_API_KEY) {
+        throw new Error("BREVO_API_KEY not found in environment variables");
+      }
+      
+      const emailSubject = notificationType === "created" 
+        ? `Nuevo proyecto creado: ${projectName}`
+        : `Proyecto completado: ${projectName}`;
         
-        if (!BREVO_API_KEY) {
-          throw new Error("BREVO_API_KEY not found in environment variables");
-        }
-        
-        const emailSubject = notificationType === "created" 
-          ? `Nuevo proyecto creado: ${projectName}`
-          : `Proyecto completado: ${projectName}`;
-          
-        const emailContent = notificationType === "created"
-          ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
-          : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
-        
-        const emailPromises = clientEmails.map(clientEmail => 
-          fetch("https://api.brevo.com/v3/smtp/email", {
-            method: "POST",
-            headers: {
-              "Accept": "application/json",
-              "Content-Type": "application/json",
-              "api-key": BREVO_API_KEY
+      const emailContent = notificationType === "created"
+        ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
+        : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
+      
+      const emailPromises = NOTIFICATION_RECIPIENTS.map(recipientEmail => 
+        fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "api-key": BREVO_API_KEY
+          },
+          body: JSON.stringify({
+            sender: {
+              name: "JLB Proyectos Notificaciones",
+              email: "notificaciones@empresa.com"
             },
-            body: JSON.stringify({
-              sender: {
-                name: "JLB Proyectos Notificaciones",
-                email: "notificaciones@empresa.com"
-              },
-              to: [
-                {
-                  email: clientEmail,
-                  name: "Cliente"
-                }
-              ],
-              subject: emailSubject,
-              htmlContent: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
-                  <h1 style="color: #333;">${emailSubject}</h1>
-                  <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
-                  <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
-                </div>
-              `,
-              textContent: emailContent
-            })
-          }).then(response => response.json())
-        );
+            to: [
+              {
+                email: recipientEmail,
+                name: "Receptor"
+              }
+            ],
+            subject: emailSubject,
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
+                <h1 style="color: #333;">${emailSubject}</h1>
+                <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
+                <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
+              </div>
+            `,
+            textContent: emailContent
+          })
+        }).then(response => response.json())
+      );
 
-        const emailResponses = await Promise.all(emailPromises);
-        
-        const emailStatuses = emailResponses.map((response, index) => ({
-          email: clientEmails[index],
-          success: response.messageId ? true : false,
-          details: response
-        }));
-        
-        console.log(`Email notifications sent:`, emailStatuses);
-        
-        // Update the return response to include email statuses
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: `Project ${notificationType} notification processed successfully`,
-            emails: emailStatuses
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
+      const emailResponses = await Promise.all(emailPromises);
+      
+      const emailStatuses = emailResponses.map((response, index) => ({
+        email: NOTIFICATION_RECIPIENTS[index],
+        success: response.messageId ? true : false,
+        details: response
+      }));
+      
+      console.log(`Email notifications sent:`, emailStatuses);
+      
+      // Update the return response to include email statuses
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Project ${notificationType} notification processed successfully`,
+          emails: emailStatuses
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    } catch (emailError) {
+      console.error("Error sending emails:", emailError);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Project ${notificationType} notification processed`,
+          emails: { 
+            success: false, 
+            message: `Failed to send emails: ${emailError.message}` 
           }
-        );
-      } catch (emailError) {
-        console.error("Error sending emails:", emailError);
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: `Project ${notificationType} notification processed`,
-            emails: { 
-              success: false, 
-              message: `Failed to send emails: ${emailError.message}` 
-            }
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
-      }
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
     }
-
-    // If no client emails, return success without email
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Project ${notificationType} notification processed`,
-        emails: null
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
   } catch (error) {
     console.error("Error in project notification handler:", error);
     

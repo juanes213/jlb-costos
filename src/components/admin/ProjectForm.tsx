@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ProjectFormProps {
-  onCreateProject: (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number, clientEmail?: string) => void;
+  onCreateProject: (name: string, numberId: string, initialDate?: Date, finalDate?: Date, income?: number) => void;
 }
 
 export function ProjectForm({ onCreateProject }: ProjectFormProps) {
@@ -14,7 +14,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
   const [initialDate, setInitialDate] = useState("");
   const [finalDate, setFinalDate] = useState("");
   const [income, setIncome] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
   const { toast } = useToast();
 
   const formatCurrency = (value: string) => {
@@ -59,8 +58,7 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
       projectId,
       parsedInitialDate,
       parsedFinalDate,
-      income ? parseFloat(income) : 0,
-      clientEmail.trim() || undefined
+      income ? parseFloat(income) : 0
     );
     
     setNewProjectName("");
@@ -68,7 +66,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
     setInitialDate("");
     setFinalDate("");
     setIncome("");
-    setClientEmail("");
 
     toast({
       title: "Éxito",
@@ -105,17 +102,6 @@ export function ProjectForm({ onCreateProject }: ProjectFormProps) {
             value={income ? formatCurrency(income) : ""}
             onChange={(e) => handleIncomeChange(e.target.value)}
             placeholder="$0"
-            className="border-blue-200 focus:border-blue-400"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Correo Electrónico del Cliente</label>
-          <Input
-            type="email"
-            value={clientEmail}
-            onChange={(e) => setClientEmail(e.target.value)}
-            placeholder="Introduzca el correo electrónico del cliente"
             className="border-blue-200 focus:border-blue-400"
           />
         </div>

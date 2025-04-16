@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -28,8 +29,7 @@ export function useProjectNotifications() {
   
   return useCallback(async (
     project: Project, 
-    notificationType: "created" | "completed",
-    clientEmails?: string[]
+    notificationType: "created" | "completed"
   ) => {
     // Show in-app toast notification
     const title = notificationType === "created" 
@@ -55,8 +55,7 @@ export function useProjectNotifications() {
         projectName: project.name,
         projectId: project.numberId || project.id,
         notificationType,
-        createdBy: userEmail,
-        clientEmails // Include multiple client emails in the payload
+        createdBy: userEmail
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
@@ -79,20 +78,25 @@ export function useProjectNotifications() {
         
         // Show email status in toast if relevant
         if (data?.emails) {
-          const successfulEmails = data.emails.filter((email: any) => email.success);
-          const failedEmails = data.emails.filter((email: any) => !email.success);
+          const successfulEmails = Array.isArray(data.emails) 
+            ? data.emails.filter((email: any) => email.success)
+            : [];
+            
+          const failedEmails = Array.isArray(data.emails)
+            ? data.emails.filter((email: any) => !email.success)
+            : [];
           
           if (successfulEmails.length > 0) {
             toast({
               title: "Notificación enviada",
-              description: `Se ha enviado un correo a ${successfulEmails.map((e: any) => e.email).join(', ')}.`,
+              description: `Se ha enviado un correo a ${successfulEmails.length} destinatario(s).`,
             });
           }
           
           if (failedEmails.length > 0) {
             toast({
               title: "Error de correo",
-              description: `No se pudo enviar correo a ${failedEmails.map((e: any) => e.email).join(', ')}.`,
+              description: `No se pudo enviar correo a ${failedEmails.length} destinatario(s).`,
               variant: "destructive",
             });
           }
