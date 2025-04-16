@@ -1,5 +1,7 @@
 
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 // Define proper CORS headers
 const corsHeaders = {
@@ -109,64 +111,67 @@ serve(async (req) => {
     }
 
     try {
-      // Get Resend API key
-      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      // Get SMTP credentials from environment variables
+      const smtpHost = Deno.env.get("SMTP_HOST");
+      const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
+      const smtpUser = Deno.env.get("SMTP_USER");
+      const smtpPass = Deno.env.get("SMTP_PASS");
+      const smtpTls = Deno.env.get("SMTP_TLS") !== "false"; // Default to true if not specified
       
       // Log available environment variables for debugging
       console.log("Available env variables:", Object.keys(Deno.env.toObject()));
+      console.log("SMTP Configuration:", {
+        hostPresent: !!smtpHost,
+        portPresent: !!smtpPort,
+        userPresent: !!smtpUser,
+        passPresent: !!smtpPass
+      });
       
-      if (!resendApiKey) {
-        throw new Error("Missing Resend API key. Please configure the RESEND_API_KEY in Supabase secrets.");
+      if (!smtpHost || !smtpUser || !smtpPass) {
+        throw new Error("Missing SMTP configuration. Please check all required secrets.");
       }
       
-      // Send emails using Resend API
+      // Create SMTP client
+      const client = new SmtpClient();
+      
+      // Connect to SMTP server
+      console.log(`Connecting to SMTP server ${smtpHost}:${smtpPort} with TLS ${smtpTls ? "enabled" : "disabled"}`);
+      await client.connectTLS({
+        hostname: smtpHost,
+        port: smtpPort,
+        username: smtpUser,
+        password: smtpPass
+      });
+      
+      // Send emails to all recipients
       const successfulEmails = [];
       const failedEmails = [];
       
       console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
       
-      // Resend API endpoint
-      const apiUrl = "https://api.resend.com/emails";
-      
-      // Send emails to all recipients
       for (const email of RECIPIENT_EMAILS) {
         try {
-          console.log(`Sending email to ${email} using Resend...`);
+          console.log(`Sending email to ${email} using SMTP...`);
           
-          const emailPayload = {
-            from: "JL Bedoya System <notifications@jorgebedoya.com>",
-            to: [email],
+          // Send email
+          await client.send({
+            from: `JL Bedoya System <${smtpUser}>`,
+            to: email,
             subject: subject,
-            html: htmlContent,
-          };
-          
-          console.log(`Email payload for ${email}:`, JSON.stringify(emailPayload, null, 2));
-          
-          const emailResponse = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${resendApiKey}`
-            },
-            body: JSON.stringify(emailPayload)
+            content: htmlContent,
+            html: htmlContent
           });
           
-          // Log the raw response for debugging
-          const responseText = await emailResponse.text();
-          console.log(`Resend Response for ${email}:`, responseText);
-          
-          if (emailResponse.ok) {
-            console.log(`Email sent successfully to ${email}`);
-            successfulEmails.push(email);
-          } else {
-            console.error(`Failed to send email to ${email}:`, responseText);
-            failedEmails.push(email);
-          }
+          console.log(`Email sent successfully to ${email}`);
+          successfulEmails.push(email);
         } catch (err) {
           console.error(`Error sending email to ${email}:`, err);
           failedEmails.push(email);
         }
       }
+      
+      // Close the connection
+      await client.close();
 
       // Return success response
       return new Response(
@@ -209,3 +214,4 @@ serve(async (req) => {
     );
   }
 });
+
