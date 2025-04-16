@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -9,7 +10,8 @@ export function useProjectNotifications() {
   
   return useCallback(async (
     project: Project, 
-    notificationType: "created" | "completed"
+    notificationType: "created" | "completed",
+    clientEmail?: string // Add optional client email parameter
   ) => {
     // Show in-app toast notification
     const title = notificationType === "created" 
@@ -26,7 +28,7 @@ export function useProjectNotifications() {
       duration: 5000,
     });
     
-    // Log notification to Supabase edge function (without email sending)
+    // Log notification to Supabase edge function (with email sending)
     try {
       const currentUser = await supabase.auth.getUser();
       const userEmail = currentUser?.data?.user?.email;
@@ -35,7 +37,8 @@ export function useProjectNotifications() {
         projectName: project.name,
         projectId: project.numberId || project.id,
         notificationType,
-        createdBy: userEmail
+        createdBy: userEmail,
+        clientEmail // Include client email in the payload
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
@@ -48,11 +51,37 @@ export function useProjectNotifications() {
       
       if (error) {
         console.error("Error logging project notification:", error);
+        toast({
+          title: "Error de notificación",
+          description: "No se pudo enviar la notificación de proyecto.",
+          variant: "destructive",
+        });
       } else {
-        console.log(`Project ${notificationType} notification logged successfully:`, data);
+        console.log(`Project ${notificationType} notification processed:`, data);
+        
+        // Show email status in toast if relevant
+        if (data?.email) {
+          if (data.email.success) {
+            toast({
+              title: "Notificación enviada",
+              description: `Se ha enviado un correo al cliente sobre el proyecto.`,
+            });
+          } else if (clientEmail) {
+            toast({
+              title: "Error de correo",
+              description: "No se pudo enviar el correo de notificación al cliente.",
+              variant: "destructive",
+            });
+          }
+        }
       }
     } catch (error) {
       console.error("Error sending notification to edge function:", error);
+      toast({
+        title: "Error",
+        description: "Error al procesar la notificación del proyecto.",
+        variant: "destructive",
+      });
     }
   }, [toast]);
 }

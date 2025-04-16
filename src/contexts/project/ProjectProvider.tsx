@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, throttledRequest } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -252,7 +251,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
     }
   }, [user, toast, saveToLocalStorage]);
 
-  const addProject = async (project: Omit<Project, "id">) => {
+  const addProject = async (project: Omit<Project, "id">, clientEmail?: string) => {
     try {
       if (isLoading) return;
       
@@ -266,7 +265,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
       
-      await sendProjectNotification(newProject as Project, "created");
+      await sendProjectNotification(newProject as Project, "created", clientEmail);
       
       toast({
         title: "Éxito",
@@ -282,7 +281,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
     }
   };
 
-  const updateProject = async (updatedProject: Project) => {
+  const updateProject = async (updatedProject: Project, clientEmail?: string) => {
     try {
       if (isLoading) return;
       
@@ -298,7 +297,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       if (existingProject && 
           existingProject.status !== "completed" && 
           updatedProject.status === "completed") {
-        await sendProjectNotification(updatedProject, "completed");
+        await sendProjectNotification(updatedProject, "completed", clientEmail);
       }
       
       console.log("Updating project:", updatedProject);
@@ -358,7 +357,14 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, addProject, updateProject, deleteProject, calculateProjectCost, isLoading }}
+      value={{ 
+        projects, 
+        addProject, 
+        updateProject, 
+        deleteProject, 
+        calculateProjectCost, 
+        isLoading 
+      }}
     >
       {children}
     </ProjectContext.Provider>
