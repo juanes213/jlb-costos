@@ -109,56 +109,35 @@ serve(async (req) => {
     }
 
     try {
-      // Send emails using EmailJS
-      const successfulEmails = [];
-      const failedEmails = [];
-
-      console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
-      
-      // Get EmailJS configuration
-      const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
-      const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
-      const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
-      const publicKey = Deno.env.get("EMAILJS_PUBLIC_KEY") || "";
+      // Get Resend API key
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
       
       // Log available environment variables for debugging
       console.log("Available env variables:", Object.keys(Deno.env.toObject()));
       
-      // Enhanced logging for configuration check
-      console.log("EmailJS Configuration:", {
-        apiKeyPresent: !!apiKey,
-        serviceIdPresent: !!serviceId,
-        templateIdPresent: !!templateId,
-        publicKeyPresent: !!publicKey
-      });
-      
-      if (!apiKey || !serviceId || !templateId || !publicKey) {
-        throw new Error("Missing EmailJS configuration. Please check all required secrets.");
+      if (!resendApiKey) {
+        throw new Error("Missing Resend API key. Please configure the RESEND_API_KEY in Supabase secrets.");
       }
       
-      // EmailJS API endpoint
-      const apiUrl = "https://api.emailjs.com/api/v1.0/email/send";
+      // Send emails using Resend API
+      const successfulEmails = [];
+      const failedEmails = [];
+      
+      console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
+      
+      // Resend API endpoint
+      const apiUrl = "https://api.resend.com/emails";
       
       // Send emails to all recipients
       for (const email of RECIPIENT_EMAILS) {
         try {
-          console.log(`Sending email to ${email} using EmailJS...`);
+          console.log(`Sending email to ${email} using Resend...`);
           
-          // For server-side operations with EmailJS, we need to structure the payload correctly
           const emailPayload = {
-            service_id: serviceId,
-            template_id: templateId,
-            user_id: publicKey,  // Required - this is the public key / user ID
-            accessToken: apiKey,  // Private API key for authentication
-            template_params: {
-              to_email: email,
-              subject: subject,
-              message: htmlContent,
-              project_name: projectName,
-              project_id: projectId,
-              created_by: createdByText,
-              project_link: projectLink
-            }
+            from: "JL Bedoya System <notifications@jorgebedoya.com>",
+            to: [email],
+            subject: subject,
+            html: htmlContent,
           };
           
           console.log(`Email payload for ${email}:`, JSON.stringify(emailPayload, null, 2));
@@ -167,13 +146,14 @@ serve(async (req) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${resendApiKey}`
             },
             body: JSON.stringify(emailPayload)
           });
           
           // Log the raw response for debugging
           const responseText = await emailResponse.text();
-          console.log(`EmailJS Response for ${email}:`, responseText);
+          console.log(`Resend Response for ${email}:`, responseText);
           
           if (emailResponse.ok) {
             console.log(`Email sent successfully to ${email}`);
