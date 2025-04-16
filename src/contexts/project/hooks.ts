@@ -77,26 +77,16 @@ export function useProjectNotifications() {
         console.log(`Project ${notificationType} notification processed:`, data);
         
         // Show email status in toast if relevant
-        if (data?.emails) {
-          const successfulEmails = Array.isArray(data.emails) 
-            ? data.emails.filter((email: any) => email.success)
-            : [];
-            
-          const failedEmails = Array.isArray(data.emails)
-            ? data.emails.filter((email: any) => !email.success)
-            : [];
-          
-          if (successfulEmails.length > 0) {
+        if (data?.email) {
+          if (data.email.success) {
             toast({
               title: "Notificación enviada",
-              description: `Se ha enviado un correo a ${successfulEmails.length} destinatario(s).`,
+              description: `Se ha enviado un correo a ${data.email.recipient}`,
             });
-          }
-          
-          if (failedEmails.length > 0) {
+          } else {
             toast({
               title: "Error de correo",
-              description: `No se pudo enviar correo a ${failedEmails.length} destinatario(s).`,
+              description: `No se pudo enviar el correo a ${data.email.recipient}`,
               variant: "destructive",
             });
           }

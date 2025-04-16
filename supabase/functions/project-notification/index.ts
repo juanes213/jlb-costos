@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
 
 // Define proper CORS headers
 const corsHeaders = {
@@ -8,13 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Fixed recipient email addresses
-const NOTIFICATION_RECIPIENTS = [
-  "gerenteadm@jorgebedoya.com",
-  "cfinanciero@jorgebedoya.com",
-  "gerenciacomercial@jorgebedoya.com",
-  "juanes.200.200@gmail.com"
-];
+// The only authorized recipient for testing purposes
+const AUTHORIZED_RECIPIENT = "albisj@uninorte.edu.co";
 
 interface ProjectNotificationRequest {
   projectName: string;
@@ -76,15 +72,17 @@ serve(async (req) => {
       createdBy
     } = parsedBody as ProjectNotificationRequest;
 
-    // Log the client emails for notification
-    console.log(`Sending notification to fixed recipients: ${NOTIFICATION_RECIPIENTS.join(', ')}`);
+    // Log the recipient for notification
+    console.log(`Sending notification to: ${AUTHORIZED_RECIPIENT}`);
 
     try {
-      const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       
-      if (!BREVO_API_KEY) {
-        throw new Error("BREVO_API_KEY not found in environment variables");
+      if (!RESEND_API_KEY) {
+        throw new Error("RESEND_API_KEY not found in environment variables");
       }
+      
+      const resend = new Resend(RESEND_API_KEY);
       
       const emailSubject = notificationType === "created" 
         ? `Nuevo proyecto creado: ${projectName}`
@@ -94,54 +92,40 @@ serve(async (req) => {
         ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
         : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
       
-      const emailPromises = NOTIFICATION_RECIPIENTS.map(recipientEmail => 
-        fetch("https://api.brevo.com/v3/smtp/email", {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "api-key": BREVO_API_KEY
-          },
-          body: JSON.stringify({
-            sender: {
-              name: "JLB Proyectos Notificaciones",
-              email: "notificaciones@empresa.com"
-            },
-            to: [
-              {
-                email: recipientEmail,
-                name: "Receptor"
-              }
-            ],
-            subject: emailSubject,
-            htmlContent: `
-              <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
-                <h1 style="color: #333;">${emailSubject}</h1>
-                <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
-                <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
-              </div>
-            `,
-            textContent: emailContent
-          })
-        }).then(response => response.json())
-      );
-
-      const emailResponses = await Promise.all(emailPromises);
+      const emailResponse = await resend.emails.send({
+        from: "JLB Proyectos <onboarding@resend.dev>",
+        to: AUTHORIZED_RECIPIENT,
+        subject: emailSubject,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
+            <h1 style="color: #333;">${emailSubject}</h1>
+            <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">
+              Este correo debe reenviarse a:
+              <ul>
+                <li>gerenteadm@jorgebedoya.com</li>
+                <li>cfinanciero@jorgebedoya.com</li>
+                <li>gerenciacomercial@jorgebedoya.com</li>
+                <li>juanes.200.200@gmail.com</li>
+              </ul>
+            </p>
+            <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
+          </div>
+        `,
+        text: `${emailContent}\n\nEste correo debe reenviarse a:\n- gerenteadm@jorgebedoya.com\n- cfinanciero@jorgebedoya.com\n- gerenciacomercial@jorgebedoya.com\n- juanes.200.200@gmail.com\n\nEste es un mensaje automático. Por favor no responda a este correo.`
+      });
       
-      const emailStatuses = emailResponses.map((response, index) => ({
-        email: NOTIFICATION_RECIPIENTS[index],
-        success: response.messageId ? true : false,
-        details: response
-      }));
+      console.log(`Email notification response:`, emailResponse);
       
-      console.log(`Email notifications sent:`, emailStatuses);
-      
-      // Update the return response to include email statuses
       return new Response(
         JSON.stringify({
           success: true,
           message: `Project ${notificationType} notification processed successfully`,
-          emails: emailStatuses
+          email: {
+            recipient: AUTHORIZED_RECIPIENT,
+            success: !!emailResponse.id,
+            details: emailResponse
+          }
         }),
         {
           status: 200,
@@ -149,19 +133,19 @@ serve(async (req) => {
         }
       );
     } catch (emailError) {
-      console.error("Error sending emails:", emailError);
+      console.error("Error sending email:", emailError);
       
       return new Response(
         JSON.stringify({
-          success: true,
-          message: `Project ${notificationType} notification processed`,
-          emails: { 
-            success: false, 
-            message: `Failed to send emails: ${emailError.message}` 
+          success: false,
+          message: `Project ${notificationType} notification processing failed`,
+          error: { 
+            message: emailError.message,
+            details: String(emailError)
           }
         }),
         {
-          status: 200,
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
