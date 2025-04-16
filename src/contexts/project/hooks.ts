@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Project } from "@/types/project";
+import { calculateProjectCost } from "@/utils/projectCalculations";
 
 export function useProjectPersistence(toast: ReturnType<typeof useToast>["toast"]) {
   const saveToLocalStorage = useCallback((projects: Project[]) => {
@@ -51,6 +52,11 @@ export function useProjectNotifications() {
       const currentUser = await supabase.auth.getUser();
       const userEmail = currentUser?.data?.user?.email;
       
+      // Calculate project costs if it's a completed project
+      const costData = notificationType === "completed" 
+        ? calculateProjectCost(project)
+        : null;
+      
       const payload = {
         projectName: project.name,
         projectId: project.numberId || project.id,
@@ -58,7 +64,8 @@ export function useProjectNotifications() {
         createdBy: userEmail,
         income: project.income,
         initialDate: project.initialDate ? project.initialDate.toISOString() : undefined,
-        finalDate: project.finalDate ? project.finalDate.toISOString() : undefined
+        finalDate: project.finalDate ? project.finalDate.toISOString() : undefined,
+        costData: costData
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);

@@ -20,6 +20,11 @@ interface ProjectNotificationRequest {
   income?: number;
   initialDate?: string;
   finalDate?: string;
+  costData?: {
+    totalCost: number;
+    margin: number;
+    marginPercentage: number;
+  };
 }
 
 // Format currency in COP
@@ -97,7 +102,8 @@ serve(async (req) => {
       createdBy,
       income,
       initialDate,
-      finalDate
+      finalDate,
+      costData
     } = parsedBody as ProjectNotificationRequest;
 
     // Log the recipient for notification
@@ -122,6 +128,34 @@ serve(async (req) => {
       
       const incomeFormatted = income ? formatCurrency(income) : "No definido";
       const createdByInfo = createdBy ? `<strong>${createdBy}</strong>` : "Usuario del sistema";
+      
+      // Financial information section for completed projects
+      let financialInfo = "";
+      if (notificationType === "completed" && costData) {
+        const totalCostFormatted = formatCurrency(costData.totalCost);
+        const marginFormatted = formatCurrency(costData.margin);
+        const marginPercentageFormatted = costData.marginPercentage.toFixed(2) + "%";
+        
+        financialInfo = `
+          <div style="background-color: #f5f5f5; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <h2 style="margin-top: 0; color: #4CAF50; font-size: 18px;">Información Financiera</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #ddd; width: 40%;"><strong>Costo Total:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${totalCostFormatted}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Margen:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${marginFormatted}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0;"><strong>Porcentaje de Margen:</strong></td>
+                <td style="padding: 8px 0;">${marginPercentageFormatted}</td>
+              </tr>
+            </table>
+          </div>
+        `;
+      }
       
       const emailResponse = await resend.emails.send({
         from: "JLB Proyectos <onboarding@resend.dev>",
@@ -167,6 +201,8 @@ serve(async (req) => {
                 </table>
               </div>
               
+              ${financialInfo}
+              
               <p style="font-size: 14px; color: #888; margin-top: 30px; text-align: center; border-top: 1px solid #eaeaea; padding-top: 20px;">
                 Este es un mensaje automático del sistema JLB Proyectos.<br>Por favor no responda a este correo.
               </p>
@@ -189,6 +225,12 @@ Creado por: ${createdBy || "Usuario del sistema"}
 Ingreso Estimado: ${incomeFormatted}
 Fecha Inicial: ${formatDate(initialDate)}
 Fecha Final: ${formatDate(finalDate)}
+${notificationType === "completed" && costData ? `
+INFORMACIÓN FINANCIERA:
+Costo Total: ${formatCurrency(costData.totalCost)}
+Margen: ${formatCurrency(costData.margin)}
+Porcentaje de Margen: ${costData.marginPercentage.toFixed(2)}%
+` : ''}
 
 Este es un mensaje automático del sistema JLB Proyectos.
 Por favor no responda a este correo.
