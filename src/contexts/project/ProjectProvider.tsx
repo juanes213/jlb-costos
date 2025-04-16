@@ -265,7 +265,10 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       console.log("Adding new project:", newProject);
       saveProjects([...projects, newProject]);
       
-      await sendProjectNotification(newProject as Project, "created", clientEmail);
+      // Convert single email to array if provided
+      const clientEmails = clientEmail ? [clientEmail] : undefined;
+      
+      await sendProjectNotification(newProject as Project, "created", clientEmails);
       
       toast({
         title: "Éxito",
@@ -294,10 +297,13 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
         } : p
       );
       
+      // Convert single email to array if provided
+      const clientEmails = clientEmail ? [clientEmail] : undefined;
+      
       if (existingProject && 
           existingProject.status !== "completed" && 
           updatedProject.status === "completed") {
-        await sendProjectNotification(updatedProject, "completed", clientEmail);
+        await sendProjectNotification(updatedProject, "completed", clientEmails);
       }
       
       console.log("Updating project:", updatedProject);
