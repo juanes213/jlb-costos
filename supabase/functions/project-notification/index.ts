@@ -120,10 +120,10 @@ serve(async (req) => {
       // Log available environment variables for debugging
       console.log("Available env variables:", Object.keys(Deno.env.toObject()));
       console.log("SMTP Configuration:", {
-        hostPresent: !!smtpHost,
-        portPresent: !!smtpPort,
-        userPresent: !!smtpUser,
-        passPresent: !!smtpPass
+        host: smtpHost,
+        port: smtpPort,
+        user: smtpUser?.substring(0, 3) + "***", // Only log part of the username for security
+        tls: smtpTls
       });
       
       if (!smtpHost || !smtpUser || !smtpPass) {
@@ -153,7 +153,7 @@ serve(async (req) => {
       const successfulEmails = [];
       const failedEmails = [];
       
-      console.log("Preparing to send emails to:", RECIPIENT_EMAILS);
+      console.log(`Sending ${notificationType} notification emails to:`, RECIPIENT_EMAILS);
       
       for (const email of RECIPIENT_EMAILS) {
         try {
@@ -172,7 +172,7 @@ serve(async (req) => {
           successfulEmails.push(email);
         } catch (err) {
           console.error(`Error sending email to ${email}:`, err);
-          failedEmails.push(email);
+          failedEmails.push({ email, error: String(err) });
         }
       }
       
@@ -185,15 +185,16 @@ serve(async (req) => {
       }
 
       // Return success response
+      const allEmailsSuccessful = failedEmails.length === 0;
       return new Response(
         JSON.stringify({ 
           success: successfulEmails.length > 0,
-          message: `Emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
+          message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
           successfulEmails,
           failedEmails
         }),
         {
-          status: 200,
+          status: allEmailsSuccessful ? 200 : 207, // Use 207 Multi-Status if some emails failed
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
@@ -205,6 +206,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Email sending failed", 
           details: String(emailError),
+          notificationType,
           solution: "Please check your email service configuration in Supabase secrets."
         }),
         {
