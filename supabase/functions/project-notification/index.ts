@@ -1,5 +1,4 @@
 
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
@@ -136,12 +135,19 @@ serve(async (req) => {
       
       // Connect to SMTP server
       console.log(`Connecting to SMTP server ${smtpHost}:${smtpPort} with TLS ${smtpTls ? "enabled" : "disabled"}`);
-      await client.connectTLS({
-        hostname: smtpHost,
-        port: smtpPort,
-        username: smtpUser,
-        password: smtpPass
-      });
+      
+      try {
+        await client.connectTLS({
+          hostname: smtpHost,
+          port: smtpPort,
+          username: smtpUser,
+          password: smtpPass
+        });
+        console.log("Successfully connected to SMTP server");
+      } catch (connectError) {
+        console.error("Error connecting to SMTP server:", connectError);
+        throw new Error(`SMTP connection failed: ${connectError.message}`);
+      }
       
       // Send emails to all recipients
       const successfulEmails = [];
@@ -171,7 +177,12 @@ serve(async (req) => {
       }
       
       // Close the connection
-      await client.close();
+      try {
+        await client.close();
+        console.log("SMTP connection closed successfully");
+      } catch (closeError) {
+        console.error("Error closing SMTP connection:", closeError);
+      }
 
       // Return success response
       return new Response(
@@ -214,4 +225,3 @@ serve(async (req) => {
     );
   }
 });
-
