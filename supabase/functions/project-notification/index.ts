@@ -119,8 +119,10 @@ serve(async (req) => {
       const apiKey = Deno.env.get("EMAILJS_API_KEY") || "";
       const serviceId = Deno.env.get("EMAILJS_SERVICE_ID") || "";
       const templateId = Deno.env.get("EMAILJS_TEMPLATE_ID") || "";
+      // The public key from EmailJS (same as your User ID)
+      const publicKey = Deno.env.get("EMAILJS_PUBLIC_KEY") || "";
       
-      if (!apiKey || !serviceId || !templateId) {
+      if (!apiKey || !serviceId || !templateId || !publicKey) {
         throw new Error("Missing EmailJS configuration");
       }
       
@@ -132,8 +134,9 @@ serve(async (req) => {
         try {
           console.log(`Sending email to ${email} using EmailJS...`);
           
-          // For server-side operations, we need the private API key in the accessToken field
-          // and we don't need to provide the public key
+          // For server-side operations with EmailJS, we need both:
+          // - private API key in the accessToken field
+          // - public key (user ID) in the publicKey field
           const emailResponse = await fetch(apiUrl, {
             method: "POST",
             headers: {
@@ -142,7 +145,8 @@ serve(async (req) => {
             body: JSON.stringify({
               service_id: serviceId,
               template_id: templateId,
-              accessToken: apiKey,  // Use private API key here
+              accessToken: apiKey,  // Private API key
+              publicKey: publicKey, // Public key (User ID)
               template_params: {
                 to_email: email,
                 subject: subject,
