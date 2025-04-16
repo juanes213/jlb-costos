@@ -55,7 +55,10 @@ export function useProjectNotifications() {
         projectName: project.name,
         projectId: project.numberId || project.id,
         notificationType,
-        createdBy: userEmail
+        createdBy: userEmail,
+        income: project.income,
+        initialDate: project.initialDate ? project.initialDate.toISOString() : undefined,
+        finalDate: project.finalDate ? project.finalDate.toISOString() : undefined
       };
       
       console.log(`Sending ${notificationType} notification for project:`, project.name);
