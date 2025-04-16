@@ -50,7 +50,7 @@ export function useProjectNotifications() {
     // Log notification to Supabase edge function (with email sending)
     try {
       const currentUser = await supabase.auth.getUser();
-      const userEmail = currentUser?.data?.user?.email;
+      const userEmail = currentUser?.data?.user?.email || "";
       
       // Calculate project costs if it's a completed project
       const costData = notificationType === "completed" 

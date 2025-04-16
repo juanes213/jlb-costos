@@ -127,7 +127,7 @@ serve(async (req) => {
         : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
       
       const incomeFormatted = income ? formatCurrency(income) : "No definido";
-      const createdByInfo = createdBy ? `<strong>${createdBy}</strong>` : "Usuario del sistema";
+      const createdByInfo = createdBy && createdBy.trim() !== "" ? `${createdBy}` : "Usuario del sistema";
       
       // Financial information section for completed projects
       let financialInfo = "";
