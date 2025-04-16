@@ -132,6 +132,8 @@ serve(async (req) => {
         try {
           console.log(`Sending email to ${email} using EmailJS...`);
           
+          // For server-side operations, we need the private API key in the accessToken field
+          // and we don't need to provide the public key
           const emailResponse = await fetch(apiUrl, {
             method: "POST",
             headers: {
@@ -140,7 +142,7 @@ serve(async (req) => {
             body: JSON.stringify({
               service_id: serviceId,
               template_id: templateId,
-              accessToken: apiKey,
+              accessToken: apiKey,  // Use private API key here
               template_params: {
                 to_email: email,
                 subject: subject,
