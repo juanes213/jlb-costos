@@ -48,7 +48,7 @@ export function useProjectNotifications() {
       console.log(`Sending ${notificationType} notification for project:`, project.name);
       console.log("Request payload:", payload);
 
-      // Use the Supabase client functions API instead of direct fetch
+      // Use the Supabase client functions API
       const { data, error } = await supabase.functions.invoke('project-notification', {
         body: payload
       });

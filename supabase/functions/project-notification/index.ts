@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 // Define proper CORS headers
 const corsHeaders = {
@@ -109,158 +108,86 @@ serve(async (req) => {
       `;
     }
 
-    // Get SMTP credentials from environment variables and log them
-    const smtpHost = Deno.env.get("SMTP_HOST");
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
-    const smtpUser = Deno.env.get("SMTP_USER");
-    const smtpPass = Deno.env.get("SMTP_PASS");
+    // Get EmailJS credentials from environment
+    const emailjsServiceId = Deno.env.get("EMAILJS_SERVICE_ID");
+    const emailjsTemplateId = Deno.env.get("EMAILJS_TEMPLATE_ID");
+    const emailjsPublicKey = Deno.env.get("EMAILJS_PUBLIC_KEY");
+    const emailjsApiKey = Deno.env.get("EMAILJS_API_KEY");
     
     console.log("Available env variables:", Object.keys(Deno.env.toObject()));
-    console.log("SMTP Configuration:", {
-      host: smtpHost || "not set",
-      port: smtpPort || "not set",
-      user: smtpUser ? (smtpUser.substring(0, 3) + "***") : "not set",
+    console.log("EmailJS Configuration:", {
+      serviceId: emailjsServiceId ? "configured" : "not set",
+      templateId: emailjsTemplateId ? "configured" : "not set",
+      publicKey: emailjsPublicKey ? "configured" : "not set",
+      apiKey: emailjsApiKey ? "configured" : "not set"
     });
     
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      throw new Error("Missing SMTP configuration");
+    if (!emailjsServiceId || !emailjsTemplateId || !emailjsApiKey) {
+      throw new Error("Missing EmailJS configuration");
     }
 
-    // Try with a simpler approach using standard client options
-    const client = new SmtpClient();
+    const successfulEmails = [];
+    const failedEmails = [];
     
-    try {
-      console.log(`Attempting to connect to SMTP server at ${smtpHost}:${smtpPort}...`);
-      
-      // Try standard TLS connection
-      await client.connect({
-        hostname: smtpHost,
-        port: smtpPort,
-        username: smtpUser,
-        password: smtpPass,
-        tls: true
-      });
-      
-      console.log("Successfully connected to SMTP server");
-      
-      // Proceed with sending emails
-      const successfulEmails = [];
-      const failedEmails = [];
-      
-      for (const email of RECIPIENT_EMAILS) {
-        try {
-          console.log(`Sending ${notificationType} notification email to ${email}...`);
-          
-          const sendResult = await client.send({
-            from: smtpUser,
-            to: email,
+    // Send an email to each recipient using EmailJS
+    for (const email of RECIPIENT_EMAILS) {
+      try {
+        console.log(`Sending ${notificationType} notification email to ${email} via EmailJS...`);
+        
+        const emailjsEndpoint = "https://api.emailjs.com/api/v1.0/email/send";
+        const emailjsPayload = {
+          service_id: emailjsServiceId,
+          template_id: emailjsTemplateId,
+          user_id: emailjsPublicKey,
+          accessToken: emailjsApiKey,
+          template_params: {
+            to_email: email,
             subject: subject,
-            content: htmlContent,
-            html: htmlContent
-          });
-          
-          console.log(`Email sent successfully to ${email}, result:`, sendResult);
-          successfulEmails.push(email);
-        } catch (err) {
-          console.error(`Error sending email to ${email}:`, err);
-          failedEmails.push({ email, error: String(err) });
-        }
-      }
-      
-      // Close the connection when done
-      try {
-        await client.close();
-        console.log("SMTP connection closed successfully");
-      } catch (closeError) {
-        console.error("Error closing SMTP connection:", closeError);
-      }
-      
-      // Return response with results
-      const allEmailsSuccessful = failedEmails.length === 0;
-      
-      return new Response(
-        JSON.stringify({
-          success: successfulEmails.length > 0,
-          message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
-          successfulEmails,
-          failedEmails
-        }),
-        {
-          status: allEmailsSuccessful ? 200 : 207,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    } catch (connectError) {
-      console.error("Failed to connect with standard TLS. Error:", connectError);
-      
-      try {
-        // Close any existing connection
-        await client.close().catch(() => {});
+            message_html: htmlContent,
+            project_name: projectName,
+            project_id: projectId,
+            project_link: projectLink,
+            created_by: createdByText || "el sistema"
+          }
+        };
         
-        // Try with explicit non-TLS connection followed by STARTTLS
-        console.log("Trying alternative connection method with explicit STARTTLS...");
-        
-        await client.connect({
-          hostname: smtpHost,
-          port: smtpPort,
-          tls: false
+        const emailResponse = await fetch(emailjsEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(emailjsPayload),
         });
         
-        // Then attempt STARTTLS upgrade
-        await client.starttls();
-        
-        // Login after secure connection is established
-        await client.login(smtpUser, smtpPass);
-        
-        console.log("Successfully connected with alternative method");
-        
-        // Send emails with similar logic as above
-        const successfulEmails = [];
-        const failedEmails = [];
-        
-        for (const email of RECIPIENT_EMAILS) {
-          try {
-            console.log(`Sending ${notificationType} notification email to ${email} (alternative method)...`);
-            
-            const sendResult = await client.send({
-              from: smtpUser,
-              to: email,
-              subject: subject,
-              content: htmlContent,
-              html: htmlContent
-            });
-            
-            console.log(`Email sent successfully to ${email}, result:`, sendResult);
-            successfulEmails.push(email);
-          } catch (err) {
-            console.error(`Error sending email to ${email}:`, err);
-            failedEmails.push({ email, error: String(err) });
-          }
+        if (emailResponse.status === 200) {
+          console.log(`Email successfully sent to ${email}`);
+          successfulEmails.push(email);
+        } else {
+          const errorText = await emailResponse.text();
+          console.error(`Failed to send email to ${email}. Status: ${emailResponse.status}, Response:`, errorText);
+          failedEmails.push({ email, error: `Status ${emailResponse.status}: ${errorText}` });
         }
-        
-        // Close the connection
-        await client.close();
-        
-        // Return response
-        const allEmailsSuccessful = failedEmails.length === 0;
-        
-        return new Response(
-          JSON.stringify({
-            success: successfulEmails.length > 0,
-            message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients (alternative method)`,
-            successfulEmails,
-            failedEmails
-          }),
-          {
-            status: allEmailsSuccessful ? 200 : 207,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
-      } catch (fallbackError) {
-        console.error("Both connection methods failed. Error with alternative method:", fallbackError);
-        throw new Error(`SMTP connection failed with both methods. Original error: ${connectError.message}, Alternative method error: ${fallbackError.message}`);
+      } catch (err) {
+        console.error(`Error sending email to ${email}:`, err);
+        failedEmails.push({ email, error: String(err) });
       }
     }
+    
+    // Return response with results
+    const allEmailsSuccessful = failedEmails.length === 0;
+    
+    return new Response(
+      JSON.stringify({
+        success: successfulEmails.length > 0,
+        message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
+        successfulEmails,
+        failedEmails
+      }),
+      {
+        status: allEmailsSuccessful ? 200 : 207,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
   } catch (error) {
     console.error("Error in project notification handler:", error);
     
@@ -268,7 +195,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: "Email sending failed", 
         details: String(error),
-        suggestion: "Please check your SMTP server configuration and network connectivity."
+        suggestion: "Please check the EmailJS configuration and network connectivity."
       }),
       {
         status: 500,
