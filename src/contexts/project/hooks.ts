@@ -59,16 +59,25 @@ export function useProjectNotifications() {
       
       console.log(`Project ${notificationType} notification emails sent:`, data);
       
-      toast({
-        title: "Correos enviados",
-        description: `Notificaciones enviadas a ${data.successfulEmails?.length || 0} destinatarios.`,
-        duration: 3000,
-      });
+      if (data.success) {
+        toast({
+          title: "Correos enviados",
+          description: `Notificaciones enviadas a ${data.successfulEmails?.length || 0} destinatarios.`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Advertencia",
+          description: `No se pudieron enviar todas las notificaciones. ${data.successfulEmails?.length || 0} de ${data.successfulEmails?.length + data.failedEmails?.length || 0} enviados.`,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
     } catch (error) {
       console.error("Error sending email notification:", error);
       toast({
         title: "Error",
-        description: "No se pudieron enviar las notificaciones por correo electrónico.",
+        description: "No se pudieron enviar las notificaciones por correo electrónico. Compruebe los registros para más detalles.",
         variant: "destructive",
         duration: 5000,
       });

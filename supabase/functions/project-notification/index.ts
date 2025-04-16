@@ -109,66 +109,57 @@ serve(async (req) => {
       `;
     }
 
+    // Get SMTP credentials from environment variables and log them
+    const smtpHost = Deno.env.get("SMTP_HOST");
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
+    const smtpUser = Deno.env.get("SMTP_USER");
+    const smtpPass = Deno.env.get("SMTP_PASS");
+    
+    console.log("Available env variables:", Object.keys(Deno.env.toObject()));
+    console.log("SMTP Configuration:", {
+      host: smtpHost || "not set",
+      port: smtpPort || "not set",
+      user: smtpUser ? (smtpUser.substring(0, 3) + "***") : "not set",
+    });
+    
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      throw new Error("Missing SMTP configuration");
+    }
+
+    // Try with a simpler approach using standard client options
+    const client = new SmtpClient();
+    
     try {
-      // Get SMTP credentials from environment variables
-      const smtpHost = Deno.env.get("SMTP_HOST");
-      const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
-      const smtpUser = Deno.env.get("SMTP_USER");
-      const smtpPass = Deno.env.get("SMTP_PASS");
-      const smtpTls = Deno.env.get("SMTP_TLS") !== "false"; // Default to true if not specified
+      console.log(`Attempting to connect to SMTP server at ${smtpHost}:${smtpPort}...`);
       
-      // Log available environment variables for debugging
-      console.log("Available env variables:", Object.keys(Deno.env.toObject()));
-      console.log("SMTP Configuration:", {
-        host: smtpHost,
+      // Try standard TLS connection
+      await client.connect({
+        hostname: smtpHost,
         port: smtpPort,
-        user: smtpUser?.substring(0, 3) + "***", // Only log part of the username for security
-        tls: smtpTls
+        username: smtpUser,
+        password: smtpPass,
+        tls: true
       });
       
-      if (!smtpHost || !smtpUser || !smtpPass) {
-        throw new Error("Missing SMTP configuration. Please check all required secrets.");
-      }
+      console.log("Successfully connected to SMTP server");
       
-      // Create SMTP client
-      const client = new SmtpClient();
-      
-      // Connect to SMTP server
-      console.log(`Connecting to SMTP server ${smtpHost}:${smtpPort} with TLS ${smtpTls ? "enabled" : "disabled"}`);
-      
-      try {
-        await client.connectTLS({
-          hostname: smtpHost,
-          port: smtpPort,
-          username: smtpUser,
-          password: smtpPass
-        });
-        console.log("Successfully connected to SMTP server");
-      } catch (connectError) {
-        console.error("Error connecting to SMTP server:", connectError);
-        throw new Error(`SMTP connection failed: ${connectError.message}`);
-      }
-      
-      // Send emails to all recipients
+      // Proceed with sending emails
       const successfulEmails = [];
       const failedEmails = [];
       
-      console.log(`Sending ${notificationType} notification emails to:`, RECIPIENT_EMAILS);
-      
       for (const email of RECIPIENT_EMAILS) {
         try {
-          console.log(`Sending email to ${email} using SMTP...`);
+          console.log(`Sending ${notificationType} notification email to ${email}...`);
           
-          // Send email
-          await client.send({
-            from: `JL Bedoya System <${smtpUser}>`,
+          const sendResult = await client.send({
+            from: smtpUser,
             to: email,
             subject: subject,
             content: htmlContent,
             html: htmlContent
           });
           
-          console.log(`Email sent successfully to ${email}`);
+          console.log(`Email sent successfully to ${email}, result:`, sendResult);
           successfulEmails.push(email);
         } catch (err) {
           console.error(`Error sending email to ${email}:`, err);
@@ -176,53 +167,112 @@ serve(async (req) => {
         }
       }
       
-      // Close the connection
+      // Close the connection when done
       try {
         await client.close();
         console.log("SMTP connection closed successfully");
       } catch (closeError) {
         console.error("Error closing SMTP connection:", closeError);
       }
-
-      // Return success response
+      
+      // Return response with results
       const allEmailsSuccessful = failedEmails.length === 0;
+      
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: successfulEmails.length > 0,
           message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients`,
           successfulEmails,
           failedEmails
         }),
         {
-          status: allEmailsSuccessful ? 200 : 207, // Use 207 Multi-Status if some emails failed
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: allEmailsSuccessful ? 200 : 207,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
-
-    } catch (emailError) {
-      console.error("Error sending email:", emailError);
+    } catch (connectError) {
+      console.error("Failed to connect with standard TLS. Error:", connectError);
       
-      return new Response(
-        JSON.stringify({ 
-          error: "Email sending failed", 
-          details: String(emailError),
-          notificationType,
-          solution: "Please check your email service configuration in Supabase secrets."
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      try {
+        // Close any existing connection
+        await client.close().catch(() => {});
+        
+        // Try with explicit non-TLS connection followed by STARTTLS
+        console.log("Trying alternative connection method with explicit STARTTLS...");
+        
+        await client.connect({
+          hostname: smtpHost,
+          port: smtpPort,
+          tls: false
+        });
+        
+        // Then attempt STARTTLS upgrade
+        await client.starttls();
+        
+        // Login after secure connection is established
+        await client.login(smtpUser, smtpPass);
+        
+        console.log("Successfully connected with alternative method");
+        
+        // Send emails with similar logic as above
+        const successfulEmails = [];
+        const failedEmails = [];
+        
+        for (const email of RECIPIENT_EMAILS) {
+          try {
+            console.log(`Sending ${notificationType} notification email to ${email} (alternative method)...`);
+            
+            const sendResult = await client.send({
+              from: smtpUser,
+              to: email,
+              subject: subject,
+              content: htmlContent,
+              html: htmlContent
+            });
+            
+            console.log(`Email sent successfully to ${email}, result:`, sendResult);
+            successfulEmails.push(email);
+          } catch (err) {
+            console.error(`Error sending email to ${email}:`, err);
+            failedEmails.push({ email, error: String(err) });
+          }
         }
-      );
+        
+        // Close the connection
+        await client.close();
+        
+        // Return response
+        const allEmailsSuccessful = failedEmails.length === 0;
+        
+        return new Response(
+          JSON.stringify({
+            success: successfulEmails.length > 0,
+            message: `${notificationType === "created" ? "Project creation" : "Project completion"} emails sent to ${successfulEmails.length}/${RECIPIENT_EMAILS.length} recipients (alternative method)`,
+            successfulEmails,
+            failedEmails
+          }),
+          {
+            status: allEmailsSuccessful ? 200 : 207,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      } catch (fallbackError) {
+        console.error("Both connection methods failed. Error with alternative method:", fallbackError);
+        throw new Error(`SMTP connection failed with both methods. Original error: ${connectError.message}, Alternative method error: ${fallbackError.message}`);
+      }
     }
   } catch (error) {
-    console.error("Error processing project notification request:", error);
+    console.error("Error in project notification handler:", error);
     
     return new Response(
-      JSON.stringify({ error: String(error) }),
+      JSON.stringify({ 
+        error: "Email sending failed", 
+        details: String(error),
+        suggestion: "Please check your SMTP server configuration and network connectivity."
+      }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   }
