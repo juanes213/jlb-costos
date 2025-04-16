@@ -82,7 +82,7 @@ serve(async (req) => {
     console.log(`Created By: ${createdBy || "unknown user"}`);
     console.log(`Client Email: ${clientEmail || "no client email provided"}`);
     
-    // Try to send email using MailerSend if client email is provided
+    // Try to send email using Brevo if client email is provided
     let emailResult = { success: false, message: "No client email provided" };
     
     if (clientEmail) {
@@ -96,46 +96,47 @@ serve(async (req) => {
           ? `Se ha creado un nuevo proyecto: ${projectName} (ID: ${projectId})`
           : `El proyecto ${projectName} (ID: ${projectId}) ha sido marcado como completado.`;
           
-        // Use MailerSend API to send the email
-        const MAILERSEND_API_KEY = Deno.env.get("MAILERSEND_API_KEY");
+        // Use Brevo API to send the email
+        const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
         
-        if (!MAILERSEND_API_KEY) {
-          throw new Error("MAILERSEND_API_KEY not found in environment variables");
+        if (!BREVO_API_KEY) {
+          throw new Error("BREVO_API_KEY not found in environment variables");
         }
         
-        const response = await fetch("https://api.mailersend.com/v1/email", {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${MAILERSEND_API_KEY}`,
-            "Content-Type": "application/json"
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "api-key": BREVO_API_KEY
           },
           body: JSON.stringify({
-            "from": {
-              "email": "notificaciones@empresa.com",
-              "name": "JLB Proyectos Notificaciones"
+            sender: {
+              name: "JLB Proyectos Notificaciones",
+              email: "notificaciones@empresa.com" // Replace with your verified sender email
             },
-            "to": [
+            to: [
               {
-                "email": clientEmail,
-                "name": "Cliente"
+                email: clientEmail,
+                name: "Cliente"
               }
             ],
-            "subject": subject,
-            "html": `
+            subject: subject,
+            htmlContent: `
               <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
                 <h1 style="color: #333;">${subject}</h1>
                 <p style="font-size: 16px; color: #666; line-height: 24px;">${content}</p>
                 <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
               </div>
             `,
-            "text": content
+            textContent: content
           })
         });
         
         const responseData = await response.json();
         
         if (!response.ok) {
-          throw new Error(`MailerSend API error: ${response.status} - ${JSON.stringify(responseData)}`);
+          throw new Error(`Brevo API error: ${response.status} - ${JSON.stringify(responseData)}`);
         }
         
         emailResult = { 
