@@ -84,3 +84,24 @@ export function useProjectNotifications() {
     }
   }, [toast]);
 }
+
+// Hook for project persistence operations
+export function useProjectPersistence(toast: ReturnType<typeof useToast>["toast"]) {
+  const saveToLocalStorage = useCallback((projects: Project[]) => {
+    try {
+      const projectsStr = JSON.stringify(projects, (key, value) => {
+        if (key === 'initialDate' || key === 'finalDate') {
+          return value instanceof Date ? value.toISOString() : value;
+        }
+        return value;
+      });
+      
+      localStorage.setItem("jlb_projects_v1", projectsStr);
+      console.log("Projects saved to localStorage with key: jlb_projects_v1");
+    } catch (error) {
+      console.error("Error saving projects to localStorage:", error);
+    }
+  }, []);
+
+  return { saveToLocalStorage };
+}
