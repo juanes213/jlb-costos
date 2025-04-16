@@ -122,8 +122,16 @@ serve(async (req) => {
       // The public key from EmailJS (same as your User ID)
       const publicKey = Deno.env.get("EMAILJS_PUBLIC_KEY") || "";
       
+      // Enhanced logging for configuration check
+      console.log("EmailJS Configuration:", {
+        apiKeyPresent: !!apiKey,
+        serviceIdPresent: !!serviceId,
+        templateIdPresent: !!templateId,
+        publicKeyPresent: !!publicKey
+      });
+      
       if (!apiKey || !serviceId || !templateId || !publicKey) {
-        throw new Error("Missing EmailJS configuration");
+        throw new Error("Missing EmailJS configuration. Please check all required secrets.");
       }
       
       // EmailJS API endpoint
@@ -159,12 +167,15 @@ serve(async (req) => {
             })
           });
           
+          // Log the raw response for debugging
+          const responseText = await emailResponse.text();
+          console.log(`EmailJS Response for ${email}:`, responseText);
+          
           if (emailResponse.ok) {
             console.log(`Email sent successfully to ${email}`);
             successfulEmails.push(email);
           } else {
-            const errorText = await emailResponse.text();
-            console.error(`Failed to send email to ${email}:`, errorText);
+            console.error(`Failed to send email to ${email}:`, responseText);
             failedEmails.push(email);
           }
         } catch (err) {
@@ -214,3 +225,4 @@ serve(async (req) => {
     );
   }
 });
+
