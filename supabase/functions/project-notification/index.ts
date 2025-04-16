@@ -100,19 +100,10 @@ serve(async (req) => {
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 5px;">
             <h1 style="color: #333;">${emailSubject}</h1>
             <p style="font-size: 16px; color: #666; line-height: 24px;">${emailContent}</p>
-            <p style="font-size: 14px; color: #666; margin-top: 10px;">
-              Este correo debe reenviarse a:
-              <ul>
-                <li>gerenteadm@jorgebedoya.com</li>
-                <li>cfinanciero@jorgebedoya.com</li>
-                <li>gerenciacomercial@jorgebedoya.com</li>
-                <li>juanes.200.200@gmail.com</li>
-              </ul>
-            </p>
             <p style="font-size: 14px; color: #888; margin-top: 30px;">Este es un mensaje automático. Por favor no responda a este correo.</p>
           </div>
         `,
-        text: `${emailContent}\n\nEste correo debe reenviarse a:\n- gerenteadm@jorgebedoya.com\n- cfinanciero@jorgebedoya.com\n- gerenciacomercial@jorgebedoya.com\n- juanes.200.200@gmail.com\n\nEste es un mensaje automático. Por favor no responda a este correo.`
+        text: `${emailContent}\n\nEste es un mensaje automático. Por favor no responda a este correo.`
       });
       
       console.log(`Email notification response:`, emailResponse);
@@ -165,3 +156,4 @@ serve(async (req) => {
     );
   }
 });
+
