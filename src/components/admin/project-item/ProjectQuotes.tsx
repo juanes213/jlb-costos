@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { 
-  Button, 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Project, QuoteFile } from "@/types/project";
@@ -35,7 +34,6 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
     
     try {
       const file = files[0];
-      // Only accept PDF files
       if (file.type !== "application/pdf") {
         toast({
           title: "Error",
@@ -45,11 +43,9 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
         return;
       }
       
-      // Generate a unique file path
       const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
       const filePath = `${project.id}/${fileName}`;
       
-      // Upload file to Supabase Storage
       const { data, error } = await supabase.storage
         .from("project_quotes")
         .upload(filePath, file);
@@ -58,7 +54,6 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
         throw error;
       }
       
-      // Create a new quote object
       const newQuote: QuoteFile = {
         id: crypto.randomUUID(),
         name: file.name,
@@ -67,7 +62,6 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
         createdAt: new Date().toISOString(),
       };
       
-      // Update project with the new quote
       const updatedQuotes = [...quotes, newQuote];
       onUpdateProject({
         ...project,
@@ -88,17 +82,15 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
       });
     } finally {
       setIsUploading(false);
-      // Reset the file input
       e.target.value = "";
     }
   };
   
   const handlePreview = async (quote: QuoteFile) => {
     try {
-      // Get signed URL for the file
       const { data, error } = await supabase.storage
         .from("project_quotes")
-        .createSignedUrl(quote.path, 60); // 60 seconds expiry
+        .createSignedUrl(quote.path, 60);
       
       if (error) throw error;
       
@@ -118,15 +110,13 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
   
   const handleDownload = async (quote: QuoteFile) => {
     try {
-      // Get signed URL for the file
       const { data, error } = await supabase.storage
         .from("project_quotes")
-        .createSignedUrl(quote.path, 60); // 60 seconds expiry
+        .createSignedUrl(quote.path, 60);
       
       if (error) throw error;
       
       if (data?.signedUrl) {
-        // Create an anchor and trigger download
         const a = document.createElement("a");
         a.href = data.signedUrl;
         a.download = quote.name;
@@ -146,14 +136,12 @@ export function ProjectQuotes({ project, onUpdateProject }: ProjectQuotesProps) 
   
   const handleDelete = async (quote: QuoteFile) => {
     try {
-      // Delete from Supabase Storage
       const { error } = await supabase.storage
         .from("project_quotes")
         .remove([quote.path]);
       
       if (error) throw error;
       
-      // Update project without the deleted quote
       const updatedQuotes = quotes.filter(q => q.id !== quote.id);
       onUpdateProject({
         ...project,
