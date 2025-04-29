@@ -46,7 +46,8 @@ export default function GuestDashboard() {
             cost: item.cost,
             unit: item.unit || "",
             ivaAmount: item.ivaAmount || undefined,
-            description: item.description || undefined
+            description: item.description || undefined,
+            quotes: item.quotes || []
           }));
           setItems(mappedItems as StorageItem[]);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -83,7 +84,8 @@ export default function GuestDashboard() {
             cost: newItem.cost,
             unit: newItem.unit || null,
             description: newItem.description || null,
-            ivaAmount: newItem.ivaAmount || null
+            ivaAmount: newItem.ivaAmount || null,
+            quotes: newItem.quotes || []
           })
           .eq('id', newItem.id);
           
@@ -106,7 +108,8 @@ export default function GuestDashboard() {
             cost: item.cost,
             unit: item.unit || "",
             ivaAmount: item.ivaAmount || undefined,
-            description: item.description || undefined
+            description: item.description || undefined,
+            quotes: item.quotes || []
           }));
           setItems(mappedItems);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -127,7 +130,8 @@ export default function GuestDashboard() {
             cost: newItem.cost,
             unit: newItem.unit || null,
             description: newItem.description || null,
-            ivaAmount: newItem.ivaAmount || null
+            ivaAmount: newItem.ivaAmount || null,
+            quotes: []
           });
         
         if (error) {
@@ -149,7 +153,8 @@ export default function GuestDashboard() {
             cost: item.cost,
             unit: item.unit || "",
             ivaAmount: item.ivaAmount || undefined,
-            description: item.description || undefined
+            description: item.description || undefined,
+            quotes: item.quotes || []
           }));
           setItems(mappedItems);
           localStorage.setItem("storageItems", JSON.stringify(mappedItems));
@@ -194,7 +199,9 @@ export default function GuestDashboard() {
           name: item.name,
           cost: item.cost,
           unit: item.unit || "",
-          ivaAmount: item.ivaAmount || undefined
+          ivaAmount: item.ivaAmount || undefined,
+          description: item.description || undefined,
+          quotes: item.quotes || []
         }));
         setItems(mappedItems as StorageItem[]);
         localStorage.setItem("storageItems", JSON.stringify(mappedItems));
