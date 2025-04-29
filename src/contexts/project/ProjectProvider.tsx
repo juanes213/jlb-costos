@@ -53,8 +53,18 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       console.log(`Importing ${newProjects.length} recovered projects`);
       
       // Format projects for Supabase and save them
-      for (const project of newProjects) {
-        const formattedProject = formatProjectForSupabase(project as Project);
+      for (const rawProject of newProjects) {
+        // Convert string dates to proper Date objects before processing
+        const projectWithDates = {
+          ...rawProject,
+          initialDate: rawProject.initialDate ? new Date(rawProject.initialDate) : undefined,
+          finalDate: rawProject.finalDate ? new Date(rawProject.finalDate) : undefined
+        };
+        
+        // Now it's safe to use as Project type
+        const project = projectWithDates as unknown as Project;
+        
+        const formattedProject = formatProjectForSupabase(project);
         console.log("Saving recovered project to Supabase:", formattedProject);
         
         const { error } = await supabase
@@ -71,12 +81,19 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
         }
       }
       
-      // Update the local state to include the recovered projects
+      // Update the local state to include the recovered projects with proper date conversion
       setProjects(prev => {
         const updatedProjects = [...prev];
-        newProjects.forEach(newProject => {
-          if (!existingIds.has(newProject.id)) {
-            updatedProjects.push(newProject as Project);
+        newProjects.forEach(rawProject => {
+          if (!existingIds.has(rawProject.id)) {
+            // Convert string dates to Date objects
+            const projectWithDates = {
+              ...rawProject,
+              initialDate: rawProject.initialDate ? new Date(rawProject.initialDate) : undefined,
+              finalDate: rawProject.finalDate ? new Date(rawProject.finalDate) : undefined
+            };
+            
+            updatedProjects.push(projectWithDates as unknown as Project);
           }
         });
         return updatedProjects;
