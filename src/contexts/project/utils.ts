@@ -78,41 +78,37 @@ export function calculateProjectCost(project: Project) {
     const categories = ensureCategoriesArray(project.categories);
 
     categories.forEach(category => {
-      if (category && category.name !== "Personal") {
-        if (typeof category.cost === 'number') {
-          totalCost += category.cost;
-        }
-        
-        if (Array.isArray(category.items)) {
-          category.items.forEach(item => {
-            if (typeof item.cost === 'number') {
-              const itemCost = item.cost * (item.quantity || 1);
-              totalCost += itemCost;
-              
-              if (typeof item.ivaAmount === 'number') {
-                totalCost += item.ivaAmount;
-              }
+      // Process all categories, including "Personal" category
+      if (typeof category.cost === 'number') {
+        totalCost += category.cost;
+      }
+      
+      if (typeof category.ivaAmount === 'number') {
+        totalCost += category.ivaAmount;
+      }
+      
+      if (Array.isArray(category.items)) {
+        category.items.forEach(item => {
+          if (typeof item.cost === 'number') {
+            const itemCost = item.cost * (item.quantity || 1);
+            totalCost += itemCost;
+            
+            if (typeof item.ivaAmount === 'number') {
+              totalCost += item.ivaAmount;
             }
-          });
-        }
+          }
+          
+          // Handle overtime records if present
+          if (item.name === "Horas extras" && Array.isArray(item.overtimeRecords)) {
+            item.overtimeRecords.forEach(record => {
+              if (typeof record.cost === 'number') {
+                totalCost += record.cost;
+              }
+            });
+          }
+        });
       }
     });
-    
-    const personalCategory = categories.find(cat => cat && cat.name === "Personal");
-    if (personalCategory && Array.isArray(personalCategory.items)) {
-      personalCategory.items.forEach(item => {
-        if (item.name === "Horas extras" && Array.isArray(item.overtimeRecords)) {
-          item.overtimeRecords.forEach(record => {
-            if (typeof record.cost === 'number') {
-              totalCost += record.cost;
-            }
-          });
-        } else if (typeof item.cost === 'number') {
-          const itemCost = item.cost * (item.quantity || 1);
-          totalCost += itemCost;
-        }
-      });
-    }
 
     const income = project.income || 0;
     const margin = income - totalCost;

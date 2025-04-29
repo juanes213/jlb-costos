@@ -31,6 +31,7 @@ export const calculateProjectCost = (project: Project): {
     
     // Ensure categories is always an array before using forEach
     const categories = ensureCategoriesArray(project.categories);
+    console.log('Project:', project.name, 'Categories:', categories);
 
     categories.forEach(category => {
       // Add category base cost if exists
@@ -59,6 +60,8 @@ export const calculateProjectCost = (project: Project): {
         });
       }
     });
+    
+    console.log('Project:', project.name, 'Total Cost:', totalCost);
     
     const income = project.income || 0;
     const margin = income - totalCost;

@@ -31,6 +31,7 @@ export function useChartData(
     
     return projectsToShow.map(project => {
       const { totalCost: cost } = calculateProjectCost(project);
+      console.log(`Project ${project.name} chart cost:`, cost);
       return {
         name: project.name.length > 12 ? project.name.substring(0, 12) + '...' : project.name,
         cost,
@@ -43,12 +44,14 @@ export function useChartData(
   const pieChartData = useMemo(() => {
     if (selectedProjects.length === 0 && filteredProjects.length > 0) {
       const project = filteredProjects[0];
+      if (!project) return [];
       
       // Use helper function to ensure categories is an array
       const categories = ensureCategoriesArray(project.categories);
+      console.log('Pie chart categories for first project:', categories);
       
       return categories
-        .filter(category => category?.name !== "Personal")
+        .filter(category => category && category.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
           
@@ -74,9 +77,10 @@ export function useChartData(
       
       // Use helper function to ensure categories is an array
       const categories = ensureCategoriesArray(project.categories);
+      console.log('Pie chart categories for selected project:', categories);
       
       return categories
-        .filter(category => category?.name !== "Personal")
+        .filter(category => category && category.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
           

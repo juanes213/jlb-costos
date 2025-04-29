@@ -12,10 +12,19 @@ export function useDashboardAnalytics(
       ? filteredProjects.filter(p => selectedProjects.includes(p.id))
       : filteredProjects;
     
+    // Add logging to debug cost calculation
+    console.log('Projects to analyze:', projectsToAnalyze.length);
+    
     const totalCost = projectsToAnalyze.reduce(
-      (sum, project) => sum + calculateProjectCost(project).totalCost,
+      (sum, project) => {
+        const result = calculateProjectCost(project);
+        console.log(`Project ${project.name} cost:`, result.totalCost);
+        return sum + result.totalCost;
+      },
       0
     );
+    
+    console.log('Total calculated cost:', totalCost);
     
     const totalIncome = projectsToAnalyze.reduce(
       (sum, project) => sum + (project.income || 0),

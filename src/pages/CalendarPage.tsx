@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +13,8 @@ export default function CalendarPage() {
   const { projects, calculateProjectCost } = useProjects();
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  // Filter projects that have dates
   const projectsWithDates = projects.filter(project => project.initialDate || project.finalDate);
 
-  // Group projects by date
   const projectsByDate: Record<string, any[]> = {};
   projectsWithDates.forEach(project => {
     if (project.initialDate) {
@@ -36,7 +33,6 @@ export default function CalendarPage() {
       if (!projectsByDate[dateKey]) {
         projectsByDate[dateKey] = [];
       }
-      // Only add if not already in the array for this date
       if (!projectsByDate[dateKey].find(p => p.id === project.id)) {
         projectsByDate[dateKey].push({
           ...project,
@@ -46,7 +42,6 @@ export default function CalendarPage() {
     }
   });
 
-  // Navigation between months
   const previousMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() - 1);
@@ -59,29 +54,22 @@ export default function CalendarPage() {
     setCurrentDate(newDate);
   };
   
-  // Get days for current month view
   const firstDayOfMonth = startOfMonth(currentDate);
   const lastDayOfMonth = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
   
-  // Calculate days needed before the first day of month to start from Sunday (0)
   const startingDayOfWeek = getDay(firstDayOfMonth);
   
-  // Generate calendar days including the padding days from previous month
   const calendarDays = [];
   
-  // Add empty cells for days before the start of the month
   for (let i = 0; i < startingDayOfWeek; i++) {
     calendarDays.push(null);
   }
   
-  // Add all days of the current month
   calendarDays.push(...daysInMonth);
   
-  // Generate days of the week header
   const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-  // Helper function to get status badge
   const getStatusBadge = (status: string) => {
     switch(status) {
       case "in-process": 
@@ -102,22 +90,13 @@ export default function CalendarPage() {
     return format(new Date(date), "dd/MM/yyyy");
   };
 
-  // Safely calculate project cost with error handling
   const safeCalculateProjectCost = (project: any) => {
     try {
-      if (!project) return 0;
-      
-      // Fix: Get the totalCost from the calculateProjectCost result
-      const result = calculateProjectCost(project);
-      
-      // Check if the result is an object with totalCost
-      if (result && typeof result === 'object' && 'totalCost' in result) {
-        return result.totalCost;
-      }
-      return 0;
+      if (!project) return { totalCost: 0, margin: 0, marginPercentage: 0 };
+      return calculateProjectCost(project);
     } catch (error) {
       console.error("Error calculating project cost:", error, project);
-      return 0;
+      return { totalCost: 0, margin: 0, marginPercentage: 0 };
     }
   };
   
@@ -145,7 +124,6 @@ export default function CalendarPage() {
             <CardTitle>Calendario Mensual</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Days of week header */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {daysOfWeek.map(day => (
                 <div 
@@ -157,11 +135,9 @@ export default function CalendarPage() {
               ))}
             </div>
             
-            {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, index) => {
                 if (day === null) {
-                  // Empty cell for padding
                   return <div key={`empty-${index}`} className="h-32 bg-gray-50 rounded"></div>;
                 }
                 
@@ -189,8 +165,7 @@ export default function CalendarPage() {
                     <div className="space-y-1 overflow-y-auto max-h-28">
                       {dayProjects.length > 0 ? (
                         dayProjects.map((project) => {
-                          // Fix: Get the totalCost from the calculateProjectCost result
-                          const { totalCost } = calculateProjectCost(project);
+                          const { totalCost } = safeCalculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="bg-white shadow-sm p-1 rounded border text-xs">
@@ -247,8 +222,7 @@ export default function CalendarPage() {
                     <CardContent className="p-3">
                       <div className="space-y-3">
                         {dayProjects.map((project) => {
-                          // Fix: Get the totalCost directly from the result object
-                          const { totalCost } = calculateProjectCost(project);
+                          const { totalCost } = safeCalculateProjectCost(project);
                           
                           return (
                             <div key={project.id} className="border p-3 rounded-md">
