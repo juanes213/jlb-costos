@@ -12,6 +12,22 @@ import { format } from "date-fns";
 import { ProjectPersonnel } from "./project-item/ProjectPersonnel";
 import { useSearchParams } from "react-router-dom";
 
+// Helper function to ensure categories is always an array
+function ensureCategoriesArray(categories: any) {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  if (typeof categories === 'string') {
+    try {
+      const parsed = JSON.parse(categories);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error parsing categories:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
 interface ProjectListItemProps {
   project: Project;
   onUpdateProject: (project: Project) => void;
@@ -48,9 +64,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
 
   const [parsedProject, setParsedProject] = useState<Project>({
     ...project,
-    categories: Array.isArray(project.categories) 
-      ? project.categories 
-      : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
+    categories: ensureCategoriesArray(project.categories)
   });
 
   const projectRef = useRef(parsedProject);
@@ -58,9 +72,7 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
   useEffect(() => {
     projectRef.current = {
       ...project,
-      categories: Array.isArray(project.categories) 
-        ? project.categories 
-        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : [])
+      categories: ensureCategoriesArray(project.categories)
     };
   }, [project]);
 
@@ -71,11 +83,8 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
     
     const newProject = { ...project };
     
-    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
-      newProject.categories = JSON.parse(newProject.categories);
-    } else if (!Array.isArray(newProject.categories)) {
-      newProject.categories = [];
-    }
+    // Ensure categories is an array
+    newProject.categories = ensureCategoriesArray(newProject.categories);
     
     newProject.categories = [...newProject.categories, { name: "", items: [] }];
     onUpdateProject(newProject);

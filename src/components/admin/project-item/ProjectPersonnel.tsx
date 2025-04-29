@@ -7,6 +7,22 @@ import { EmployeeOvertimeSelector } from "../category/EmployeeOvertimeSelector";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
+// Helper function to ensure categories is always an array
+function ensureCategoriesArray(categories: any) {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  if (typeof categories === 'string') {
+    try {
+      const parsed = JSON.parse(categories);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error parsing categories:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
 interface ProjectPersonnelProps {
   project: Project;
   onUpdateProject: (project: Project) => void;
@@ -17,10 +33,13 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
+  // Ensure categories is an array before using find
+  const categories = ensureCategoriesArray(project.categories);
+  
   // Extract overtime records from project if they exist
-  const overtimeRecords = project.categories
-    .find(cat => cat.name === "Personal")?.items
-    .find(item => item.name === "Horas extras")?.overtimeRecords || [];
+  const overtimeRecords = categories
+    .find(cat => cat?.name === "Personal")?.items
+    ?.find(item => item?.name === "Horas extras")?.overtimeRecords || [];
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -94,6 +113,18 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
     const totalCost = records.reduce((sum, record) => sum + record.cost, 0);
     
     const newProject = { ...project };
+    
+    // Ensure categories is an array in the newProject
+    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
+      try {
+        newProject.categories = JSON.parse(newProject.categories);
+      } catch (e) {
+        console.error("Error parsing project categories:", e);
+        newProject.categories = [];
+      }
+    } else if (!Array.isArray(newProject.categories)) {
+      newProject.categories = [];
+    }
     
     // Find or create the Personal category
     let personalCategoryIndex = newProject.categories.findIndex(cat => cat.name === "Personal");

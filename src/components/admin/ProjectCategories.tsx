@@ -8,6 +8,22 @@ import type { Project } from "@/types/project";
 import { CategoryItems } from "./CategoryItems";
 import { CategoryCost } from "./CategoryCost";
 
+// Helper function to ensure categories is always an array
+function ensureCategoriesArray(categories: any) {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  if (typeof categories === 'string') {
+    try {
+      const parsed = JSON.parse(categories);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error parsing categories:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
 interface ProjectCategoriesProps {
   project: Project;
   onUpdateProject: (project: Project) => void;
@@ -19,9 +35,7 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
   const { toast } = useToast();
 
   // Ensure categories is an array, parse it if it's a string
-  const categories = Array.isArray(project.categories) 
-    ? project.categories 
-    : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+  const categories = ensureCategoriesArray(project.categories);
 
   // Function to calculate total cost of a category
   const calculateCategoryCost = (categoryIndex: number): number => {
@@ -64,7 +78,15 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
     
     // Ensure categories is an array before updating
     if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
-      newProject.categories = JSON.parse(newProject.categories);
+      try {
+        newProject.categories = JSON.parse(newProject.categories);
+      } catch (e) {
+        console.error("Error parsing project categories:", e);
+        newProject.categories = [];
+        return;
+      }
+    } else if (!Array.isArray(newProject.categories)) {
+      newProject.categories = [];
     }
     
     newProject.categories[editingCategory.categoryIndex].name = editedCategoryName;
@@ -84,7 +106,15 @@ export function ProjectCategories({ project, onUpdateProject }: ProjectCategorie
     
     // Ensure categories is an array before filtering
     if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
-      newProject.categories = JSON.parse(newProject.categories);
+      try {
+        newProject.categories = JSON.parse(newProject.categories);
+      } catch (e) {
+        console.error("Error parsing project categories:", e);
+        return;
+      }
+    } else if (!Array.isArray(newProject.categories)) {
+      newProject.categories = [];
+      return;
     }
     
     newProject.categories = newProject.categories.filter((_, index) => index !== categoryIndex);
