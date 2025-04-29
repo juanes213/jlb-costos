@@ -120,6 +120,7 @@ export type Database = {
           id: string
           ivaAmount: number | null
           name: string
+          quotes: Json | null
           unit: string | null
         }
         Insert: {
@@ -130,6 +131,7 @@ export type Database = {
           id?: string
           ivaAmount?: number | null
           name: string
+          quotes?: Json | null
           unit?: string | null
         }
         Update: {
@@ -140,6 +142,7 @@ export type Database = {
           id?: string
           ivaAmount?: number | null
           name?: string
+          quotes?: Json | null
           unit?: string | null
         }
         Relationships: []

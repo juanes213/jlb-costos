@@ -180,7 +180,7 @@ export function StorageTable({ items, onDeleteItem, onEditItem }: StorageTablePr
       if (error) throw error;
       
       // Update the item without deleted quote
-      const updatedQuotes = selectedItem.quotes.filter((q: any) => q.id !== quote.id);
+      const updatedQuotes = selectedItem.quotes?.filter((q: any) => q.id !== quote.id) || [];
       
       const { error: updateError } = await supabase
         .from("storage_items")

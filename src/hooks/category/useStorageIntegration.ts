@@ -40,6 +40,8 @@ export function useStorageIntegration(
             cost: item.cost,
             unit: item.unit || "",
             ivaAmount: item.ivaAmount || undefined,
+            description: item.description || undefined,
+            quotes: item.quotes || []
           }));
           
           setStorageItems(mappedItems);
@@ -138,6 +140,8 @@ export function useStorageIntegration(
           cost: item.cost,
           unit: item.unit || "",
           ivaAmount: item.ivaAmount || undefined,
+          description: item.description || undefined,
+          quotes: item.quotes || []
         }));
         
         setStorageItems(mappedItems);

@@ -7,7 +7,10 @@ export function formatCurrency(value: number) {
   }).format(value);
 }
 
-export const formatFileSize = (bytes: number): string => {
+/**
+ * Formats file size to human readable format
+ */
+export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   
   const k = 1024;
@@ -15,4 +18,4 @@ export const formatFileSize = (bytes: number): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
+}

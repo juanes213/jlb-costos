@@ -24,6 +24,7 @@ export type StorageItem = {
   unit?: string;
   ivaAmount?: number;
   description?: string; // Optional description field
+  quotes?: QuoteFile[]; // Added quotes array
 };
 
 export type OvertimeType = 
