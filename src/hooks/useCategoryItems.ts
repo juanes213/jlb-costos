@@ -4,7 +4,7 @@ import { useItemManagement } from "./category/useItemManagement";
 import { useItemEditing } from "./category/useItemEditing";
 import { useStorageIntegration } from "./category/useStorageIntegration";
 import { useToast } from "@/hooks/use-toast";
-import type { Project, Category, StorageItem } from "@/types/project";
+import type { Project, Category, StorageItem, QuoteFile } from "@/types/project";
 
 export function useCategoryItems(
   project: Project,
@@ -25,7 +25,8 @@ export function useCategoryItems(
     handleDeleteProjectItem,
     handleAddItem,
     handleQuantityChange,
-    handleIvaCalculated
+    handleIvaCalculated,
+    handleQuotesChange
   } = useItemManagement(
     project,
     categoryIndex,
@@ -89,6 +90,7 @@ export function useCategoryItems(
     handleItemUnitChange,
     handleApplyManualChanges,
     handleIvaCalculated,
+    handleQuotesChange,
     handleSaveToStorage: handleSaveWithNotification,
     handleAddItem,
     handleCompleteManualEntry,

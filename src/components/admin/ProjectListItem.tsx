@@ -10,7 +10,6 @@ import { ProjectEditForm } from "./project-item/ProjectEditForm";
 import { ProjectObservations } from "./project-item/ProjectObservations";
 import { format } from "date-fns";
 import { ProjectPersonnel } from "./project-item/ProjectPersonnel";
-import { ProjectQuotes } from "./project-item/ProjectQuotes";
 import { useSearchParams } from "react-router-dom";
 
 interface ProjectListItemProps {
@@ -166,13 +165,6 @@ export function ProjectListItem({ project, onUpdateProject, onDeleteProject }: P
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2">Personal</h3>
             <ProjectPersonnel 
-              project={projectRef.current}
-              onUpdateProject={onUpdateProject}
-            />
-          </div>
-
-          <div className="mb-6">
-            <ProjectQuotes 
               project={projectRef.current}
               onUpdateProject={onUpdateProject}
             />

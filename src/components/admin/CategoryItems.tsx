@@ -35,6 +35,7 @@ export function CategoryItems({
     handleItemUnitChange,
     handleApplyManualChanges,
     handleIvaCalculated,
+    handleQuotesChange,
     handleSaveToStorage,
     handleAddItem,
     handleCompleteManualEntry,
@@ -75,6 +76,7 @@ export function CategoryItems({
           onCostChange={handleItemCostChange}
           onApplyChanges={handleApplyManualChanges}
           onIvaCalculated={handleIvaCalculated}
+          onQuotesChange={handleQuotesChange}
           onSaveToStorage={handleSaveToStorage}
           onDelete={handleDeleteProjectItem}
           onCompleteManualEntry={handleCompleteManualEntry}

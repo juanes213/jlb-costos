@@ -31,6 +31,7 @@ interface CategoryItemRowProps {
   onSaveToStorage: (itemIndex: number) => void;
   onDelete: (itemIndex: number) => void;
   onCompleteManualEntry?: (itemIndex: number) => void;
+  onQuotesChange?: (itemIndex: number, quotes: any[]) => void;
   isLoading?: boolean;
 }
 
@@ -53,10 +54,17 @@ export function CategoryItemRow({
   onSaveToStorage,
   onDelete,
   onCompleteManualEntry,
+  onQuotesChange,
   isLoading = false
 }: CategoryItemRowProps) {
   // Only show unit for "Insumos" category
   const shouldShowUnit = categoryName === "Insumos";
+  
+  const handleQuotesChange = (quotes: any[]) => {
+    if (onQuotesChange) {
+      onQuotesChange(itemIndex, quotes);
+    }
+  };
   
   return (
     <div className="flex items-center justify-between ml-4 flex-wrap gap-2">
@@ -128,7 +136,12 @@ export function CategoryItemRow({
           />
         )}
       </div>
-      <CategoryItemActions onDelete={() => onDelete(itemIndex)} />
+      <CategoryItemActions 
+        onDelete={() => onDelete(itemIndex)} 
+        itemId={item.id || crypto.randomUUID()}
+        quotes={item.quotes || []}
+        onQuotesChange={handleQuotesChange}
+      />
     </div>
   );
 }

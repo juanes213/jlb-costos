@@ -1,11 +1,12 @@
-
 export type Item = {
+  id?: string;
   name: string;
   cost: number;
   quantity?: number;
   ivaAmount?: number;
   unit?: string;
   overtimeRecords?: OvertimeRecord[];
+  quotes?: QuoteFile[];
 };
 
 export type OvertimeRecord = {

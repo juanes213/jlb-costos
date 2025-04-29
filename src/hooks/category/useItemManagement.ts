@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Project } from "@/types/project";
+import type { Project, QuoteFile } from "@/types/project";
 
 export function useItemManagement(
   project: Project,
@@ -60,9 +60,11 @@ export function useItemManagement(
     
     // Add the new empty item
     newProject.categories[categoryIndex].items.push({
+      id: crypto.randomUUID(),
       name: "",
       cost: 0,
       quantity: 1,
+      quotes: []
     });
     
     onUpdateProject(newProject);
@@ -88,10 +90,17 @@ export function useItemManagement(
     onUpdateProject(newProject);
   };
 
+  const handleQuotesChange = (itemIndex: number, quotes: QuoteFile[]) => {
+    const newProject = { ...project };
+    newProject.categories[categoryIndex].items[itemIndex].quotes = quotes;
+    onUpdateProject(newProject);
+  };
+
   return {
     handleDeleteProjectItem,
     handleAddItem,
     handleQuantityChange,
-    handleIvaCalculated
+    handleIvaCalculated,
+    handleQuotesChange
   };
 }
