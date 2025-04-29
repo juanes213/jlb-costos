@@ -17,9 +17,6 @@ import {
 import { useProjectNotifications, useProjectPersistence } from "./hooks";
 import { ProjectContext } from "./context";
 
-// Recovered project data
-const recoveredProjects = [{"name":"Transelca - Valledupar","numberId":"BVAR-24-229","income":43200000,"categories":[{"name":"Insumos","items":[{"name":"Nitrogeno","cost":140000,"quantity":2,"unit":"unidad"},{"name":"Trapos","cost":15000,"quantity":3,"unit":"k"},{"name":"Wypall","cost":34000,"quantity":1,"unit":"rollo"},{"name":"Alcohol","cost":38000,"quantity":1,"unit":"galon"},{"name":"Papel Oleofilico","cost":2000,"quantity":30,"unit":"Hoja"}]},{"name":"Transporte","items":[{"name":"Camioneta","cost":180000,"quantity":3},{"name":"Combustible","cost":200000,"quantity":2},{"name":"Bus","cost":65000,"quantity":4},{"name":"Taxi","cost":20000,"quantity":4},{"name":"Peaje","cost":18000,"quantity":10},{"name":"Alquiler grua","cost":4000000,"quantity":2},{"name":"Transporte de equipo","cost":2000000,"quantity":2}]},{"name":"Imprevistos","items":[],"cost":800000},{"name":"Viáticos","items":[{"name":"Hotel","cost":65000,"quantity":12},{"name":"Desayuno","cost":15000,"quantity":18},{"name":"Almuerzo","cost":15000,"quantity":18},{"name":"Cena","cost":15000,"quantity":12},{"name":"Dispensador","cost":300000,"quantity":1},{"name":"Botellón de agua","cost":15000,"quantity":3}]},{"name":"Personal","items":[{"name":"Técnicos","cost":2250000,"quantity":1}]}],"status":"on-hold","initialDate":"2025-03-08T00:00:00.000Z","finalDate":"2025-03-10T00:00:00.000Z","id":"63fd8582-fcbf-496e-b356-53efdd766fb8"},{"name":"Klarens - Valledupar","numberId":"VAR-05-005","income":34190000,"categories":[{"name":"Insumos","items":[{"name":"Nitrogeno","cost":140000,"quantity":3,"unit":"unidad"},{"name":"WD-40","cost":45000,"quantity":8,"unit":"unidad"},{"name":"Alcohol","cost":38000,"quantity":2,"unit":"galon"},{"name":"Wypall","cost":34000,"quantity":3,"unit":"rollo"},{"name":"Trapos","cost":15000,"quantity":5,"unit":"k"},{"name":"Cinta aislante 33","cost":19000,"quantity":1,"unit":"unidad"},{"name":"Cinta aislante 23","cost":45000,"quantity":1,"unit":"unidad"},{"name":"Cinta de silicona 70","cost":325000,"quantity":1,"unit":"unidad"},{"name":"Cinta de colores","cost":7000,"quantity":5,"unit":"unidad"},{"name":"Pintura Epóxica","cost":350000,"quantity":1,"unit":"galon"},{"name":"Thinner Epóxico","cost":78900,"quantity":1,"unit":"galon"},{"name":"Thinner Corriente","cost":25000,"quantity":1,"unit":"galon"},{"name":"Anticorrosivo Epóxico","cost":218500,"quantity":1,"unit":"galon"},{"name":"Lijas 240","cost":2000,"quantity":3,"unit":"pliego"},{"name":"Cinta Enmascarar","cost":5000,"quantity":2,"unit":"unidad"},{"name":"Calcomanias","cost":100000,"quantity":1,"unit":"global"}]},{"name":"Transporte","items":[{"name":"Maquinaria","cost":1500000,"quantity":1},{"name":"Personal ","cost":70000,"quantity":6},{"name":"Taxi","cost":20000,"quantity":6},{"name":"Taxi local valledupar","cost":20000,"quantity":6}]},{"name":"Imprevistos","items":[],"cost":800000},{"name":"Viáticos","items":[{"name":"Hotel","cost":70000,"quantity":14},{"name":"Almuerzo","cost":15000,"quantity":21},{"name":"Desayuno","cost":15000,"quantity":7},{"name":"Cena","cost":15000,"quantity":14},{"name":"hidratación","cost":150000,"quantity":1}]}],"status":"on-hold","initialDate":"2025-03-08T00:00:00.000Z","finalDate":"2025-03-10T00:00:00.000Z","id":"607ccb24-8c82-4ee0-8909-e3fe97add857"}];
-
 export function ProjectProvider({ children }: ProjectContextProviderProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,91 +26,9 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
   const lastSavedProjects = useRef<string>("");
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const statusCheckEnabledRef = useRef<boolean>(false);
-  const recoveredDataLoadedRef = useRef<boolean>(false);
   
   const sendProjectNotification = useProjectNotifications();
   const { saveToLocalStorage } = useProjectPersistence(toast);
-
-  // Function to import the recovered project data
-  const importRecoveredProjects = useCallback(async () => {
-    try {
-      if (recoveredDataLoadedRef.current) return;
-      
-      console.log("Importing recovered project data");
-      const existingIds = new Set(projects.map(p => p.id));
-      
-      // Filter out projects that already exist
-      const newProjects = recoveredProjects.filter(p => !existingIds.has(p.id));
-      
-      if (newProjects.length === 0) {
-        console.log("No new projects to import");
-        return;
-      }
-      
-      console.log(`Importing ${newProjects.length} recovered projects`);
-      
-      // Format projects for Supabase and save them
-      for (const rawProject of newProjects) {
-        // Convert string dates to proper Date objects before processing
-        const projectWithDates = {
-          ...rawProject,
-          initialDate: rawProject.initialDate ? new Date(rawProject.initialDate) : undefined,
-          finalDate: rawProject.finalDate ? new Date(rawProject.finalDate) : undefined
-        };
-        
-        // Now it's safe to use as Project type
-        const project = projectWithDates as unknown as Project;
-        
-        const formattedProject = formatProjectForSupabase(project);
-        console.log("Saving recovered project to Supabase:", formattedProject);
-        
-        const { error } = await supabase
-          .from('projects')
-          .upsert(formattedProject, { 
-            onConflict: 'id',
-            ignoreDuplicates: false 
-          });
-          
-        if (error) {
-          console.error("Error saving recovered project to Supabase:", error);
-        } else {
-          console.log("Recovered project saved to Supabase:", formattedProject.id);
-        }
-      }
-      
-      // Update the local state to include the recovered projects with proper date conversion
-      setProjects(prev => {
-        const updatedProjects = [...prev];
-        newProjects.forEach(rawProject => {
-          if (!existingIds.has(rawProject.id)) {
-            // Convert string dates to Date objects
-            const projectWithDates = {
-              ...rawProject,
-              initialDate: rawProject.initialDate ? new Date(rawProject.initialDate) : undefined,
-              finalDate: rawProject.finalDate ? new Date(rawProject.finalDate) : undefined
-            };
-            
-            updatedProjects.push(projectWithDates as unknown as Project);
-          }
-        });
-        return updatedProjects;
-      });
-      
-      recoveredDataLoadedRef.current = true;
-      
-      toast({
-        title: "Datos Recuperados",
-        description: `Se han importado ${newProjects.length} proyectos recuperados.`
-      });
-    } catch (error) {
-      console.error("Error importing recovered projects:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron importar los datos recuperados",
-        variant: "destructive"
-      });
-    }
-  }, [projects, toast]);
 
   useEffect(() => {
     if (!user) {
@@ -159,9 +74,6 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
         setTimeout(() => {
           statusCheckEnabledRef.current = true;
         }, 1000);
-        
-        // Import recovered data after initial load
-        importRecoveredProjects();
       }
     };
     
@@ -197,7 +109,7 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
     };
     
     loadProjects();
-  }, [user, importRecoveredProjects]);
+  }, [user]);
 
   useEffect(() => {
     if (!statusCheckEnabledRef.current || isLoading || projects.length === 0) return;
