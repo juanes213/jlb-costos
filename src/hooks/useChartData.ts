@@ -3,6 +3,22 @@ import { useMemo } from "react";
 import type { Project } from "@/types/project";
 import { format } from "date-fns";
 
+// Helper function to ensure categories is always an array
+function ensureCategoriesArray(categories: any) {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  if (typeof categories === 'string') {
+    try {
+      const parsed = JSON.parse(categories);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error parsing categories:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
 export function useChartData(
   filteredProjects: Project[],
   selectedProjects: string[],
@@ -28,13 +44,11 @@ export function useChartData(
     if (selectedProjects.length === 0 && filteredProjects.length > 0) {
       const project = filteredProjects[0];
       
-      // Ensure categories is an array before mapping
-      const categories = Array.isArray(project.categories) 
-        ? project.categories 
-        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+      // Use helper function to ensure categories is an array
+      const categories = ensureCategoriesArray(project.categories);
       
       return categories
-        .filter(category => category.name !== "Personal")
+        .filter(category => category?.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
           
@@ -58,13 +72,11 @@ export function useChartData(
       const project = filteredProjects.find(p => p.id === selectedProjects[0]);
       if (!project) return [];
       
-      // Ensure categories is an array before mapping
-      const categories = Array.isArray(project.categories) 
-        ? project.categories 
-        : (typeof project.categories === 'string' ? JSON.parse(project.categories) : []);
+      // Use helper function to ensure categories is an array
+      const categories = ensureCategoriesArray(project.categories);
       
       return categories
-        .filter(category => category.name !== "Personal")
+        .filter(category => category?.name !== "Personal")
         .map(category => {
           let categoryCost = category.cost || 0;
           
@@ -116,7 +128,6 @@ export function useChartData(
       const { totalCost: cost } = calculateProjectCost(project);
       const income = project.income || 0;
       const margin = income - cost;
-      // Fix: Calculate margin percentage based on income
       const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
       
       return {
