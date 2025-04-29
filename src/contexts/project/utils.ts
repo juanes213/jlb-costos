@@ -112,7 +112,7 @@ export function calculateProjectCost(project: Project) {
 
     const income = project.income || 0;
     const margin = income - totalCost;
-    // Fix: Calculate margin percentage based on income, not on cost
+    // Calculate margin percentage based on income, not on cost
     const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
 
     return { totalCost, margin, marginPercentage };

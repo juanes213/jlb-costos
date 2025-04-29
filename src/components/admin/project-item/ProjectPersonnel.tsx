@@ -115,15 +115,17 @@ export function ProjectPersonnel({ project, onUpdateProject }: ProjectPersonnelP
     const newProject = { ...project };
     
     // Ensure categories is an array in the newProject
-    if (!Array.isArray(newProject.categories) && typeof newProject.categories === 'string') {
-      try {
-        newProject.categories = JSON.parse(newProject.categories);
-      } catch (e) {
-        console.error("Error parsing project categories:", e);
+    if (!Array.isArray(newProject.categories)) {
+      if (typeof newProject.categories === 'string') {
+        try {
+          newProject.categories = JSON.parse(newProject.categories);
+        } catch (e) {
+          console.error("Error parsing project categories:", e);
+          newProject.categories = [];
+        }
+      } else {
         newProject.categories = [];
       }
-    } else if (!Array.isArray(newProject.categories)) {
-      newProject.categories = [];
     }
     
     // Find or create the Personal category

@@ -32,7 +32,7 @@ export function useDashboardAnalytics(
     );
     
     const totalMargin = totalIncome - totalCost;
-    // Fix: Calculate margin percentage based on income
+    // Calculate margin percentage based on income
     const marginPercentage = totalIncome > 0 ? (totalMargin / totalIncome) * 100 : 0;
     
     // Calculate average project metrics

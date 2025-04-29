@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import type { Project } from "@/types/project";
 import { format } from "date-fns";
@@ -48,7 +47,6 @@ export function useChartData(
       
       // Use helper function to ensure categories is an array
       const categories = ensureCategoriesArray(project.categories);
-      console.log('Pie chart categories for first project:', categories);
       
       return categories
         .filter(category => category && category.name !== "Personal")
@@ -77,7 +75,6 @@ export function useChartData(
       
       // Use helper function to ensure categories is an array
       const categories = ensureCategoriesArray(project.categories);
-      console.log('Pie chart categories for selected project:', categories);
       
       return categories
         .filter(category => category && category.name !== "Personal")

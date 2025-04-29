@@ -31,8 +31,11 @@ export const calculateProjectCost = (project: Project): {
     
     // Ensure categories is always an array before using forEach
     const categories = ensureCategoriesArray(project.categories);
+    
+    // Add debug logging
     console.log('Project:', project.name, 'Categories:', categories);
 
+    // Process all categories
     categories.forEach(category => {
       // Add category base cost if exists
       if (category && typeof category.cost === 'number') {
@@ -56,6 +59,15 @@ export const calculateProjectCost = (project: Project): {
             if (typeof item.ivaAmount === 'number') {
               totalCost += item.ivaAmount;
             }
+            
+            // Handle overtime records if present
+            if (item.name === "Horas extras" && Array.isArray(item.overtimeRecords)) {
+              item.overtimeRecords.forEach(record => {
+                if (typeof record.cost === 'number') {
+                  totalCost += record.cost;
+                }
+              });
+            }
           }
         });
       }
@@ -66,7 +78,7 @@ export const calculateProjectCost = (project: Project): {
     const income = project.income || 0;
     const margin = income - totalCost;
     
-    // Fix: Calculate margin percentage based on income, not on cost
+    // Calculate margin percentage based on income, not on cost
     // Only calculate if income is greater than zero to avoid division by zero
     const marginPercentage = income > 0 ? (margin / income) * 100 : 0;
     

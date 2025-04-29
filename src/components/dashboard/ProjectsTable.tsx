@@ -50,7 +50,7 @@ export function ProjectsTable({
             </TableRow>
           ) : (
             filteredProjects.slice(0, visibleRows).map((project) => {
-              // Fix: Explicitly extract and use the totalCost, margin and marginPercentage values
+              // Explicitly extract and use the totalCost, margin and marginPercentage values
               const { totalCost, margin, marginPercentage } = calculateProjectCost(project);
               const income = project.income || 0;
               
