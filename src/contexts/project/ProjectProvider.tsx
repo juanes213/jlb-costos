@@ -53,17 +53,9 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
         }
         
         if (supabaseProjects && supabaseProjects.length > 0) {
-          const formattedProjects: Project[] = supabaseProjects.map(project => ({
-            id: project.id,
-            name: project.name,
-            numberId: project.numberId,
-            status: project.status,
-            initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
-            finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
-            income: project.income,
-            categories: project.categories as any,
-            observations: project.observations || undefined
-          }));
+          const formattedProjects: Project[] = supabaseProjects.map(project => 
+            parseProjectData(project)
+          );
           
           setProjects(formattedProjects);
           console.log("Projects loaded from Supabase:", formattedProjects);
@@ -71,42 +63,8 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
           lastSavedProjects.current = stringifyProjects(formattedProjects);
           localStorage.setItem(PROJECTS_STORAGE_KEY, lastSavedProjects.current);
         } else {
-          const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
-          
-          if (storedProjects) {
-            const parsedProjects = JSON.parse(storedProjects);
-            const projectsWithDates = parsedProjects.map((project: any) => ({
-              ...project,
-              initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
-              finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
-            }));
-            
-            console.log("Migrating projects from localStorage to Supabase");
-            for (const project of projectsWithDates) {
-              const { error: insertError } = await supabase.from('projects').insert({
-                id: project.id,
-                name: project.name,
-                numberId: project.numberId || '',
-                status: project.status,
-                initialDate: project.initialDate ? project.initialDate.toISOString() : null,
-                finalDate: project.finalDate ? project.finalDate.toISOString() : null,
-                income: project.income || 0,
-                categories: project.categories,
-                observations: project.observations || null,
-                created_at: new Date().toISOString()
-              });
-              
-              if (insertError) {
-                console.error("Error migrating project to Supabase:", insertError);
-              }
-            }
-            
-            setProjects(projectsWithDates);
-            lastSavedProjects.current = stringifyProjects(projectsWithDates);
-            console.log("Projects loaded from localStorage:", projectsWithDates);
-          } else {
-            setProjects([]);
-          }
+          console.log("No projects found in Supabase, checking localStorage");
+          fallbackToLocalStorage();
         }
       } catch (error) {
         console.error("Error loading projects:", error);
@@ -123,18 +81,30 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
       try {
         const storedProjects = localStorage.getItem(PROJECTS_STORAGE_KEY);
         if (storedProjects) {
-          const parsedProjects = JSON.parse(storedProjects);
-          const projectsWithDates = parsedProjects.map((project: any) => ({
-            ...project,
-            initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
-            finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
-          }));
-          
-          setProjects(projectsWithDates);
-          console.log("Projects loaded from localStorage fallback:", projectsWithDates);
+          try {
+            const parsedProjects = JSON.parse(storedProjects);
+            const projectsWithDates = parsedProjects.map((project: any) => ({
+              ...project,
+              initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
+              finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+              categories: typeof project.categories === 'string' 
+                ? JSON.parse(project.categories) 
+                : (project.categories || [])
+            }));
+            
+            setProjects(projectsWithDates);
+            console.log("Projects loaded from localStorage:", projectsWithDates);
+          } catch (e) {
+            console.error("Error parsing localStorage projects:", e);
+            setProjects([]);
+          }
+        } else {
+          console.log("No projects found in localStorage");
+          setProjects([]);
         }
       } catch (error) {
         console.error("Error loading projects from localStorage:", error);
+        setProjects([]);
       }
     };
     
@@ -211,6 +181,8 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
             
             pendingSaves.current.add(project.id);
             const supabaseProject = formatProjectForSupabase(project);
+            
+            console.log("Formatted project for Supabase:", supabaseProject);
             
             throttledRequest(async () => {
               try {
@@ -291,6 +263,12 @@ export function ProjectProvider({ children }: ProjectContextProviderProps) {
           ...updatedProject,
           initialDate: updatedProject.initialDate ? new Date(updatedProject.initialDate) : undefined,
           finalDate: updatedProject.finalDate ? new Date(updatedProject.finalDate) : undefined,
+          // Ensure categories is always an array
+          categories: Array.isArray(updatedProject.categories) 
+            ? updatedProject.categories 
+            : (typeof updatedProject.categories === 'string' 
+              ? JSON.parse(updatedProject.categories) 
+              : [])
         } : p
       );
       

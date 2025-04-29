@@ -27,12 +27,13 @@ export const calculateProjectCost = (project: Project): {
       return { totalCost: 0, margin: 0, marginPercentage: 0 };
     }
     
+    console.log('Calculating cost for project:', project.name, 'ID:', project.id);
+    
     let totalCost = 0;
     
     // Ensure categories is always an array before using forEach
     const categories = ensureCategoriesArray(project.categories);
     
-    // Add debug logging
     console.log('Project:', project.name, 'Categories:', categories);
 
     // Process all categories
@@ -40,11 +41,13 @@ export const calculateProjectCost = (project: Project): {
       // Add category base cost if exists
       if (category && typeof category.cost === 'number') {
         totalCost += category.cost;
+        console.log(`Added category cost for ${category.name}: ${category.cost}`);
       }
       
       // Add category IVA amount if exists
       if (category && typeof category.ivaAmount === 'number') {
         totalCost += category.ivaAmount;
+        console.log(`Added category IVA for ${category.name}: ${category.ivaAmount}`);
       }
       
       // Ensure items is an array before iterating
@@ -53,27 +56,33 @@ export const calculateProjectCost = (project: Project): {
         category.items.forEach(item => {
           if (item && typeof item.cost === 'number') {
             const quantity = item.quantity || 1;
-            totalCost += item.cost * quantity;
+            const itemTotal = item.cost * quantity;
+            totalCost += itemTotal;
+            console.log(`Added item cost for ${item.name}: ${itemTotal} (unit: ${item.cost} × qty: ${quantity})`);
             
             // Add item IVA amount if exists
             if (typeof item.ivaAmount === 'number') {
               totalCost += item.ivaAmount;
+              console.log(`Added item IVA for ${item.name}: ${item.ivaAmount}`);
             }
             
             // Handle overtime records if present
             if (item.name === "Horas extras" && Array.isArray(item.overtimeRecords)) {
+              let overtimeCost = 0;
               item.overtimeRecords.forEach(record => {
                 if (typeof record.cost === 'number') {
                   totalCost += record.cost;
+                  overtimeCost += record.cost;
                 }
               });
+              console.log(`Added overtime costs for ${item.name}: ${overtimeCost}`);
             }
           }
         });
       }
     });
     
-    console.log('Project:', project.name, 'Total Cost:', totalCost);
+    console.log('Project:', project.name, 'Final Total Cost:', totalCost);
     
     const income = project.income || 0;
     const margin = income - totalCost;

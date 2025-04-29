@@ -6,6 +6,24 @@ export const PROJECTS_STORAGE_KEY = "jlb_projects_v1";
 
 // Parse project data to ensure dates are properly formatted
 export function parseProjectData(project: any): Project {
+  // Ensure categories is always parsed as an array
+  let categories = project.categories;
+  
+  try {
+    // If categories is a string, try to parse it
+    if (typeof categories === 'string') {
+      categories = JSON.parse(categories);
+    }
+    
+    // If parsing failed or categories is null/undefined, default to empty array
+    if (!Array.isArray(categories)) {
+      categories = [];
+    }
+  } catch (e) {
+    console.error("Error parsing categories:", e);
+    categories = [];
+  }
+  
   return {
     id: project.id,
     name: project.name,
@@ -14,9 +32,7 @@ export function parseProjectData(project: any): Project {
     initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
     finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
     income: project.income || 0,
-    categories: typeof project.categories === 'string' 
-      ? JSON.parse(project.categories) 
-      : (project.categories || []),
+    categories: categories,
     observations: project.observations || undefined,
     quotes: project.quotes || []
   };
@@ -24,6 +40,11 @@ export function parseProjectData(project: any): Project {
 
 // Format project for Supabase storage
 export const formatProjectForSupabase = (project: Project) => {
+  // Ensure we're storing categories as a JSON string in Supabase
+  const categoriesString = typeof project.categories === 'string' 
+    ? project.categories 
+    : JSON.stringify(project.categories);
+    
   return {
     id: project.id,
     name: project.name,
@@ -32,7 +53,7 @@ export const formatProjectForSupabase = (project: Project) => {
     initialDate: project.initialDate ? project.initialDate.toISOString() : null,
     finalDate: project.finalDate ? project.finalDate.toISOString() : null,
     income: project.income,
-    categories: JSON.stringify(project.categories),
+    categories: categoriesString,
     observations: project.observations || null,
     quotes: project.quotes || [],
     updated_at: new Date().toISOString()
