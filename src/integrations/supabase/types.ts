@@ -77,6 +77,7 @@ export type Database = {
           name: string | null
           numberId: string | null
           observations: string | null
+          quotes: Json | null
           status: string | null
           updated_at: string | null
         }
@@ -90,6 +91,7 @@ export type Database = {
           name?: string | null
           numberId?: string | null
           observations?: string | null
+          quotes?: Json | null
           status?: string | null
           updated_at?: string | null
         }
@@ -103,6 +105,7 @@ export type Database = {
           name?: string | null
           numberId?: string | null
           observations?: string | null
+          quotes?: Json | null
           status?: string | null
           updated_at?: string | null
         }

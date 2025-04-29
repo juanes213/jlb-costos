@@ -63,6 +63,14 @@ export type Category = {
 
 export type ProjectStatus = "in-process" | "on-hold" | "paused" | "completed";
 
+export type QuoteFile = {
+  id: string;
+  name: string;
+  path: string;
+  size: number;
+  createdAt: string;
+};
+
 export type Project = {
   id: string;
   numberId: string;
@@ -73,4 +81,5 @@ export type Project = {
   finalDate?: Date;
   status: ProjectStatus;
   observations?: string;
+  quotes?: QuoteFile[];
 };

@@ -1,4 +1,3 @@
-
 import { Project } from "@/types/project";
 
 // Storage key for local storage cache
@@ -7,26 +6,37 @@ export const PROJECTS_STORAGE_KEY = "jlb_projects_v1";
 // Parse project data to ensure dates are properly formatted
 export function parseProjectData(project: any): Project {
   return {
-    ...project,
+    id: project.id,
+    name: project.name,
+    numberId: project.numberId || "",
+    status: project.status,
     initialDate: project.initialDate ? new Date(project.initialDate) : undefined,
     finalDate: project.finalDate ? new Date(project.finalDate) : undefined,
+    income: project.income || 0,
+    categories: typeof project.categories === 'string' 
+      ? JSON.parse(project.categories) 
+      : (project.categories || []),
+    observations: project.observations || undefined,
+    quotes: project.quotes || []
   };
 }
 
 // Format project for Supabase storage
-export function formatProjectForSupabase(project: Project) {
+export const formatProjectForSupabase = (project: Project) => {
   return {
     id: project.id,
     name: project.name,
-    numberId: project.numberId || '',
+    numberId: project.numberId,
     status: project.status,
     initialDate: project.initialDate ? project.initialDate.toISOString() : null,
     finalDate: project.finalDate ? project.finalDate.toISOString() : null,
-    income: project.income || 0,
-    categories: project.categories,
-    observations: project.observations || null
+    income: project.income,
+    categories: JSON.stringify(project.categories),
+    observations: project.observations || null,
+    quotes: project.quotes || [],
+    updated_at: new Date().toISOString()
   };
-}
+};
 
 // Stringify project for storage with proper date handling
 export function stringifyProjects(projects: Project[]): string {
